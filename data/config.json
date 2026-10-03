@@ -1,1 +1,18 @@
-
+{
+  "nombre": "Ferretería Demo",
+  "titulo": "Todo para tus proyectos",
+  "descripcion": "Maderas, herramientas y materiales. Consulta por WhatsApp.",
+  "whatsapp": "56995553544",
+  "color": "#17733a",
+  "columnas": 3,
+  "columnasPC": 4,
+  "columnasMobile": 2,
+  "telefono": "",
+  "email": "",
+  "direccion": "",
+  "mapa": "",
+  "horarios": "",
+  "instagram": "",
+  "facebook": "",
+  "tiktok": ""
+}
