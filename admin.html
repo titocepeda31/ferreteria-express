@@ -328,7 +328,7 @@
         <main>
             <h1>Administrador del catálogo</h1>
             <p>
-                Importa el CSV, revisa el catálogo y descarga el JSON para publicarlo. Este panel no debe publicarse
+                Importa el CSV, revisa el catálogo y descarga los archivos JSON. Este panel no publica automáticamente en GitHub y no debe publicarse
                 junto al sitio público.
             </p>
             <div class="steps">
@@ -471,7 +471,7 @@
                     ><a class="button" href="index.html?preview=1" target="_blank">Ver vista previa ↗</a>
                 </div>
                 <p class="note">
-                    El administrador funciona localmente. Los cambios públicos requieren subir los JSON al hosting.
+                    El administrador funciona localmente. Para publicar cambios, reemplaza data/config.json y data/productos.json en GitHub. La vista previa no cambia los archivos públicos.
                 </p>
             </section>
         </main>
@@ -574,6 +574,7 @@
                         let fullDesc =
                             get(r, h, ["Descripcion", "Description", "Descripcion larga", "Long description"]) || desc;
                         let id = get(r, h, ["ID", "SKU", "Codigo"]) || String(i + 1);
+                        let principal = get(r, h, ["Principal", "Destacado", "Featured"]);
                         return {
                             id,
                             nombre: name,
@@ -585,6 +586,7 @@
                             descripcionCompleta: fullDesc,
                             imagen: rawImages.split(",")[0]?.trim() || "",
                             precio: price,
+                            principal: ["1", "true", "si", "sí", "yes"].includes(principal.toLowerCase()) ? "1" : "0",
                         };
                     })
                     .filter(Boolean);
@@ -651,7 +653,7 @@
                     localStorage.setItem("ferreteria_catalogo", JSON.stringify(data));
                     localStorage.setItem("ferreteria_whatsapp", $("whatsapp").value);
                     status(
-                        `✓ ${data.length} productos importados.\n✓ Categorías generadas automáticamente.\n${x.skipped ? "⚠ " + x.skipped + " filas sin nombre omitidas." : ""}\n✓ Catálogo actualizado.`
+                        `✓ ${data.length} productos importados.\n✓ Categorías generadas automáticamente.\n${x.skipped ? "⚠ " + x.skipped + " filas sin nombre omitidas." : ""}\n✓ Vista previa actualizada en este navegador.\n⚠ Para publicar: descarga productos.json y reemplaza data/productos.json en GitHub.`
                     );
                 } catch (e) {
                     status(e.message, true);
@@ -681,9 +683,9 @@
                     "productos-limpios.csv",
                     "\uFEFF" +
                         [
-                            "ID,Nombre,Categorías,Descripción,Imagen,Precio",
+                            "ID,Nombre,Categorías,Descripción,Imagen,Precio,Principal",
                             ...data.map((p) =>
-                                [p.id, p.nombre, p.categorias.join(", "), p.descripcion, p.imagen, p.precio]
+                                [p.id, p.nombre, p.categorias.join(", "), p.descripcion, p.imagen, p.precio, p.principal]
                                     .map(csvCell)
                                     .join(",")
                             ),
@@ -756,7 +758,7 @@
             function saveConfig() {
                 let c = configData();
                 localStorage.setItem("ferreteria_config_preview", JSON.stringify(c));
-                status("✓ Configuración guardada en este navegador. Abre la vista previa o descarga config.json.");
+                status("✓ Configuración guardada en este navegador. Para publicar, descarga config.json y reemplaza data/config.json en GitHub.");
                 return c;
             }
             try {
