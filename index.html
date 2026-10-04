@@ -641,6 +641,41 @@
           white-space: nowrap;
         }
       }
+
+
+      #volver-arriba {
+    position: fixed;
+    bottom: 24px;
+    right: 20px;
+    width: 46px;
+    height: 46px;
+    border: none;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 100;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(12px);
+    transition: opacity .2s, transform .2s, visibility .2s;
+}
+
+#volver-arriba.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+@media (max-width: 490px) {
+    #volver-arriba {
+        right: 16px;
+        bottom: 20px;
+    }
+}
     </style>
 
   </head>
@@ -1345,9 +1380,35 @@ function filter() {
 
       }
 
+
+      const botonArriba = document.getElementById('volver-arriba');
+
+window.addEventListener('scroll', () => {
+    botonArriba.classList.toggle(
+        'visible',
+        window.scrollY > 500
+    );
+}, { passive: true });
+
+botonArriba.addEventListener('click', () => {
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+});
+
       init();
 
     </script>
+
+    <button
+    id="volver-arriba"
+    type="button"
+    aria-label="Volver arriba"
+    title="Volver arriba"
+>
+    ↑
+</button>
 
   </body>
 
