@@ -1486,7 +1486,7 @@ footer {
 
 
 
-#products .card-photo-link {
+:is(#products, #featured) .card-photo-link {
 
   display: block;
 
@@ -1498,7 +1498,7 @@ footer {
 
 }
 
-#products .card .photo {
+:is(#products, #featured) .card .photo {
 
   width: 100%;
 
@@ -1512,7 +1512,7 @@ footer {
 
 }
 
-#products .card .photo img {
+:is(#products, #featured) .card .photo img {
 
   width: 100%;
 
@@ -1522,7 +1522,7 @@ footer {
 
 }
 
-#products .card-content {
+:is(#products, #featured) .card-content {
 
   padding: 14px;
 
@@ -1530,7 +1530,7 @@ footer {
 
 }
 
-#products .card .cat {
+:is(#products, #featured) .card .cat {
 
   white-space: nowrap;
 
@@ -1540,7 +1540,7 @@ footer {
 
 }
 
-#products .card h3 {
+:is(#products, #featured) .card h3 {
 
   font-size: 16px;
 
@@ -1550,7 +1550,7 @@ footer {
 
 }
 
-#products .card-name-link {
+:is(#products, #featured) .card-name-link {
 
   display: -webkit-box;
 
@@ -1564,7 +1564,7 @@ footer {
 
 }
 
-#products .card .price {
+:is(#products, #featured) .card .price {
 
   margin-top: 2px;
 
@@ -1574,7 +1574,7 @@ footer {
 
 }
 
-#products .card-actions {
+:is(#products, #featured) .card-actions {
 
   margin-top: 4px;
 
@@ -1582,7 +1582,7 @@ footer {
 
 }
 
-#products .card-actions a {
+:is(#products, #featured) .card-actions a {
 
   display: flex;
 
@@ -1600,19 +1600,19 @@ footer {
 
 @media (max-width: 490px) {
 
-  #products .card-photo-link { height: 130px; }
+  :is(#products, #featured) .card-photo-link { height: 130px; }
 
-  #products .card .photo { padding: 6px; }
+  :is(#products, #featured) .card .photo { padding: 6px; }
 
-  #products .card-content { padding: 10px; gap: 7px; }
+  :is(#products, #featured) .card-content { padding: 10px; gap: 7px; }
 
-  #products .card h3 { font-size: 13px; min-height: 2.7em; }
+  :is(#products, #featured) .card h3 { font-size: 13px; min-height: 2.7em; }
 
-  #products .card .price { font-size: 15px; }
+  :is(#products, #featured) .card .price { font-size: 15px; }
 
-  #products .card-actions .outline { display: none; }
+  :is(#products, #featured) .card-actions .outline { display: none; }
 
-  #products .card-actions .btn { width: 100%; font-size: 12px; }
+  :is(#products, #featured) .card-actions .btn { width: 100%; font-size: 12px; }
 
 }
 
@@ -1649,7 +1649,13 @@ footer {
   #featured .card-actions .btn { width:100%; font-size:12px; }
 }
 
-    </style>
+    
+/* Navegación entre portada y catálogo */
+.catalog-nav { margin: 0 0 22px; }
+.catalog-nav a { color:var(--primary); font-weight:700; text-decoration:none; }
+.catalog-nav a:hover { text-decoration:underline; }
+#inicio-destacados .featured-footer .btn { min-width:220px; }
+</style>
 
 
 
@@ -1669,7 +1675,7 @@ footer {
 
 
 
-        <div class="brand" id="brand">FERRETERÍA DEMO</div>
+        <a class="brand" id="brand" href="#inicio" style="text-decoration:none">FERRETERÍA DEMO</a>
 
 
 
@@ -1741,6 +1747,7 @@ footer {
 
 
       <div id="catalogo">
+        <nav class="catalog-nav"><a href="#inicio">← Volver al inicio</a></nav>
 
 
 
@@ -2348,8 +2355,9 @@ function esDestacado(p) {
 
 function renderDestacados() {
   const seleccion = products.filter(esDestacado).slice(0, 12);
-  $('featured').innerHTML = seleccion.map(tarjetaProducto).join('');
-  // Si la importación aún no entrega Principal, mostramos el catálogo normal.
+  $('featured').innerHTML = seleccion.length
+    ? seleccion.map(tarjetaProducto).join('')
+    : '<div class="empty">Todavía no hay productos destacados. Comprueba que la columna Principal llegue desde Drive con valor 1.</div>';
   $('inicio-destacados').dataset.hayDestacados = seleccion.length ? '1' : '0';
 }
 
@@ -2519,12 +2527,12 @@ function filter() {
           ? decodeURIComponent(hash.slice('#producto='.length)) : null;
         const p = products.find(x => String(x.id) === id);
         const catalogoSolicitado = hash === '#catalogo' || (!!id && !p);
-        const hayDestacados = $('inicio-destacados').dataset.hayDestacados === '1';
-        const portada = !p && !catalogoSolicitado && hayDestacados;
+        const portada = !p && !catalogoSolicitado;
         $('catalogo').classList.toggle('hidden', !!p || portada);
         $('hero').classList.toggle('hidden', !!p || catalogoSolicitado);
         $('inicio-destacados').classList.toggle('hidden', !portada);
         $('detail').classList.toggle('hidden', !p);
+        $('businessInfo').classList.toggle('hidden', !portada);
         if (p) {
           $('detailPhoto').innerHTML = img(p);
           $('detailCategory').textContent = (p.categorias || []).join(' · ');
@@ -2536,8 +2544,8 @@ function filter() {
           document.title = p.nombre + ' · ' + (config.nombre || 'Ferretería');
           window.scrollTo(0, 0);
         } else {
-          document.title = (config.nombre || 'Ferretería') + ' · Catálogo';
-          if (catalogoSolicitado) window.scrollTo(0, 0);
+          document.title = (config.nombre || 'Ferretería') + (portada ? ' · Inicio' : ' · Catálogo');
+          if (catalogoSolicitado || hash === '#inicio') window.scrollTo(0, 0);
         }
       }
 
@@ -3030,6 +3038,7 @@ function filter() {
 
 
         render();
+        renderDestacados();
 
 
 
