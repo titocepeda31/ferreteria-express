@@ -1843,6 +1843,7 @@ footer {
 
 
 
+            <button class="btn" id="detailAdd" type="button">+ Agregar a cotización</button>
             <a class="btn" id="detailWA" target="_blank" rel="noopener"
 
 
@@ -1958,6 +1959,16 @@ footer {
 </button>
 
 
+
+    <button type="button" id="quoteFab" class="quote-fab" aria-label="Abrir mi cotización">🛒 Mi cotización (<span id="quoteCount">0</span>)</button>
+    <div id="quotePanel" class="quote-panel hidden" role="presentation">
+      <section class="quote-dialog" role="dialog" aria-modal="true" aria-labelledby="quoteTitle">
+        <div class="quote-head"><h2 id="quoteTitle">Mi cotización</h2><button class="quote-close" type="button" id="quoteClose" aria-label="Cerrar">×</button></div>
+        <p class="muted">Selecciona las cantidades y envía tu consulta por WhatsApp.</p>
+        <div id="quoteItems"></div>
+        <div class="quote-actions"><a class="btn" id="quoteSend" target="_blank" rel="noopener">Enviar por WhatsApp ↗</a><button type="button" class="outline" id="quoteClear">Vaciar cotización</button></div>
+      </section>
+    </div>
 
     <script>
 
@@ -2385,7 +2396,7 @@ function tarjetaProducto(p) {
 
         <a class="outline" href="${detalle}">Ver detalle</a>
 
-        <a class="btn" href="${wa(p)}" target="_blank" rel="noopener">Cotizar ↗</a>
+        <button type="button" class="btn quote-add" data-quote-add="${esc(p.id)}">+ Agregar</button>
 
       </div>
 
@@ -3083,6 +3094,64 @@ botonArriba.addEventListener('click', () => {
 });
 
 
+
+
+      // Cotización local: no requiere campos de unidades ni cambios en Google Sheets.
+      const QUOTE_KEY = 'titolabs_cotizacion_v1';
+      let quote = {};
+      try { quote = JSON.parse(localStorage.getItem(QUOTE_KEY) || '{}') || {}; } catch(e) { quote = {}; }
+      function saveQuote() {
+        try { localStorage.setItem(QUOTE_KEY, JSON.stringify(quote)); } catch(e) {}
+        renderQuote();
+      }
+      function addQuote(id) {
+        id = String(id);
+        if (!products.some(p => String(p.id) === id)) return;
+        quote[id] = Math.min(9999, (Number(quote[id]) || 0) + 1);
+        saveQuote();
+        $('quotePanel').classList.remove('hidden');
+        $('quoteClose').focus();
+      }
+      function renderQuote() {
+        // El catálogo es la fuente de verdad: no enviamos productos obsoletos.
+        const lines = Object.entries(quote).map(([id, qty]) => ({p:products.find(p => String(p.id) === id),qty:Number(qty)}))
+          .filter(x => x.p && Number.isInteger(x.qty) && x.qty > 0);
+        $('quoteCount').textContent = lines.reduce((n,x) => n+x.qty,0);
+        $('quoteItems').innerHTML = lines.length ? lines.map(({p,qty}) => `
+          <div class="quote-line"><div class="quote-line-name">${esc(p.nombre)}</div>
+            <div class="quote-line-controls">
+              <button type="button" data-quote-change="${esc(p.id)}" data-delta="-1" aria-label="Disminuir ${esc(p.nombre)}">−</button>
+              <strong>${qty}</strong>
+              <button type="button" data-quote-change="${esc(p.id)}" data-delta="1" aria-label="Aumentar ${esc(p.nombre)}">+</button>
+              <button type="button" class="remove" data-quote-remove="${esc(p.id)}">Quitar</button>
+            </div>
+          </div>`).join('') : '<p class="muted">Aún no has agregado productos.</p>';
+        $('quoteSend').classList.toggle('hidden', !lines.length);
+        $('quoteClear').classList.toggle('hidden', !lines.length);
+        if (lines.length) {
+          const msg = 'Hola, quisiera cotizar estos productos:\n\n' +
+            lines.map(({p,qty},i) => `${i+1}. ${p.nombre} — Cantidad: ${qty}`).join('\n') +
+            '\n\n¿Me podrían confirmar disponibilidad, unidades de venta y precios?';
+          $('quoteSend').href = 'https://wa.me/' + String(config.whatsapp || '').replace(/\D/g,'') + '?text=' + encodeURIComponent(msg);
+        }
+      }
+      document.addEventListener('click', e => {
+        const add=e.target.closest('[data-quote-add]');
+        if(add) { addQuote(add.dataset.quoteAdd); return; }
+        const change=e.target.closest('[data-quote-change]');
+        if(change) { const id=change.dataset.quoteChange; quote[id]=Math.max(1,Math.min(9999,(Number(quote[id])||1)+Number(change.dataset.delta)));saveQuote();return; }
+        const remove=e.target.closest('[data-quote-remove]');
+        if(remove) { delete quote[remove.dataset.quoteRemove];saveQuote(); }
+      });
+      $('detailAdd').addEventListener('click', () => {
+        const id=location.hash.startsWith('#producto=') ? decodeURIComponent(location.hash.slice(10)) : '';
+        addQuote(id);
+      });
+      $('quoteFab').onclick=()=>{renderQuote();$('quotePanel').classList.remove('hidden');$('quoteClose').focus();};
+      $('quoteClose').onclick=()=>{$('quotePanel').classList.add('hidden');$('quoteFab').focus();};
+      $('quotePanel').onclick=e=>{if(e.target===$('quotePanel'))$('quoteClose').click();};
+      document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('quotePanel').classList.contains('hidden'))$('quoteClose').click();});
+      $('quoteClear').onclick=()=>{quote={};saveQuote();};
 
       init();
 
