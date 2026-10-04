@@ -83,7 +83,7 @@
       }
       .section {
         padding: 40px 0;
-      }     
+      }
       .toolbar {
         display: flex;
         gap: 12px;
@@ -271,6 +271,35 @@
           padding: 25px 16px;
         }
       }
+
+
+      #cargar-mas-productos {
+    display: none;
+    padding: 28px 16px;
+    text-align: center;
+    color: #67756b;
+    font-size: 14px;
+}
+
+.loader-spinner {
+    width: 30px;
+    height: 30px;
+    margin: 0 auto 12px;
+    border: 3px solid #e1e8e1;
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: girar 0.7s linear infinite;
+}
+
+@keyframes girar {
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .loader-spinner {
+        animation: none;
+    }
+}
     </style>
   </head>
   <body>
@@ -457,34 +486,88 @@ function tarjetaProducto(p) {
   </article>`;
 }
 
-function cargarMasProductos() {
-  const contenedor = $('products');
+let cargandoProductos = false;
+let versionFiltro = 0;
 
-  const siguientes = productosFiltrados.slice(
-    productosVisibles,
-    productosVisibles + PRODUCTOS_POR_CARGA
-  );
+async function cargarMasProductos() {
+    if (cargandoProductos) return;
 
-  if (!siguientes.length) return;
+    const siguientes = productosFiltrados.slice(
+        productosVisibles,
+        productosVisibles + PRODUCTOS_POR_CARGA
+    );
 
-  contenedor.insertAdjacentHTML(
-    'beforeend',
-    siguientes.map(tarjetaProducto).join('')
-  );
+    if (!siguientes.length) return;
 
-  productosVisibles += siguientes.length;
+    cargandoProductos = true;
 
-  const indicador = document.getElementById('cargar-mas-productos');
+    const versionActual = versionFiltro;
+    const contenedor = $('products');
+    const indicador = $('cargar-mas-productos');
 
-  if (productosVisibles >= productosFiltrados.length) {
     observadorProductos.unobserve(indicador);
-    indicador.style.display = 'none';
-  } else {
+
     indicador.style.display = 'block';
-  }
+    indicador.innerHTML = `
+        <div class="loader-spinner" aria-hidden="true"></div>
+        <span>Cargando más productos…</span>
+    `;
+
+    // Permite que el navegador pinte el spinner.
+    await new Promise(resolve =>
+        requestAnimationFrame(() =>
+            requestAnimationFrame(resolve)
+        )
+    );
+
+    if (versionActual !== versionFiltro) return;
+
+    const inicio = contenedor.children.length;
+
+    contenedor.insertAdjacentHTML(
+        'beforeend',
+        siguientes.map(tarjetaProducto).join('')
+    );
+
+    productosVisibles += siguientes.length;
+
+    // Espera a que terminen de cargar las primeras imágenes
+    // de esta tanda, sin bloquear indefinidamente el catálogo.
+    const tarjetasNuevas = [...contenedor.children].slice(inicio);
+    const imagenes = tarjetasNuevas
+        .map(tarjeta => tarjeta.querySelector('img'))
+        .filter(Boolean)
+        .slice(0, 3);
+
+    await Promise.race([
+        Promise.all(imagenes.map(imagen => {
+            if (imagen.complete) return Promise.resolve();
+
+            return new Promise(resolve => {
+                imagen.addEventListener('load', resolve, { once: true });
+                imagen.addEventListener('error', resolve, { once: true });
+            });
+        })),
+        new Promise(resolve => setTimeout(resolve, 2500))
+    ]);
+
+    if (versionActual !== versionFiltro) return;
+
+    cargandoProductos = false;
+
+    if (productosVisibles >= productosFiltrados.length) {
+        indicador.innerHTML = '✓ Has visto todos los productos';
+        indicador.style.display = 'block';
+    } else {
+        indicador.style.display = 'none';
+        observadorProductos.observe(indicador);
+    }
 }
 
 function filter() {
+    versionFiltro++;
+cargandoProductos = false;
+
   const q = norm($('search').value);
   const c = $('category').value;
 
@@ -502,15 +585,14 @@ function filter() {
 
   let indicador = document.getElementById('cargar-mas-productos');
 
-  if (!indicador) {
+if (!indicador) {
     indicador = document.createElement('div');
     indicador.id = 'cargar-mas-productos';
-    indicador.style.cssText =
-      'padding:24px;text-align:center;color:#666;';
-    indicador.textContent = 'Cargando más productos...';
+    indicador.setAttribute('role', 'status');
+    indicador.setAttribute('aria-live', 'polite');
 
     $('products').insertAdjacentElement('afterend', indicador);
-  }
+}
 
   observadorProductos.disconnect();
 
