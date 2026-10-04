@@ -12,15 +12,18 @@
 
     <style>
 
-      :root {
 
-        --primary: #17733a;
+:root {
+  --primary: #17733a;
+  --primary-contrast: #ffffff;
+  --background: #f7f8f6;
+  --ink: #202820;
 
-        --background: #f6f6f2;
+  --primary-soft: color-mix(in srgb, var(--primary) 10%, white);
+  --primary-hover: color-mix(in srgb, var(--primary) 85%, black);
+  --border: #e3e8e2;
+}
 
-        --ink: #1e2b22;
-
-      }
 
       * {
 
@@ -676,6 +679,63 @@
         bottom: 20px;
     }
 }
+
+      
+/* Colores reutilizables de la plantilla */
+
+.brand,
+.price,
+.back,
+.business-info a {
+  color: var(--primary);
+}
+
+.contact,
+.btn,
+#volver-arriba {
+  background: var(--primary);
+  color: var(--primary-contrast);
+}
+
+.contact:hover,
+.btn:hover,
+#volver-arriba:hover {
+  background: var(--primary-hover);
+}
+
+.hero {
+  background: linear-gradient(
+    115deg,
+    var(--primary-soft),
+    var(--background)
+  );
+}
+
+.photo {
+  background: var(--primary-soft);
+}
+
+.card,
+header {
+  border-color: var(--border);
+}
+
+.outline {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+input:focus,
+select:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+footer {
+  background: var(--ink);
+  color: #ffffff;
+}
+
     </style>
 
   </head>
