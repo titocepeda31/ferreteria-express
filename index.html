@@ -1,5 +1,675 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ferretería Express · Catálogo</title><style>
-:root{--primary:#17733a;--background:#f6f6f2;--ink:#1e2b22}*{box-sizing:border-box}body{margin:0;font:16px system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink);background:var(--background)}header{background:#fff;border-bottom:1px solid #e4e8e3;position:sticky;top:0;z-index:2}.wrap{max-width:1160px;margin:auto;padding:0 20px}.top{min-height:76px;display:flex;justify-content:space-between;align-items:center;gap:12px}.brand{font-size:22px;font-weight:900;color:var(--primary)}.contact,.btn{background:var(--primary);color:white;text-decoration:none;padding:12px 18px;border-radius:9px;display:inline-block;border:0;cursor:pointer;font:inherit;font-weight:700}.hero{padding:60px 0;background:linear-gradient(110deg,#e8f2e8,#f8f7ef)}h1{font-size:clamp(32px,5vw,52px);line-height:1.1;margin:0 0 15px}.hero p{font-size:19px;max-width:650px;line-height:1.55;color:#506457}.section{padding:40px 0}.toolbar{display:flex;gap:12px;flex-wrap:wrap;margin:25px 0}input,select{font:inherit;padding:13px;border:1px solid #d5dfd5;border-radius:9px;background:white}input{flex:1;min-width:220px}select{min-width:200px}.grid{display:grid;grid-template-columns:repeat(var(--cols-desktop,3),minmax(0,1fr));gap:20px}.card{background:#fff;border:1px solid #e4e9e3;border-radius:14px;overflow:hidden;display:flex;flex-direction:column}.photo{aspect-ratio:4/3;background:#edf0e9;display:grid;place-items:center;font-size:55px}.photo img{width:100%;height:100%;object-fit:contain}.card-content{padding:18px;display:flex;flex-direction:column;gap:10px;flex:1}.cat{color:#6c796f;font-size:13px}.card h3{margin:0;font-size:18px;line-height:1.35}.price{font-weight:900;color:var(--primary);font-size:19px}.card-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}.card-actions a{flex:1;text-align:center;font-size:13px}.outline{border:1px solid var(--primary);color:var(--primary);background:white;text-decoration:none;padding:11px;border-radius:9px;font-weight:700}.empty{padding:55px 20px;text-align:center;background:#fff;border-radius:14px;color:#657166;grid-column:1/-1}.detail{display:grid;grid-template-columns:1fr 1fr;gap:38px;align-items:start}.detail .photo{border-radius:15px;overflow:hidden;aspect-ratio:1}.detail h1{font-size:clamp(28px,4vw,42px)}.detail p{line-height:1.7;white-space:pre-line;color:#4b5d50}.back{background:none;border:0;color:var(--primary);cursor:pointer;font:inherit;padding:0 0 22px;font-weight:700}.business-info{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;padding:35px 0}.business-info h2{margin:0 0 12px}.business-info a{color:var(--primary)}.business-info p{white-space:pre-line;line-height:1.7}.socials{display:flex;gap:12px;flex-wrap:wrap}@media(max-width:700px){.business-info{grid-template-columns:1fr}}footer{background:#1c2b20;color:#e4ede5;padding:28px 0;margin-top:45px}.muted{color:#67756b}.hidden{display:none!important}@media(max-width:800px){ .grid{grid-template-columns:repeat(var(--cols-tablet,2),minmax(0,1fr))}.detail{grid-template-columns:1fr}.hero{padding:42px 0}}@media(max-width:490px){.grid{grid-template-columns:repeat(var(--cols-mobile,1),minmax(0,1fr))}.brand{font-size:17px}.contact{padding:10px;font-size:13px}.section{padding:25px 0}}
-</style></head><body><header><div class="wrap top"><div class="brand" id="brand">FERRETERÍA DEMO</div><a class="contact" id="topwa" href="#">WhatsApp ↗</a></div></header><section class="hero" id="hero"><div class="wrap"><h1 id="heroTitle">Todo para tus proyectos</h1><p id="heroText">Encuentra maderas, herramientas y materiales de construcción. Consulta disponibilidad directamente por WhatsApp.</p><a class="btn" href="#catalogo">Ver productos ↓</a></div></section><main class="wrap section"><div id="catalogo"><h2>Nuestros productos <small class="muted" id="count"></small></h2><div class="toolbar"><input id="search" type="search" placeholder="Buscar productos…" aria-label="Buscar productos"><select id="category" aria-label="Categoría"><option value="">Todas las categorías</option></select></div><div class="grid" id="products"></div></div><div id="detail" class="hidden"><button class="back" id="back">← Volver al catálogo</button><div class="detail"><div class="photo" id="detailPhoto"></div><div><div class="cat" id="detailCategory"></div><h1 id="detailName"></h1><div class="price" id="detailPrice"></div><h3>Descripción</h3><p id="detailDescription"></p><a class="btn" id="detailWA" target="_blank" rel="noopener">Consultar por WhatsApp ↗</a></div></div></div></main><section class="wrap business-info" id="businessInfo"><div><h2>Contacto y ubicación</h2><div id="contactInfo"></div></div><div><h2>Horarios de atención</h2><p id="businessHours"></p><div class="socials" id="socialLinks"></div></div></section><footer><div class="wrap"><strong id="footerName">FERRETERÍA DEMO</strong><p>Catálogo digital · Cotizaciones por WhatsApp</p></div></footer><script>
-const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),norm=s=>String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();let products=[],config={};const demo=[{id:'1',nombre:'Tapa cepillada 1 x 4 x 3,20 m',categorias:['Maderas','Cepilladas'],descripcion:'Madera cepillada para proyectos de construcción y carpintería.',imagen:'',precio:''},{id:'2',nombre:'Martillo carpintero',categorias:['Herramientas'],descripcion:'Martillo de uso general.',imagen:'',precio:'8990'},{id:'3',nombre:'Piso cepillado 1 x 4 x 3,20 m',categorias:['Maderas','Pisos'],descripcion:'Piso de madera cepillada.',imagen:'',precio:''}];function price(p){let n=Number(String(p.precio??'').replace(/\./g,'').replace(',','.'));return String(p.precio??'').trim()&&Number.isFinite(n)&&n>0?'$'+Math.round(n).toLocaleString('es-CL'):'Consultar precio'}function img(p){let url=/^(https?:\/\/|\.\.?\/|assets\/|imagenes\/)/i.test(p.imagen||'')?p.imagen:'';return url?`<img src="${esc(url)}" alt="${esc(p.nombre)}" loading="lazy" onerror="this.replaceWith(document.createTextNode('📦'))">`:'📦'}function wa(p){return 'https://wa.me/'+String(config.whatsapp||'56995553544').replace(/\D/g,'')+'?text='+encodeURIComponent('Hola, quisiera consultar por '+p.nombre)}function render(){let cats=[...new Set(products.flatMap(p=>p.categorias||[]))].sort((a,b)=>a.localeCompare(b,'es'));let current=$('category').value;$('category').innerHTML='<option value="">Todas las categorías</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');$('category').value=cats.includes(current)?current:'';$('count').textContent='('+products.length+')';filter()}function filter(){let q=norm($('search').value),c=$('category').value;let found=products.filter(p=>(!q||norm([p.nombre,p.descripcion,...(p.categorias||[])].join(' ')).includes(q))&&(!c||(p.categorias||[]).includes(c)));$('products').innerHTML=found.length?found.map(p=>`<article class="card"><div class="photo">${img(p)}</div><div class="card-content"><div class="cat">${esc((p.categorias||[]).join(' · '))}</div><h3>${esc(p.nombre)}</h3><div class="price">${price(p)}</div><div class="card-actions"><a class="outline" href="#producto=${encodeURIComponent(p.id)}">Ver detalle</a><a class="btn" href="${wa(p)}" target="_blank" rel="noopener">Cotizar ↗</a></div></div></article>`).join(''):'<div class="empty">No encontramos productos con esos filtros.</div>'}function route(){let id=location.hash.startsWith('#producto=')?decodeURIComponent(location.hash.slice(10)):null,p=products.find(x=>String(x.id)===id);$('catalogo').classList.toggle('hidden',!!p);$('hero').classList.toggle('hidden',!!p);$('detail').classList.toggle('hidden',!p);if(p){$('detailPhoto').innerHTML=img(p);$('detailCategory').textContent=(p.categorias||[]).join(' · ');$('detailName').textContent=p.nombre;$('detailPrice').textContent=price(p);$('detailDescription').textContent=p.descripcionCompleta||p.descripcion||'Consulta las características y disponibilidad de este producto por WhatsApp.';$('detailWA').href=wa(p);document.title=p.nombre+' · '+(config.nombre||'Ferretería');window.scrollTo(0,0)}else document.title=(config.nombre||'Ferretería')+' · Catálogo'}$('search').oninput=filter;$('category').onchange=filter;$('back').onclick=()=>location.hash='catalogo';window.onhashchange=route;async function init(){try{let r=await fetch('data/config.json');if(r.ok)config=await r.json()}catch(e){}if(new URLSearchParams(location.search).get('preview')==='1'){try{config={...config,...JSON.parse(localStorage.getItem('ferreteria_config_preview')||'{}')}}catch(e){}}if(!Object.keys(config).length)config={nombre:'Ferretería Demo',whatsapp:localStorage.getItem('ferreteria_whatsapp')||'56995553544',color:'#17733a',columnas:3};document.documentElement.style.setProperty('--primary',/^#[0-9a-f]{6}$/i.test(config.color)?config.color:'#17733a');document.documentElement.style.setProperty('--cols-desktop',[2,3,4,5].includes(Number(config.columnasPC??config.columnas))?Number(config.columnasPC??config.columnas):3);document.documentElement.style.setProperty('--cols-mobile',[1,2].includes(Number(config.columnasMobile))?Number(config.columnasMobile):1);$('brand').textContent=$('footerName').textContent=config.nombre||'Ferretería Demo';$('heroTitle').textContent=config.titulo||'Todo para tus proyectos';$('heroText').textContent=config.descripcion||'Encuentra maderas, herramientas y materiales de construcción. Consulta disponibilidad directamente por WhatsApp.';$('topwa').href='https://wa.me/'+String(config.whatsapp||'').replace(/\D/g,'');const safeLink=u=>{try{let x=new URL(u);return ['https:','http:'].includes(x.protocol)?x.href:''}catch(e){return ''}};let info=[];if(config.telefono)info.push('<p>📞 <a href="tel:'+esc(config.telefono.replace(/[^+0-9]/g,''))+'">'+esc(config.telefono)+'</a></p>');if(config.email)info.push('<p>✉️ <a href="mailto:'+esc(config.email)+'">'+esc(config.email)+'</a></p>');if(config.direccion)info.push('<p>📍 '+esc(config.direccion)+'</p>');if(safeLink(config.mapa))info.push('<p><a target="_blank" rel="noopener" href="'+esc(safeLink(config.mapa))+'">Ver ubicación en Google Maps ↗</a></p>');$('contactInfo').innerHTML=info.join('')||'<p>Consulta nuestros productos por WhatsApp.</p>';$('businessHours').textContent=config.horarios||'Consulta nuestros horarios por WhatsApp.';$('socialLinks').innerHTML=['instagram','facebook','tiktok'].filter(k=>safeLink(config[k])).map(k=>'<a target="_blank" rel="noopener" href="'+esc(safeLink(config[k]))+'">'+k[0].toUpperCase()+k.slice(1)+' ↗</a>').join('');try{let r=await fetch('data/productos.json');if(r.ok)products=await r.json()}catch(e){}if(!products.length){try{products=JSON.parse(localStorage.getItem('ferreteria_catalogo')||'[]')}catch(e){}}if(!products.length)products=demo;products=products.map((p,i)=>({...p,id:String(p.id??i),categorias:Array.isArray(p.categorias) ? p.categorias : String(p.categorias || p.categoria || 'General') .split(',') .map(c => c.trim()) .filter(Boolean)}));render();route()}init();
-</script></body></html>
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Ferretería Express · Catálogo</title>
+    <style>
+      :root {
+        --primary: #17733a;
+        --background: #f6f6f2;
+        --ink: #1e2b22;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font:
+          16px system-ui,
+          -apple-system,
+          Segoe UI,
+          sans-serif;
+        color: var(--ink);
+        background: var(--background);
+      }
+      header {
+        background: #fff;
+        border-bottom: 1px solid #e4e8e3;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+      }
+      .wrap {
+        max-width: 1160px;
+        margin: auto;
+        padding: 0 20px;
+      }
+      .top {
+        min-height: 76px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+      .brand {
+        font-size: 22px;
+        font-weight: 900;
+        color: var(--primary);
+      }
+      .contact,
+      .btn {
+        background: var(--primary);
+        color: white;
+        text-decoration: none;
+        padding: 12px 18px;
+        border-radius: 9px;
+        display: inline-block;
+        border: 0;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 700;
+      }
+      .hero {
+        padding: 60px 0;
+        background: linear-gradient(110deg, #e8f2e8, #f8f7ef);
+      }
+      h1 {
+        font-size: clamp(32px, 5vw, 52px);
+        line-height: 1.1;
+        margin: 0 0 15px;
+      }
+      .hero p {
+        font-size: 19px;
+        max-width: 650px;
+        line-height: 1.55;
+        color: #506457;
+      }
+      .section {
+        padding: 40px 0;
+      }
+      .toolbar {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 25px 0;
+      }
+      input,
+      select {
+        font: inherit;
+        padding: 13px;
+        border: 1px solid #d5dfd5;
+        border-radius: 9px;
+        background: white;
+      }
+      input {
+        flex: 1;
+        min-width: 220px;
+      }
+      select {
+        min-width: 200px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(var(--cols-desktop, 3), minmax(0, 1fr));
+        gap: 20px;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid #e4e9e3;
+        border-radius: 14px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      .photo {
+        aspect-ratio: 4/3;
+        background: #edf0e9;
+        display: grid;
+        place-items: center;
+        font-size: 55px;
+      }
+      .photo img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+      .card-content {
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        flex: 1;
+      }
+      .cat {
+        color: #6c796f;
+        font-size: 13px;
+      }
+      .card h3 {
+        margin: 0;
+        font-size: 18px;
+        line-height: 1.35;
+      }
+      .price {
+        font-weight: 900;
+        color: var(--primary);
+        font-size: 19px;
+      }
+      .card-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: auto;
+      }
+      .card-actions a {
+        flex: 1;
+        text-align: center;
+        font-size: 13px;
+      }
+      .outline {
+        border: 1px solid var(--primary);
+        color: var(--primary);
+        background: white;
+        text-decoration: none;
+        padding: 11px;
+        border-radius: 9px;
+        font-weight: 700;
+      }
+      .empty {
+        padding: 55px 20px;
+        text-align: center;
+        background: #fff;
+        border-radius: 14px;
+        color: #657166;
+        grid-column: 1/-1;
+      }
+      .detail {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 38px;
+        align-items: start;
+      }
+      .detail .photo {
+        border-radius: 15px;
+        overflow: hidden;
+        aspect-ratio: 1;
+      }
+      .detail h1 {
+        font-size: clamp(28px, 4vw, 42px);
+      }
+      .detail p {
+        line-height: 1.7;
+        white-space: pre-line;
+        color: #4b5d50;
+      }
+      .back {
+        background: none;
+        border: 0;
+        color: var(--primary);
+        cursor: pointer;
+        font: inherit;
+        padding: 0 0 22px;
+        font-weight: 700;
+      }
+      .business-info {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 22px;
+        padding: 35px 0;
+      }
+      .business-info h2 {
+        margin: 0 0 12px;
+      }
+      .business-info a {
+        color: var(--primary);
+      }
+      .business-info p {
+        white-space: pre-line;
+        line-height: 1.7;
+      }
+      .socials {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      @media (max-width: 700px) {
+        .business-info {
+          grid-template-columns: 1fr;
+        }
+      }
+      footer {
+        background: #1c2b20;
+        color: #e4ede5;
+        padding: 28px 0;
+        margin-top: 45px;
+      }
+      .muted {
+        color: #67756b;
+      }
+      .hidden {
+        display: none !important;
+      }
+      @media (max-width: 800px) {
+        .grid {
+          grid-template-columns: repeat(var(--cols-tablet, 2), minmax(0, 1fr));
+        }
+        .detail {
+          grid-template-columns: 1fr;
+        }
+        .hero {
+          padding: 42px 0;
+        }
+      }
+      @media (max-width: 490px) {
+        .grid {
+          grid-template-columns: repeat(var(--cols-mobile, 1), minmax(0, 1fr));
+        }
+        .brand {
+          font-size: 17px;
+        }
+        .contact {
+          padding: 10px;
+          font-size: 13px;
+        }
+        .section {
+          padding: 25px 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="wrap top">
+        <div class="brand" id="brand">FERRETERÍA DEMO</div>
+        <a class="contact" id="topwa" href="#">WhatsApp ↗</a>
+      </div>
+    </header>
+    <section class="hero" id="hero">
+      <div class="wrap">
+        <h1 id="heroTitle">Todo para tus proyectos</h1>
+        <p id="heroText">
+          Encuentra maderas, herramientas y materiales de construcción. Consulta
+          disponibilidad directamente por WhatsApp.
+        </p>
+        <a class="btn" href="#catalogo">Ver productos ↓</a>
+      </div>
+    </section>
+    <main class="wrap section">
+      <div id="catalogo">
+        <h2>Nuestros productos <small class="muted" id="count"></small></h2>
+        <div class="toolbar">
+          <input
+            id="search"
+            type="search"
+            placeholder="Buscar productos…"
+            aria-label="Buscar productos"
+          /><select id="category" aria-label="Categoría">
+            <option value="">Todas las categorías</option>
+          </select>
+        </div>
+        <div class="grid" id="products"></div>
+      </div>
+      <div id="detail" class="hidden">
+        <button class="back" id="back">← Volver al catálogo</button>
+        <div class="detail">
+          <div class="photo" id="detailPhoto"></div>
+          <div>
+            <div class="cat" id="detailCategory"></div>
+            <h1 id="detailName"></h1>
+            <div class="price" id="detailPrice"></div>
+            <h3>Descripción</h3>
+            <p id="detailDescription"></p>
+            <a class="btn" id="detailWA" target="_blank" rel="noopener"
+              >Consultar por WhatsApp ↗</a
+            >
+          </div>
+        </div>
+      </div>
+    </main>
+    <section class="wrap business-info" id="businessInfo">
+      <div>
+        <h2>Contacto y ubicación</h2>
+        <div id="contactInfo"></div>
+      </div>
+      <div>
+        <h2>Horarios de atención</h2>
+        <p id="businessHours"></p>
+        <div class="socials" id="socialLinks"></div>
+      </div>
+    </section>
+    <footer>
+      <div class="wrap">
+        <strong id="footerName">FERRETERÍA DEMO</strong>
+        <p>Catálogo digital · Cotizaciones por WhatsApp</p>
+      </div>
+    </footer>
+    <script>
+      const $ = (id) => document.getElementById(id),
+        esc = (s) =>
+          String(s ?? "").replace(
+            /[&<>"']/g,
+            (c) =>
+              ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;",
+              })[c],
+          ),
+        norm = (s) =>
+          String(s ?? "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase();
+      let products = [],
+        config = {};
+      const demo = [
+        {
+          id: "1",
+          nombre: "Tapa cepillada 1 x 4 x 3,20 m",
+          categorias: ["Maderas", "Cepilladas"],
+          descripcion:
+            "Madera cepillada para proyectos de construcción y carpintería.",
+          imagen: "",
+          precio: "",
+        },
+        {
+          id: "2",
+          nombre: "Martillo carpintero",
+          categorias: ["Herramientas"],
+          descripcion: "Martillo de uso general.",
+          imagen: "",
+          precio: "8990",
+        },
+        {
+          id: "3",
+          nombre: "Piso cepillado 1 x 4 x 3,20 m",
+          categorias: ["Maderas", "Pisos"],
+          descripcion: "Piso de madera cepillada.",
+          imagen: "",
+          precio: "",
+        },
+      ];
+      function price(p) {
+        let n = Number(
+          String(p.precio ?? "")
+            .replace(/\./g, "")
+            .replace(",", "."),
+        );
+        return String(p.precio ?? "").trim() && Number.isFinite(n) && n > 0
+          ? "$" + Math.round(n).toLocaleString("es-CL")
+          : "Consultar precio";
+      }
+      function img(p) {
+        let url = /^(https?:\/\/|\.\.?\/|assets\/|imagenes\/)/i.test(
+          p.imagen || "",
+        )
+          ? p.imagen
+          : "";
+        return url
+          ? `<img src="${esc(url)}" alt="${esc(p.nombre)}" loading="lazy" onerror="this.replaceWith(document.createTextNode('📦'))">`
+          : "📦";
+      }
+      function wa(p) {
+        return (
+          "https://wa.me/" +
+          String(config.whatsapp || "56995553544").replace(/\D/g, "") +
+          "?text=" +
+          encodeURIComponent("Hola, quisiera consultar por " + p.nombre)
+        );
+      }
+      function render() {
+        let cats = [
+          ...new Set(products.flatMap((p) => p.categorias || [])),
+        ].sort((a, b) => a.localeCompare(b, "es"));
+        let current = $("category").value;
+        $("category").innerHTML =
+          '<option value="">Todas las categorías</option>' +
+          cats
+            .map((c) => `<option value="${esc(c)}">${esc(c)}</option>`)
+            .join("");
+        $("category").value = cats.includes(current) ? current : "";
+        $("count").textContent = "(" + products.length + ")";
+        filter();
+      }
+      
+let productosFiltrados = [];
+let productosVisibles = 0;
+const PRODUCTOS_POR_CARGA = 12;
+
+const observadorProductos = new IntersectionObserver((entradas) => {
+  if (entradas[0].isIntersecting) {
+    cargarMasProductos();
+  }
+}, { rootMargin: "300px" });
+
+function tarjetaProducto(p) {
+  return `<article class="card">
+    <div class="photo">${img(p)}</div>
+    <div class="card-content">
+      <div class="cat">${esc((p.categorias || []).join(' · '))}</div>
+      <h3>${esc(p.nombre)}</h3>
+      <div class="price">${price(p)}</div>
+      <div class="card-actions">
+        <a class="outline" href="#producto=${encodeURIComponent(p.id)}">Ver detalle</a>
+        <a class="btn" href="${wa(p)}" target="_blank" rel="noopener">
+          Cotizar ↗
+        </a>
+      </div>
+    </div>
+  </article>`;
+}
+
+function cargarMasProductos() {
+  const contenedor = $('products');
+
+  const siguientes = productosFiltrados.slice(
+    productosVisibles,
+    productosVisibles + PRODUCTOS_POR_CARGA
+  );
+
+  if (!siguientes.length) return;
+
+  contenedor.insertAdjacentHTML(
+    'beforeend',
+    siguientes.map(tarjetaProducto).join('')
+  );
+
+  productosVisibles += siguientes.length;
+
+  const indicador = document.getElementById('cargar-mas-productos');
+
+  if (productosVisibles >= productosFiltrados.length) {
+    observadorProductos.unobserve(indicador);
+    indicador.style.display = 'none';
+  } else {
+    indicador.style.display = 'block';
+  }
+}
+
+function filter() {
+  const q = norm($('search').value);
+  const c = $('category').value;
+
+  productosFiltrados = products.filter(p =>
+    (!q || norm([
+      p.nombre,
+      p.descripcion,
+      ...(p.categorias || [])
+    ].join(' ')).includes(q)) &&
+    (!c || (p.categorias || []).includes(c))
+  );
+
+  productosVisibles = 0;
+  $('products').innerHTML = '';
+
+  let indicador = document.getElementById('cargar-mas-productos');
+
+  if (!indicador) {
+    indicador = document.createElement('div');
+    indicador.id = 'cargar-mas-productos';
+    indicador.style.cssText =
+      'padding:24px;text-align:center;color:#666;';
+    indicador.textContent = 'Cargando más productos...';
+
+    $('products').insertAdjacentElement('afterend', indicador);
+  }
+
+  observadorProductos.disconnect();
+
+  if (!productosFiltrados.length) {
+    $('products').innerHTML =
+      '<div class="empty">No encontramos productos con esos filtros.</div>';
+    indicador.style.display = 'none';
+    return;
+  }
+
+  cargarMasProductos();
+
+  if (productosVisibles < productosFiltrados.length) {
+    observadorProductos.observe(indicador);
+  }
+}
+
+      function route() {
+        let id = location.hash.startsWith("#producto=")
+            ? decodeURIComponent(location.hash.slice(10))
+            : null,
+          p = products.find((x) => String(x.id) === id);
+        $("catalogo").classList.toggle("hidden", !!p);
+        $("hero").classList.toggle("hidden", !!p);
+        $("detail").classList.toggle("hidden", !p);
+        if (p) {
+          $("detailPhoto").innerHTML = img(p);
+          $("detailCategory").textContent = (p.categorias || []).join(" · ");
+          $("detailName").textContent = p.nombre;
+          $("detailPrice").textContent = price(p);
+          $("detailDescription").textContent =
+            p.descripcionCompleta ||
+            p.descripcion ||
+            "Consulta las características y disponibilidad de este producto por WhatsApp.";
+          $("detailWA").href = wa(p);
+          document.title = p.nombre + " · " + (config.nombre || "Ferretería");
+          window.scrollTo(0, 0);
+        } else document.title = (config.nombre || "Ferretería") + " · Catálogo";
+      }
+      $("search").oninput = filter;
+      $("category").onchange = filter;
+      $("back").onclick = () => (location.hash = "catalogo");
+      window.onhashchange = route;
+      async function init() {
+        try {
+          let r = await fetch("data/config.json");
+          if (r.ok) config = await r.json();
+        } catch (e) {}
+        if (new URLSearchParams(location.search).get("preview") === "1") {
+          try {
+            config = {
+              ...config,
+              ...JSON.parse(
+                localStorage.getItem("ferreteria_config_preview") || "{}",
+              ),
+            };
+          } catch (e) {}
+        }
+        if (!Object.keys(config).length)
+          config = {
+            nombre: "Ferretería Demo",
+            whatsapp:
+              localStorage.getItem("ferreteria_whatsapp") || "56995553544",
+            color: "#17733a",
+            columnas: 3,
+          };
+        document.documentElement.style.setProperty(
+          "--primary",
+          /^#[0-9a-f]{6}$/i.test(config.color) ? config.color : "#17733a",
+        );
+        document.documentElement.style.setProperty(
+          "--cols-desktop",
+          [2, 3, 4, 5].includes(Number(config.columnasPC ?? config.columnas))
+            ? Number(config.columnasPC ?? config.columnas)
+            : 3,
+        );
+        document.documentElement.style.setProperty(
+          "--cols-mobile",
+          [1, 2].includes(Number(config.columnasMobile))
+            ? Number(config.columnasMobile)
+            : 1,
+        );
+        $("brand").textContent = $("footerName").textContent =
+          config.nombre || "Ferretería Demo";
+        $("heroTitle").textContent = config.titulo || "Todo para tus proyectos";
+        $("heroText").textContent =
+          config.descripcion ||
+          "Encuentra maderas, herramientas y materiales de construcción. Consulta disponibilidad directamente por WhatsApp.";
+        $("topwa").href =
+          "https://wa.me/" + String(config.whatsapp || "").replace(/\D/g, "");
+        const safeLink = (u) => {
+          try {
+            let x = new URL(u);
+            return ["https:", "http:"].includes(x.protocol) ? x.href : "";
+          } catch (e) {
+            return "";
+          }
+        };
+        let info = [];
+        if (config.telefono)
+          info.push(
+            '<p>📞 <a href="tel:' +
+              esc(config.telefono.replace(/[^+0-9]/g, "")) +
+              '">' +
+              esc(config.telefono) +
+              "</a></p>",
+          );
+        if (config.email)
+          info.push(
+            '<p>✉️ <a href="mailto:' +
+              esc(config.email) +
+              '">' +
+              esc(config.email) +
+              "</a></p>",
+          );
+        if (config.direccion)
+          info.push("<p>📍 " + esc(config.direccion) + "</p>");
+        if (safeLink(config.mapa))
+          info.push(
+            '<p><a target="_blank" rel="noopener" href="' +
+              esc(safeLink(config.mapa)) +
+              '">Ver ubicación en Google Maps ↗</a></p>',
+          );
+        $("contactInfo").innerHTML =
+          info.join("") || "<p>Consulta nuestros productos por WhatsApp.</p>";
+        $("businessHours").textContent =
+          config.horarios || "Consulta nuestros horarios por WhatsApp.";
+        $("socialLinks").innerHTML = ["instagram", "facebook", "tiktok"]
+          .filter((k) => safeLink(config[k]))
+          .map(
+            (k) =>
+              '<a target="_blank" rel="noopener" href="' +
+              esc(safeLink(config[k])) +
+              '">' +
+              k[0].toUpperCase() +
+              k.slice(1) +
+              " ↗</a>",
+          )
+          .join("");
+        try {
+          let r = await fetch("data/productos.json");
+          if (r.ok) products = await r.json();
+        } catch (e) {}
+        if (!products.length) {
+          try {
+            products = JSON.parse(
+              localStorage.getItem("ferreteria_catalogo") || "[]",
+            );
+          } catch (e) {}
+        }
+        if (!products.length) products = demo;
+        products = products.map((p, i) => ({
+          ...p,
+          id: String(p.id ?? i),
+          categorias: Array.isArray(p.categorias)
+            ? p.categorias
+            : String(p.categorias || p.categoria || "General")
+                .split(",")
+                .map((c) => c.trim())
+                .filter(Boolean),
+        }));
+        render();
+        route();
+      }
+      init();
+    </script>
+  </body>
+</html>
