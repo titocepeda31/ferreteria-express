@@ -1679,7 +1679,8 @@ footer {
 
 /* Barra móvil de cotización: no se superpone con las tarjetas */
 @media (max-width: 600px) {
-  body { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
+  body { padding-bottom: 0; }
+  footer { padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)); }
   .quote-fab {
     position: fixed;
     left: 16px;
