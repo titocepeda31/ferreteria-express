@@ -1703,6 +1703,24 @@ footer {
   body:has(#quotePanel:not(.hidden)) #volver-arriba { opacity: 0; visibility: hidden; pointer-events: none; }
 }
 .price-original { color: #67756b; font-size: 0.8em; font-weight: 400; margin-right: 6px; }
+/* Separación de las acciones de la ficha de producto. */
+.detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+.detail-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  text-align: center;
+}
+@media (max-width: 600px) {
+  .detail-actions { flex-direction: column; }
+  .detail-actions .btn { width: 100%; }
+}
 </style>
 
 
@@ -1891,6 +1909,7 @@ footer {
 
 
 
+            <div class="detail-actions">
             <button class="btn" id="detailAdd" type="button">+ Agregar a cotización</button>
             <a class="btn" id="detailWA" target="_blank" rel="noopener"
 
@@ -1901,6 +1920,7 @@ footer {
 
 
             >
+            </div>
 
 
 
