@@ -1872,6 +1872,21 @@ footer { margin-top: 24px; }
   border-radius: 999px; background: #fff; color: var(--primary);
   font-size: 14px; font-weight: 800;
 }
+
+.detail-sale-badge {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 10px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 700;
+}
+#detailPrice { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+#detailPrice .detail-sale-badge, #detailPrice .price-original { margin-right: 0; }
 </style>
 
 
@@ -2768,7 +2783,8 @@ function filter() {
           $('detailPhoto').innerHTML = img(p);
           $('detailCategory').textContent = (p.categorias || []).join(' · ');
           $('detailName').textContent = p.nombre;
-          $('detailPrice').innerHTML = price(p);
+          $('detailPrice').innerHTML =
+            (isSale(p) ? '<span class="detail-sale-badge">Oferta</span>' : '') + price(p);
           $('detailDescription').textContent = p.descripcionCompleta || p.descripcion ||
             'Consulta las características y disponibilidad de este producto por WhatsApp.';
           $('detailWA').href = wa(p);
