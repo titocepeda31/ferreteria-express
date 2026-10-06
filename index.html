@@ -1722,6 +1722,28 @@ footer {
   .detail-actions { flex-direction: column; }
   .detail-actions .btn { width: 100%; }
 }
+/* Ajustes de proporción y jerarquía visual. */
+.detail-actions #detailWA {
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+}
+.detail-actions #detailWA:hover { background: var(--primary-soft); }
+#cargar-mas-productos { padding: 20px 12px; }
+footer { margin-top: 24px; }
+@media (max-width: 600px) {
+  #catalogo { padding-bottom: 8px; }
+  #catalogo .catalog-nav { margin-bottom: 16px; }
+  #cargar-mas-productos { padding: 18px 8px; }
+  footer { margin-top: 16px; }
+}
+@media (max-width: 490px) {
+  :is(#products, #featured) .card-photo-link { height: 118px; }
+  :is(#products, #featured) .card-content { padding: 10px; gap: 6px; }
+  :is(#products, #featured) .card h3 { min-height: 0; }
+  :is(#products, #featured) .card .price { min-height: 0; }
+  :is(#products, #featured) .card-actions { margin-top: auto; padding-top: 4px; }
+}
 </style>
 
 
@@ -1912,7 +1934,7 @@ footer {
 
             <div class="detail-actions">
             <button class="btn" id="detailAdd" type="button">+ Agregar a cotización</button>
-            <a class="btn" id="detailWA" target="_blank" rel="noopener"
+            <a class="btn outline" id="detailWA" target="_blank" rel="noopener"
 
 
 
