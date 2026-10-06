@@ -569,7 +569,7 @@
                         let cat = get(r, h, ["Categorias", "Categories", "Categoria", "Category"]) || "General";
                         let rawImages = get(r, h, ["Imagenes", "Images", "Imagen", "Image"]);
                         let price = get(r, h, ["Precio normal", "Regular price", "Precio", "Price"]);
-                        if (!price) price = get(r, h, ["Precio rebajado", "Sale price"]);
+                        let salePrice = get(r, h, ["Precio rebajado", "Sale price", "precioRebajado"]);
                         let desc = get(r, h, ["Descripcion corta", "Short description", "Descripcion", "Description"]);
                         let fullDesc =
                             get(r, h, ["Descripcion", "Description", "Descripcion larga", "Long description"]) || desc;
@@ -586,6 +586,7 @@
                             descripcionCompleta: fullDesc,
                             imagen: rawImages.split(",")[0]?.trim() || "",
                             precio: price,
+                            precioRebajado: salePrice,
                             principal: ["1", "true", "si", "sí", "yes"].includes(principal.toLowerCase()) ? "1" : "0",
                         };
                     })
@@ -683,9 +684,9 @@
                     "productos-limpios.csv",
                     "\uFEFF" +
                         [
-                            "ID,Nombre,Categorías,Descripción,Imagen,Precio,Principal",
+                            "ID,Nombre,Categorías,Descripción,Imagen,Precio,Precio rebajado,Principal",
                             ...data.map((p) =>
-                                [p.id, p.nombre, p.categorias.join(", "), p.descripcion, p.imagen, p.precio, p.principal]
+                                [p.id, p.nombre, p.categorias.join(", "), p.descripcion, p.imagen, p.precio, p.precioRebajado, p.principal]
                                     .map(csvCell)
                                     .join(",")
                             ),
