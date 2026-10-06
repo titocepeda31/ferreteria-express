@@ -2828,11 +2828,11 @@ function filter() {
 
 
 
+        // Texto configurable desde config.json / Drive para el botón de la cabecera.
+        const mensajeWhatsApp = String(config.mensajeWhatsApp ?? '').trim();
         $("topwa").href =
-
-
-
-          "https\://wa.me/" + String(config.whatsapp || "").replace(/\D/g, "");
+          "https://wa.me/" + String(config.whatsapp || "").replace(/\D/g, "") +
+          (mensajeWhatsApp ? "?text=" + encodeURIComponent(mensajeWhatsApp) : "");
 
 
 
