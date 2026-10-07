@@ -57,9 +57,9 @@ Nunca publicar:
 
 ## Identificación de la tienda
 
-El UUID de `businesses` es interno. El `slug` es público y debe mantenerse estable si se utiliza en un QR.
+El UUID de `businesses` es interno. El `slug` es público y debe mantenerse estable si se utiliza en un QR. El administrador construye la URL pública con la base configurada y `?catalogo=<slug>`.
 
-Los cambios de productos, precios, imágenes o diseño no modifican la URL. Cambiar el dominio o el slug sí puede afectar enlaces impresos.
+Los cambios de productos, precios, imágenes o diseño no modifican la URL. Cambiar el dominio o el slug sí puede afectar enlaces impresos. Si se migra el hosting, la URL anterior debe mantenerse como redirección.
 
 ## Limitaciones actuales
 
@@ -68,7 +68,6 @@ Este frontend no incluye todavía:
 - Inventario automático.
 - Reservas.
 - Pagos online.
-- Generación de QR desde el administrador.
 - Asociación automática de dominios propios.
 
 Para la documentación de migración, seguridad y operación, revisar el archivo [OPERACION-Y-MIGRACION.md](https://github.com/titocepeda31/catalogo-admin/blob/main/docs/OPERACION-Y-MIGRACION.md).
