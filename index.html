@@ -2316,7 +2316,7 @@ footer { margin-top: 24px; }
 
       async function loadRemoteCatalog() {
         const businesses = await supabasePublic("/rest/v1/businesses", {
-          select: "id,slug,name,description,phone,whatsapp,address,logo_url,title,email,map_url,opening_hours,instagram_url,facebook_url,tiktok_url,whatsapp_message,theme_color,columns_default,columns_desktop,columns_mobile",
+          select: "id,slug,name,description,phone,whatsapp,address,logo_url,title,email,map_url,opening_hours,instagram_url,facebook_url,tiktok_url,whatsapp_message,theme_color,catalog_type,columns_default,columns_desktop,columns_mobile",
           slug: "eq." + CATALOG_SLUG,
           is_active: "eq.true",
           limit: "1"
@@ -2332,7 +2332,7 @@ footer { margin-top: 24px; }
             order: "name.asc"
           }),
           supabasePublic("/rest/v1/products", {
-            select: "id,external_id,name,description,price,sale_price,image_url,is_featured,category_id",
+            select: "id,external_id,name,description,price,sale_price,image_url,is_featured,category_id,sale_unit,price_from,capacity_min,capacity_max",
             business_id: "eq." + business.id,
             is_active: "eq.true",
             order: "created_at.asc"
@@ -2359,6 +2359,7 @@ footer { margin-top: 24px; }
           tiktok: business.tiktok_url || "",
           mensajeWhatsApp: business.whatsapp_message || "",
           color: business.theme_color || "#17733a",
+          catalogType: business.catalog_type || "retail",
           columnas: business.columns_default ?? 3,
           columnasPC: business.columns_desktop ?? 4,
           columnasMobile: business.columns_mobile ?? 2
@@ -2370,6 +2371,10 @@ footer { margin-top: 24px; }
             nombre: p.name || "",
             precio: p.price != null ? Number(p.price) : null,
             precioRebajado: p.sale_price != null ? Number(p.sale_price) : null,
+            unidad: p.sale_unit || "unidad",
+            precioDesde: Boolean(p.price_from),
+            capacidadMin: p.capacity_min ?? null,
+            capacidadMax: p.capacity_max ?? null,
             categoria: category,
             categorias: category ? [category] : [],
             descripcion: p.description || "",
@@ -2499,15 +2504,21 @@ footer { margin-top: 24px; }
         return Number.isFinite(number) && number > 0 ? number : null;
       }
 
+      function unitSuffix(p) {
+        const unit = String(p.unidad || "unidad").trim();
+        return unit && unit !== "unidad" ? " / " + esc(unit) : "";
+      }
+
       function price(p) {
         const regular = parsePrice(p.precio);
         const sale = parsePrice(p.precioRebajado);
-        const format = n => '$' + Math.round(n).toLocaleString('es-CL');
+        const format = n => "$" + Math.round(n).toLocaleString("es-CL");
+        const label = n => (p.precioDesde ? "Desde " : "") + format(n) + unitSuffix(p);
         if (sale !== null && regular !== null && sale < regular) {
-          return '<del class="price-original" aria-label="Precio normal">' + format(regular) +
-            '</del> <span aria-label="Precio rebajado">' + format(sale) + '</span>';
+          return '<del class="price-original" aria-label="Precio normal">' + label(regular) +
+            '</del> <span aria-label="Precio rebajado">' + label(sale) + '</span>';
         }
-        return regular !== null || sale !== null ? format(regular ?? sale) : 'Consultar precio';
+        return regular !== null || sale !== null ? label(regular ?? sale) : "Consultar precio";
       }
 
       function uiIcon(name) {
@@ -2697,6 +2708,16 @@ function renderDestacados() {
   $('inicio-destacados').dataset.hayDestacados = seleccion.length ? '1' : '0';
 }
 
+function productMeta(p) {
+  const min = Number(p.capacidadMin);
+  const max = Number(p.capacidadMax);
+  if (!Number.isFinite(min) && !Number.isFinite(max)) return "";
+  const text = Number.isFinite(min) && Number.isFinite(max) && max !== min
+    ? "Capacidad: " + min + " a " + max + " personas"
+    : "Capacidad: hasta " + (Number.isFinite(max) ? max : min) + " personas";
+  return '<div class="product-meta">' + esc(text) + "</div>";
+}
+
 function tarjetaProducto(p) {
 
   const detalle = `#producto=${encodeURIComponent(p.id)}`;
@@ -2717,6 +2738,8 @@ function tarjetaProducto(p) {
       <h3><a class="card-name-link" href="${detalle}" title="${esc(p.nombre)}">${esc(p.nombre)}</a></h3>
 
       <div class="price">${price(p)}</div>
+
+      ${productMeta(p)}
 
       <div class="card-actions">
 
@@ -2876,8 +2899,16 @@ function filter() {
           $('detailName').textContent = p.nombre;
           $('detailPrice').innerHTML =
             (isSale(p) ? '<span class="detail-sale-badge">Oferta</span>' : '') + price(p);
-          $('detailDescription').textContent = p.descripcionCompleta || p.descripcion ||
-            'Consulta las características y disponibilidad de este producto por WhatsApp.';
+          const detailText = p.descripcionCompleta || p.descripcion ||
+            "Consulta las características y disponibilidad de este producto por WhatsApp.";
+          const minCapacity = Number(p.capacidadMin);
+          const maxCapacity = Number(p.capacidadMax);
+          const capacityText = Number.isFinite(minCapacity) && Number.isFinite(maxCapacity) && maxCapacity !== minCapacity
+            ? "\n\nCapacidad: " + minCapacity + " a " + maxCapacity + " personas"
+            : Number.isFinite(maxCapacity) || Number.isFinite(minCapacity)
+              ? "\n\nCapacidad: hasta " + (Number.isFinite(maxCapacity) ? maxCapacity : minCapacity) + " personas"
+              : "";
+          $('detailDescription').textContent = detailText + capacityText;
           $('detailWA').href = wa(p);
           document.title = p.nombre + ' · ' + (config.nombre || 'Ferretería');
           window.scrollTo(0, 0);
@@ -3431,33 +3462,44 @@ botonArriba.addEventListener('click', () => {
         try { localStorage.setItem(QUOTE_KEY, JSON.stringify(quote)); } catch(e) {}
         renderQuote();
       }
+      function quoteStep(p) {
+        return ["kg","g","litro","ml","metro","m2"].includes(String(p?.unidad || "").toLowerCase()) ? 0.5 : 1;
+      }
+      function formatQuoteQty(value) {
+        return Number(value).toLocaleString("es-CL", {maximumFractionDigits:2});
+      }
       function addQuote(id) {
         id = String(id);
-        if (!products.some(p => String(p.id) === id)) return;
-        quote[id] = Math.min(9999, (Number(quote[id]) || 0) + 1);
+        const product = products.find(p => String(p.id) === id);
+        if (!product) return;
+        const step = quoteStep(product);
+        quote[id] = Math.min(9999, Math.round(((Number(quote[id]) || 0) + step) * 100) / 100);
         saveQuote();
         $('quotePanel').classList.remove('hidden');
         $('quoteClose').focus();
       }
       function renderQuote() {
-        // El catálogo es la fuente de verdad: no enviamos productos obsoletos.
         const lines = Object.entries(quote).map(([id, qty]) => ({p:products.find(p => String(p.id) === id),qty:Number(qty)}))
-          .filter(x => x.p && Number.isInteger(x.qty) && x.qty > 0);
-        $('quoteCount').textContent = lines.reduce((n,x) => n+x.qty,0);
-        $('quoteItems').innerHTML = lines.length ? lines.map(({p,qty}) => `
+          .filter(x => x.p && Number.isFinite(x.qty) && x.qty > 0);
+        $('quoteCount').textContent = formatQuoteQty(lines.reduce((n,x) => n+x.qty,0));
+        $('quoteItems').innerHTML = lines.length ? lines.map(({p,qty}) => {
+          const step = quoteStep(p);
+          const unit = p.unidad && p.unidad !== "unidad" ? " " + p.unidad : "";
+          return `
           <div class="quote-line"><div class="quote-line-name">${esc(p.nombre)}</div>
             <div class="quote-line-controls">
-              <button type="button" data-quote-change="${esc(p.id)}" data-delta="-1" aria-label="Disminuir ${esc(p.nombre)}">−</button>
-              <strong>${qty}</strong>
-              <button type="button" data-quote-change="${esc(p.id)}" data-delta="1" aria-label="Aumentar ${esc(p.nombre)}">+</button>
+              <button type="button" data-quote-change="${esc(p.id)}" data-delta="-${step}" aria-label="Disminuir ${esc(p.nombre)}">−</button>
+              <strong>${formatQuoteQty(qty)}${esc(unit)}</strong>
+              <button type="button" data-quote-change="${esc(p.id)}" data-delta="${step}" aria-label="Aumentar ${esc(p.nombre)}">+</button>
               <button type="button" class="remove" data-quote-remove="${esc(p.id)}">Quitar</button>
             </div>
-          </div>`).join('') : '<p class="muted">Aún no has agregado productos.</p>';
+          </div>`;
+        }).join('') : '<p class="muted">Aún no has agregado productos.</p>';
         $('quoteSend').classList.toggle('hidden', !lines.length);
         $('quoteClear').classList.toggle('hidden', !lines.length);
         if (lines.length) {
           const msg = 'Hola, quisiera cotizar estos productos:\n\n' +
-            lines.map(({p,qty},i) => `${i+1}. ${p.nombre} — Cantidad: ${qty}`).join('\n') +
+            lines.map(({p,qty},i) => `${i+1}. ${p.nombre} — Cantidad: ${formatQuoteQty(qty)}${p.unidad && p.unidad !== "unidad" ? " " + p.unidad : ""}`).join('\n') +
             '\n\n¿Me podrían confirmar disponibilidad, unidades de venta y precios?';
           $('quoteSend').href = 'https://wa.me/' + String(config.whatsapp || '').replace(/\D/g,'') + '?text=' + encodeURIComponent(msg);
         }
@@ -3466,7 +3508,7 @@ botonArriba.addEventListener('click', () => {
         const add=e.target.closest('[data-quote-add]');
         if(add) { addQuote(add.dataset.quoteAdd); return; }
         const change=e.target.closest('[data-quote-change]');
-        if(change) { const id=change.dataset.quoteChange; quote[id]=Math.max(1,Math.min(9999,(Number(quote[id])||1)+Number(change.dataset.delta)));saveQuote();return; }
+        if(change) { const id=change.dataset.quoteChange; const product=products.find(p=>String(p.id)===id); const step=quoteStep(product); quote[id]=Math.max(step,Math.min(9999,Math.round(((Number(quote[id])||step)+Number(change.dataset.delta))*100)/100));saveQuote();return; }
         const remove=e.target.closest('[data-quote-remove]');
         if(remove) { delete quote[remove.dataset.quoteRemove];saveQuote(); }
       });
