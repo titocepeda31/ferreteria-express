@@ -1887,6 +1887,12 @@ footer { margin-top: 24px; }
 }
 #detailPrice { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 #detailPrice .detail-sale-badge, #detailPrice .price-original { margin-right: 0; }
+      .brand.has-logo { display:inline-flex; align-items:center; gap:8px; }
+      .brand-logo { display:block; width:auto; max-width:190px; max-height:48px; object-fit:contain; }
+      @media (max-width:490px) {
+        .brand-logo { max-width:150px; max-height:40px; }
+      }
+
 </style>
 
 
@@ -2289,6 +2295,91 @@ footer { margin-top: 24px; }
         config = {};
 
 
+
+      const SUPABASE_URL = "https://wndwnjzmnrrclczpxbea.supabase.co";
+      const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_6W5lUpsW4g5WUesWI8u-wg_9adY5G-6";
+      const CATALOG_SLUG = new URLSearchParams(location.search).get("catalogo") || "ferreteria-demo";
+      const SUPABASE_HEADERS = {
+        apikey: SUPABASE_PUBLISHABLE_KEY,
+        Authorization: "Bearer " + SUPABASE_PUBLISHABLE_KEY,
+        Accept: "application/json"
+      };
+
+      async function supabasePublic(path, params = {}) {
+        const query = new URLSearchParams(params);
+        const response = await fetch(SUPABASE_URL + path + (query.toString() ? "?" + query.toString() : ""), {
+          headers: SUPABASE_HEADERS
+        });
+        if (!response.ok) throw new Error("Supabase HTTP " + response.status);
+        return response.json();
+      }
+
+      async function loadRemoteCatalog() {
+        const businesses = await supabasePublic("/rest/v1/businesses", {
+          select: "id,slug,name,description,phone,whatsapp,address,logo_url,title,email,map_url,opening_hours,instagram_url,facebook_url,tiktok_url,whatsapp_message,theme_color,columns_default,columns_desktop,columns_mobile",
+          slug: "eq." + CATALOG_SLUG,
+          is_active: "eq.true",
+          limit: "1"
+        });
+        const business = businesses[0];
+        if (!business) return false;
+
+        const [categories, remoteProducts] = await Promise.all([
+          supabasePublic("/rest/v1/categories", {
+            select: "id,name",
+            business_id: "eq." + business.id,
+            is_active: "eq.true",
+            order: "name.asc"
+          }),
+          supabasePublic("/rest/v1/products", {
+            select: "id,external_id,name,description,price,sale_price,image_url,is_featured,category_id",
+            business_id: "eq." + business.id,
+            is_active: "eq.true",
+            order: "created_at.asc"
+          })
+        ]);
+
+        const categoryNames = new Map(categories.map(c => [String(c.id), c.name]));
+        config = {
+          ...config,
+          id: business.id,
+          slug: business.slug || CATALOG_SLUG,
+          nombre: business.name || "",
+          descripcion: business.description || "",
+          titulo: business.title || "",
+          whatsapp: business.whatsapp || "",
+          telefono: business.phone || "",
+          email: business.email || "",
+          direccion: business.address || "",
+          logo_url: business.logo_url || "",
+          mapa: business.map_url || "",
+          horarios: business.opening_hours || "",
+          instagram: business.instagram_url || "",
+          facebook: business.facebook_url || "",
+          tiktok: business.tiktok_url || "",
+          mensajeWhatsApp: business.whatsapp_message || "",
+          color: business.theme_color || "#17733a",
+          columnas: business.columns_default ?? 3,
+          columnasPC: business.columns_desktop ?? 4,
+          columnasMobile: business.columns_mobile ?? 2
+        };
+        products = remoteProducts.map((p, index) => {
+          const category = categoryNames.get(String(p.category_id)) || "";
+          return {
+            id: String(p.external_id || p.id || index),
+            nombre: p.name || "",
+            precio: p.price != null ? Number(p.price) : null,
+            precioRebajado: p.sale_price != null ? Number(p.sale_price) : null,
+            categoria: category,
+            categorias: category ? [category] : [],
+            descripcion: p.description || "",
+            descripcionCompleta: p.description || "",
+            imagen: p.image_url || "",
+            principal: p.is_featured ? "1" : ""
+          };
+        });
+        return true;
+      }
 
       const demo = [
 
@@ -2832,6 +2923,13 @@ function filter() {
 
 
 
+        let remoteLoaded = false;
+        try {
+          remoteLoaded = await loadRemoteCatalog();
+        } catch (error) {
+          console.warn("No se pudo cargar el catálogo desde Supabase; se usará la copia estática.", error);
+        }
+
         if (new URLSearchParams(location.search).get("preview") === "1") {
 
 
@@ -2968,13 +3066,13 @@ function filter() {
 
 
 
-        $("brand").textContent = $("footerName").textContent =
-
-
-
-          config.nombre || "Ferretería Demo";
-
-
+        const nombreCatalogo = config.nombre || "Ferretería Demo";
+        $("brand").textContent = $("footerName").textContent = nombreCatalogo;
+        const logoUrl = String(config.logo_url || config.logo || "").trim();
+        if (/^https?:\/\//i.test(logoUrl)) {
+          $("brand").innerHTML = '<img class="brand-logo" src="' + esc(logoUrl) + '" alt="' + esc(nombreCatalogo) + '">';
+          $("brand").classList.add("has-logo");
+        }
 
         $("heroTitle").textContent = config.titulo || "Todo para tus proyectos";
 
@@ -3200,17 +3298,12 @@ function filter() {
 
 
 
-          let r = await fetch("data/productos.json");
-
-
-
-          if (r.ok) products = await r.json();
-
-
-
-        } catch (e) {}
-
-
+        if (!remoteLoaded) {
+          try {
+            let r = await fetch("data/productos.json");
+            if (r.ok) products = await r.json();
+          } catch (e) {}
+        }
 
         if (!products.length) {
 
