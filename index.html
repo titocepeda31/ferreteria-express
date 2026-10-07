@@ -2709,8 +2709,14 @@ function renderDestacados() {
 }
 
 function productMeta(p) {
-  const min = Number(p.capacidadMin);
-  const max = Number(p.capacidadMax);
+  const parseCapacity = value => {
+    const raw = String(value ?? "").trim();
+    if (!raw) return NaN;
+    const number = Number(raw);
+    return Number.isFinite(number) && number > 0 ? number : NaN;
+  };
+  const min = parseCapacity(p.capacidadMin);
+  const max = parseCapacity(p.capacidadMax);
   if (!Number.isFinite(min) && !Number.isFinite(max)) return "";
   const text = Number.isFinite(min) && Number.isFinite(max) && max !== min
     ? "Capacidad: " + min + " a " + max + " personas"
@@ -2901,8 +2907,14 @@ function filter() {
             (isSale(p) ? '<span class="detail-sale-badge">Oferta</span>' : '') + price(p);
           const detailText = p.descripcionCompleta || p.descripcion ||
             "Consulta las características y disponibilidad de este producto por WhatsApp.";
-          const minCapacity = Number(p.capacidadMin);
-          const maxCapacity = Number(p.capacidadMax);
+          const parseCapacity = value => {
+            const raw = String(value ?? "").trim();
+            if (!raw) return NaN;
+            const number = Number(raw);
+            return Number.isFinite(number) && number > 0 ? number : NaN;
+          };
+          const minCapacity = parseCapacity(p.capacidadMin);
+          const maxCapacity = parseCapacity(p.capacidadMax);
           const capacityText = Number.isFinite(minCapacity) && Number.isFinite(maxCapacity) && maxCapacity !== minCapacity
             ? "\n\nCapacidad: " + minCapacity + " a " + maxCapacity + " personas"
             : Number.isFinite(maxCapacity) || Number.isFinite(minCapacity)
