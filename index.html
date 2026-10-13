@@ -2212,6 +2212,7 @@ footer { margin-top: 24px; }
       </section>
     </div>
 
+    <script src="catalog-analytics.js"></script>
     <script>
 
 
@@ -2296,6 +2297,7 @@ footer { margin-top: 24px; }
 
 
 
+      let remoteAnalyticsReady = false;
       const SUPABASE_URL = "https://wndwnjzmnrrclczpxbea.supabase.co";
       const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_6W5lUpsW4g5WUesWI8u-wg_9adY5G-6";
       const CATALOG_SLUG = new URLSearchParams(location.search).get("catalogo") || "ferreteria-demo";
@@ -2367,6 +2369,7 @@ footer { margin-top: 24px; }
         products = remoteProducts.map((p, index) => {
           const category = categoryNames.get(String(p.category_id)) || "";
           return {
+            analyticsId: p.id,
             id: String(p.external_id || p.id || index),
             nombre: p.name || "",
             precio: p.price != null ? Number(p.price) : null,
@@ -2383,6 +2386,7 @@ footer { margin-top: 24px; }
             principal: p.is_featured ? "1" : ""
           };
         });
+        remoteAnalyticsReady = true;
         return true;
       }
 
@@ -2887,6 +2891,17 @@ function filter() {
 
 
 
+      const metrics = createCatalogAnalytics({url:SUPABASE_URL,headers:SUPABASE_HEADERS,
+        getBusinessId:()=>remoteAnalyticsReady ? config.id : null,
+        storage:{getItem:key=>sessionStorage.getItem(key),setItem:(key,value)=>sessionStorage.setItem(key,value)}
+      });
+      document.addEventListener('click', event => {
+        const link = event.target.closest('a[href]');
+        if (!link || !/^https:\/\/wa\.me\//i.test(link.href)) return;
+        const product = link.id === 'detailWA' ? products.find(p => String(p.id) === decodeURIComponent(location.hash.slice(10))) : null;
+        const page = link.id === 'quoteSend' ? 'cotizacion' : product ? 'producto' : location.hash === '#catalogo' ? 'catalogo' : 'inicio';
+        metrics.whatsapp(page, product?.analyticsId || null);
+      });
       function route() {
         const hash = location.hash;
         const id = hash.startsWith('#producto=')
@@ -2894,6 +2909,7 @@ function filter() {
         const p = products.find(x => String(x.id) === id);
         const catalogoSolicitado = hash === '#catalogo' || (!!id && !p);
         const portada = !p && !catalogoSolicitado;
+        metrics.route(p ? 'producto' : portada ? 'inicio' : 'catalogo', p?.analyticsId || null);
         $('catalogo').classList.toggle('hidden', !!p || portada);
         $('hero').classList.toggle('hidden', !!p || catalogoSolicitado);
         $('inicio-destacados').classList.toggle('hidden', !portada);
@@ -3551,3 +3567,4 @@ botonArriba.addEventListener('click', () => {
 
 
 </html>
+
