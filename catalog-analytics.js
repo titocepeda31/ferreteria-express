@@ -14,7 +14,7 @@ function createCatalogAnalytics({url,headers,getBusinessId,storage=window.sessio
     if(!businessId)return;
     try{
       const id=sessionId();
-      const body=JSON.stringify(events.map(e=>({...e,business_id:businessId,session_id:id})));
+      const body=JSON.stringify(events.map(e=>({...e,id:uuid(),business_id:businessId,session_id:id})));
       Promise.resolve(send(url+'/rest/v1/catalog_events',{
         method:'POST',headers:{...headers,'Content-Type':'application/json',Prefer:'return=minimal'},body,keepalive:true
       })).catch(()=>{});
@@ -34,7 +34,7 @@ function createCatalogAnalytics({url,headers,getBusinessId,storage=window.sessio
     whatsapp(page,productId=null){
       if(!getBusinessId()||now()-lastClick<1000)return;
       lastClick=now();
-      emit([{event_type:'whatsapp_click',page,product_id:productId}]);
+      emit([{event_type:'whatsapp_click',page:page==='cotizacion'?'catalogo':page,source:page==='cotizacion'?'cotizador':productId?'producto':'cabecera',product_id:productId}]);
     }
   };
 }

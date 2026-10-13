@@ -26,7 +26,7 @@ test('new navigation counts, uses same session, then expires after inactivity',(
 });
 test('WhatsApp double click is suppressed and quotation counts once without assigning every product',()=>{
   const {tracker,requests,advance}=setup();tracker.whatsapp('cotizacion');tracker.whatsapp('cotizacion');
-  assert.equal(requests.length,1);assert.equal(requests[0].events[0].product_id,null);
+  assert.equal(requests.length,1);assert.equal(requests[0].events[0].product_id,null);assert.equal(requests[0].events[0].page,'catalogo');assert.equal(requests[0].events[0].source,'cotizador');assert.match(requests[0].events[0].id,/^[0-9a-f-]{36}$/);
   advance(1000);tracker.whatsapp('producto','product-uuid');assert.equal(requests.length,2);
 });
 test('no events for offline/demo fallback without a remote business',()=>{
