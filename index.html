@@ -2200,12 +2200,12 @@ footer { margin-top: 24px; }
     <div id="quotePanel" class="quote-panel hidden" role="presentation">
       <section class="quote-dialog" role="dialog" aria-modal="true" aria-labelledby="quoteTitle" aria-describedby="quoteHelp">
         <div class="quote-head"><h2 id="quoteTitle">Mi cotización</h2><button class="quote-close" type="button" id="quoteClose" aria-label="Cerrar">×</button></div>
-        <p class="muted" id="quoteHelp">Selecciona las cantidades y envía tu consulta por WhatsApp.</p>
+        <p class="muted" id="quoteHelp">Ajusta las cantidades y envía tu cotización.</p>
         <div class="quote-content">
           <div id="quoteItems"></div>
           <div id="quoteSummary" class="quote-summary hidden" role="status" aria-live="polite" aria-atomic="true"></div>
         </div>
-        <div class="quote-actions"><a class="btn" id="quoteSend" target="_blank" rel="noopener">Enviar por WhatsApp ↗</a><button type="button" class="outline" id="quoteClear">Vaciar cotización</button></div>
+        <div class="quote-actions"><a class="btn" id="quoteSend" target="_blank" rel="noopener">Enviar cotización por WhatsApp</a><button type="button" class="outline" id="quoteClear">Vaciar cotización</button></div>
       </section>
     </div>
 
@@ -3573,15 +3573,15 @@ botonArriba.addEventListener('click', () => {
           .filter(x => x.p && Number.isFinite(x.qty) && x.qty > 0);
         $('quoteCount').textContent = formatQuoteQty(lines.reduce((n,x) => n+x.qty,0));
         const economy = quoteEconomy(lines);
-        $('quoteItems').innerHTML = lines.length ? economy.lines.map(({p,qty,unitText,subtotalText}) => {
+        $('quoteItems').innerHTML = lines.length ? economy.lines.map(({p,qty,unitPrice,unitText,subtotalText}) => {
           const step = quoteStep(p);
           const unit = p.unidad && p.unidad !== "unidad" ? " " + p.unidad : "";
           return `
           <div class="quote-line"><div class="quote-line-info"><div class="quote-line-name">${esc(p.nombre)}</div>
-            <dl class="quote-line-prices">
+            ${unitPrice === null ? '<p class="quote-price-pending">Sin precio</p>' : `<dl class="quote-line-prices">
               <div><dt>Precio unitario${p.unidad && p.unidad !== 'unidad' ? ' / ' + esc(p.unidad) : ''}</dt><dd>${esc(unitText)}</dd></div>
               <div><dt>Subtotal</dt><dd>${esc(subtotalText)}</dd></div>
-            </dl></div>
+            </dl>`}</div>
             <div class="quote-line-controls">
               <button type="button" data-quote-change="${esc(p.id)}" data-delta="-${step}" aria-label="Disminuir ${esc(p.nombre)}">−</button>
               <strong>${formatQuoteQty(qty)}${esc(unit)}</strong>
@@ -3591,9 +3591,17 @@ botonArriba.addEventListener('click', () => {
           </div>`;
         }).join('') : '<p class="muted">Aún no has agregado productos.</p>';
         $('quoteSummary').classList.toggle('hidden', !lines.length);
-        $('quoteSummary').innerHTML = lines.length ? '<h3>Resumen de cotización · CLP</h3><dl>' +
-          economy.rows.map(([label, value]) => `<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join('') +
-          '</dl><p class="quote-notice">' + esc(economy.notice) + '</p>' : '';
+        // Compact presentation only; retain the shared economic model and WhatsApp message.
+        const summaryRows = economy.rows.map(([label, value], index) => {
+          if (index === 0) return ['Unidades', value];
+          if (index === 1) return [economy.pending ? 'Subtotal conocido' : 'Subtotal',
+            economy.pending === lines.length ? '—' : (label.includes('(desde)') ? 'Desde ' : '') + value];
+          if (index === 2) return ['Sin precio', value];
+          return [label, value];
+        });
+        $('quoteSummary').innerHTML = lines.length ? '<h3>Resumen</h3><dl>' +
+          summaryRows.map(([label, value]) => `<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join('') +
+          '</dl>' + (economy.pending ? '<p class="quote-notice">El negocio confirmará los precios pendientes</p>' : '') : '';
         $('quoteSend').classList.toggle('hidden', !lines.length);
         $('quoteClear').classList.toggle('hidden', !lines.length);
         if (lines.length) {

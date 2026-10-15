@@ -28,29 +28,30 @@ html {
 .quote-dialog {
   display: flex; flex-direction: column; overflow: hidden;
   max-height: min(90vh, 760px); max-height: min(90dvh, 760px);
-  padding: 20px; min-height: 0;
+  padding: 16px; min-height: 0;
 }
 .quote-head, #quoteHelp, .quote-actions { flex-shrink: 0; }
 .quote-head h2 { font-size: clamp(20px, 5vw, 24px); }
 .quote-close { width: 44px; height: 44px; flex-shrink: 0; }
-#quoteHelp { margin: 0 0 8px; line-height: 1.4; font-size: 14px; }
-.quote-content { overflow-y: auto; overscroll-behavior: contain; min-height: 0; margin: 8px 0 16px; padding: 3px; }
-#quoteItems { margin: 0; }
-.quote-line { padding: 12px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+#quoteHelp { margin: 0 0 4px; line-height: 1.4; font-size: 14px; }
+.quote-content { overflow-y: auto; overscroll-behavior: contain; min-height: 0; margin: 6px 0 10px; padding: 3px; }
+#quoteItems { margin: 0; gap: 8px; }
+.quote-line { padding: 10px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
 .quote-line-info { min-width: 0; }
-.quote-line-prices { margin: 10px 0 0; font-size: 14px; }
+.quote-line-prices { margin: 6px 0 0; font-size: 14px; }
+.quote-price-pending { margin: 4px 0 0; font-size: 13px; color: var(--muted, #67756b); }
 .quote-line-prices > div, .quote-summary dl > div { display: flex; justify-content: space-between; gap: 12px; margin-top: 6px; }
 .quote-line-prices dt, .quote-summary dt { min-width: 0; overflow-wrap: anywhere; }
 .quote-line-prices dd, .quote-summary dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; flex-shrink: 0; max-width: 58%; overflow-wrap: anywhere; }
 .quote-line-prices dd { font-weight: 600; }
 .quote-line-controls { justify-content: flex-start; }
 .quote-line-controls .remove { margin-left: auto; }
-.quote-summary { margin-top: 16px; padding: 14px; background: var(--primary-soft); border: 1px solid var(--border); border-radius: 12px; font-size: 14px; }
-.quote-summary h3 { margin: 0 0 12px; font-size: 15px; }
+.quote-summary { margin-top: 10px; padding: 10px; background: var(--primary-soft); border: 1px solid var(--border); border-radius: 12px; font-size: 14px; }
+.quote-summary h3 { margin: 0 0 6px; font-size: 15px; }
 .quote-summary dl { margin: 0; }
 .quote-summary dl > div:last-child { padding-top: 8px; border-top: 1px solid var(--border); }
 .quote-summary dd { font-weight: 700; }
-.quote-notice { line-height: 1.45; margin: 12px 0 0; }
+.quote-notice { line-height: 1.4; margin: 8px 0 0; }
 .quote-line-name { overflow-wrap: anywhere; }
 .quote-line-controls { gap: 6px; }
 .quote-line-controls button { min-width: 44px; min-height: 44px; }
@@ -71,7 +72,7 @@ body.quote-open { overflow: hidden; }
   .hero { padding: 30px 0; }
   .business-info { padding-top: 20px; padding-bottom: 20px; }
   .business-info > div { padding: 18px; }
-  .quote-dialog { padding: 14px; }
+  .quote-dialog { padding: 12px; }
   .quote-actions { align-items: stretch; gap: 8px; }
   .quote-actions > * { width: 100%; }
   .quote-line-controls .remove { margin-left: auto; }

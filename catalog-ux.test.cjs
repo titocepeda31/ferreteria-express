@@ -99,16 +99,23 @@ test('Known prices, sale prices and totals are identical on screen and WhatsApp'
   assert.match(message,/Precio unitario: \$2\.000\nSubtotal: \$6\.000/);
   const model=f.run("quoteEconomy([{p:products[0],qty:2},{p:products[1],qty:3}])");
   for(const [label,value] of model.rows) {
-    assert.ok(f.nodes.quoteSummary.innerHTML.includes(label));
     assert.ok(f.nodes.quoteSummary.innerHTML.includes(value));
     assert.ok(message.includes(label+': '+value));
   }
+  assert.match(f.nodes.quoteSummary.innerHTML,/<h3>Resumen<\/h3>/);
+  assert.match(f.nodes.quoteSummary.innerHTML,/<dt>Unidades<\/dt>/);
+  assert.match(f.nodes.quoteSummary.innerHTML,/<dt>Subtotal<\/dt><dd>\$13\.000<\/dd>/);
+  assert.doesNotMatch(f.nodes.quoteSummary.innerHTML,/precios pendientes/);
 });
 
 test('Mixed prices show only a known subtotal, pending count and no total',()=>{
   const f=fixture();
   const message=setQuote(f,[{id:'a',nombre:'Con precio',precio:3500},{id:'b',nombre:'Sin precio',precio:null}],{a:2,b:4});
-  assert.match(f.nodes.quoteItems.innerHTML,/Precio por confirmar/);
+  assert.match(f.nodes.quoteItems.innerHTML,/<p class="quote-price-pending">Sin precio<\/p>/);
+  assert.doesNotMatch(f.nodes.quoteItems.innerHTML,/Precio por confirmar/);
+  assert.match(f.nodes.quoteSummary.innerHTML,/<dt>Subtotal conocido<\/dt><dd>\$7\.000<\/dd>/);
+  assert.match(f.nodes.quoteSummary.innerHTML,/<dt>Sin precio<\/dt><dd>1<\/dd>/);
+  assert.match(f.nodes.quoteSummary.innerHTML,/El negocio confirmará los precios pendientes/);
   assert.match(message,/Subtotal con precio publicado: \$7\.000/);
   assert.match(message,/Productos sin precio publicado: 1/); // Product lines, not four units.
   assert.match(message,/Cotización con importes pendientes/);
@@ -124,6 +131,8 @@ test('All prices missing or invalid stay unknown, rather than zero',()=>{
   assert.match(message,/Productos sin precio publicado: 6/);
   assert.doesNotMatch(message,/Total referencial|\$0/);
   assert.doesNotMatch(f.nodes.quoteItems.innerHTML,/\$/);
+  assert.match(f.nodes.quoteSummary.innerHTML,/<dt>Subtotal conocido<\/dt><dd>—<\/dd>/);
+  assert.doesNotMatch(f.nodes.quoteItems.innerHTML,/Precio por confirmar|<dl/);
 });
 
 test('Quantity changes, removal and empty state recalculate without a stale send URL',()=>{
@@ -158,4 +167,5 @@ test('From prices remain indicative and sale fallback matches the catalog',()=>{
   assert.match(message,/Total referencial desde: \$7\.000/);
   assert.match(message,/Incluye precios «desde»/);
   assert.match(message,/confirmar disponibilidad, unidades de venta y precio final/);
+  assert.match(f.nodes.quoteSummary.innerHTML,/<dt>Subtotal<\/dt><dd>Desde \$7\.000<\/dd>/);
 });

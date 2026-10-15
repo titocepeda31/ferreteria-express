@@ -32,7 +32,8 @@ del precio vigente del catálogo. La cotización calcula importes referenciales.
 ## Resumen económico
 
 - Cada línea conserva nombre y medidas completos, cantidades con controles +/−,
-  precio unitario publicado y subtotal de línea, o «Precio por confirmar».
+  precio unitario publicado y subtotal de línea. Si falta precio, muestra una sola
+  etiqueta «Sin precio», sin repetir filas de precio unitario/subtotal pendientes.
 - Precio vigente compartido con el catálogo: oferta menor al normal, normal si la
   oferta no es menor, o precio rebajado disponible si falta el normal.
 - Se reutiliza `parsePrice`, compatible con números y cadenas formateadas en Chile.
@@ -41,16 +42,23 @@ del precio vigente del catálogo. La cotización calcula importes referenciales.
 - CLP se muestra sin decimales, igual que el catálogo. El precio unitario visible
   se redondea a pesos, el subtotal es cantidad × ese precio redondeado a pesos,
   y el resumen suma los subtotales de línea visibles. No se escribe en los datos.
-- Resumen: suma de cantidades seleccionadas, subtotal de productos con precio
-  publicado y número de referencias sin precio (no su cantidad de unidades).
+- Encabezado «Resumen» y etiquetas «Unidades», «Subtotal conocido» y «Sin precio».
+  El subtotal se llama «Subtotal» cuando todas las referencias tienen precio.
+  «Sin precio» cuenta referencias, no su cantidad de unidades.
 - «Total referencial» aparece únicamente si todas las referencias tienen precio.
-  Si ninguna tiene precio, se muestra «Sin importes conocidos», sin monto cero.
+  Si ninguna tiene precio, el subtotal del modal muestra «—», sin monto cero.
+  WhatsApp conserva la formulación «Sin importes conocidos».
 - Los precios «Desde» se conservan en la línea y en el resumen: el total, cuando
   corresponde, se denomina «Total referencial desde» y se informa su condición.
-- Siempre se solicita confirmación de disponibilidad y precio final. No se
-  agregan impuestos, despacho, pagos, descuentos automáticos ni pedidos.
+- El modal pendiente indica «El negocio confirmará los precios pendientes»;
+  no muestra esa nota cuando todos los precios son conocidos. El mensaje de
+  WhatsApp conserva la solicitud de confirmación de disponibilidad y precio final.
+  No se agregan impuestos, despacho, pagos, descuentos automáticos ni pedidos.
 - Modal y WhatsApp se construyen a partir del mismo cálculo `quoteEconomy` y de
-  los mismos textos de importes. Al vaciar, se elimina también el enlace anterior.
+  los mismos valores de importes. El modal usa etiquetas compactas y el mensaje
+  mantiene su detalle. Al vaciar, se elimina también el enlace anterior.
+  El botón dice «Enviar cotización por WhatsApp». Padding de filas/resumen: 10 px,
+  separación entre filas: 8 px; se conservan los controles táctiles de 44 px.
 
 ## Validación
 
@@ -65,6 +73,11 @@ del precio vigente del catálogo. La cotización calcula importes referenciales.
   No se repitió esta suite al añadir el resumen económico.
 - `git diff --check`: correcto.
 - No existe comando de build en este frontend estático.
+- La compactación final se comprobó con las mismas 10 pruebas dirigidas, ajustadas
+  para validar las etiquetas cortas y el guion cuando no hay precios, sin cambiar
+  los resultados numéricos ni WhatsApp. No se realizó un nuevo despliegue ni una
+  nueva revisión visual de esta última compactación; las capturas siguientes
+  corresponden a la versión previa a ese ajuste de textos y espaciado.
 
 ### Navegador real
 
