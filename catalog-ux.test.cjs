@@ -12,9 +12,9 @@ function fixture() {
     return {contains:x=>set.has(x), add:x=>set.add(x), remove:x=>set.delete(x),
       toggle:(x, enabled)=>enabled ? set.add(x) : set.delete(x)};
   }
-  for (const id of ['quotePanel','quoteClose','quoteFab','quoteCount','quoteItems','quoteSend','quoteClear','page']) {
+  for (const id of ['quotePanel','quoteClose','quoteFab','quoteCount','quoteItems','quoteSummary','quoteSend','quoteClear','page']) {
     nodes[id] = {id, tagName:'DIV', inert:false, isConnected:true, classList:classes(id === 'quotePanel' ? ['hidden'] : []),
-      focus(){document.activeElement=this;}};
+      focus(){document.activeElement=this;}, removeAttribute(key){delete this[key];}};
   }
   document.body.children = [nodes.page,nodes.quoteFab,nodes.quotePanel];
   nodes.page.inert = true; // Previously inert content must stay inert after closing.
@@ -25,6 +25,7 @@ function fixture() {
     products:[{id:'timber',nombre:'Pino dimensionado 1 × 10, 3.20 mts'}, {id:'bulk',nombre:'Material',unidad:'kg'}]});
   const start = html.indexOf("      const QUOTE_KEY =");
   const end = html.indexOf("      document.addEventListener('click', e =>", start);
+  vm.runInContext(html.slice(html.indexOf('      function parsePrice('), html.indexOf('      function uiIcon(')),context);
   vm.runInContext(html.slice(start,end),context);
   return {nodes,document,context,run:code=>vm.runInContext(code,context)};
 }
@@ -73,4 +74,88 @@ test('Quantity rerender restores focus on the same action',()=>{
   f.context.control=control;
   f.run('updateQuoteFromControl(control)');
   assert.equal(f.document.activeElement,replacement);
+});
+
+function setQuote(f, products, quote) {
+  f.context.products = products;
+  f.context.selection = quote;
+  f.run('quote = selection; renderQuote()');
+  return new URL(f.nodes.quoteSend.href).searchParams.get('text');
+}
+
+test('Known prices, sale prices and totals are identical on screen and WhatsApp',()=>{
+  const f=fixture();
+  const message=setQuote(f,[
+    {id:'a',nombre:'Madera 1 x 10, 3.20 mts',precio:'$3.500'},
+    {id:'b',nombre:'Oferta',precio:2500,precioRebajado:'2.000'}
+  ],{a:2,b:3});
+  assert.match(f.nodes.quoteItems.innerHTML,/\$3\.500/);
+  assert.match(f.nodes.quoteItems.innerHTML,/\$7\.000/);
+  assert.match(f.nodes.quoteItems.innerHTML,/\$2\.000/);
+  assert.match(f.nodes.quoteItems.innerHTML,/\$6\.000/);
+  assert.match(message,/Unidades seleccionadas: 5/);
+  assert.match(message,/Subtotal con precio publicado: \$13\.000/);
+  assert.match(message,/Total referencial: \$13\.000/);
+  assert.match(message,/Precio unitario: \$2\.000\nSubtotal: \$6\.000/);
+  const model=f.run("quoteEconomy([{p:products[0],qty:2},{p:products[1],qty:3}])");
+  for(const [label,value] of model.rows) {
+    assert.ok(f.nodes.quoteSummary.innerHTML.includes(label));
+    assert.ok(f.nodes.quoteSummary.innerHTML.includes(value));
+    assert.ok(message.includes(label+': '+value));
+  }
+});
+
+test('Mixed prices show only a known subtotal, pending count and no total',()=>{
+  const f=fixture();
+  const message=setQuote(f,[{id:'a',nombre:'Con precio',precio:3500},{id:'b',nombre:'Sin precio',precio:null}],{a:2,b:4});
+  assert.match(f.nodes.quoteItems.innerHTML,/Precio por confirmar/);
+  assert.match(message,/Subtotal con precio publicado: \$7\.000/);
+  assert.match(message,/Productos sin precio publicado: 1/); // Product lines, not four units.
+  assert.match(message,/Cotización con importes pendientes/);
+  assert.doesNotMatch(message,/Total referencial|\$0/);
+  assert.doesNotMatch(f.nodes.quoteSummary.innerHTML,/Total referencial/);
+});
+
+test('All prices missing or invalid stay unknown, rather than zero',()=>{
+  const f=fixture();
+  const values=[null,'',0,-5,'consultar',Infinity];
+  const message=setQuote(f,values.map((precio,i)=>({id:String(i),nombre:'Producto '+i,precio})),Object.fromEntries(values.map((_,i)=>[String(i),1])));
+  assert.match(message,/Subtotal con precio publicado: Sin importes conocidos/);
+  assert.match(message,/Productos sin precio publicado: 6/);
+  assert.doesNotMatch(message,/Total referencial|\$0/);
+  assert.doesNotMatch(f.nodes.quoteItems.innerHTML,/\$/);
+});
+
+test('Quantity changes, removal and empty state recalculate without a stale send URL',()=>{
+  const f=fixture();
+  setQuote(f,[{id:'a',nombre:'Material',precio:3500},{id:'b',nombre:'Pendiente'}],{a:1,b:1});
+  f.run('quote.a=3; saveQuote()');
+  assert.match(decodeURIComponent(f.nodes.quoteSend.href),/Subtotal con precio publicado: \$10\.500/);
+  f.run('delete quote.b; saveQuote()');
+  assert.match(f.nodes.quoteSummary.innerHTML,/Total referencial/);
+  assert.match(f.nodes.quoteSummary.innerHTML,/\$10\.500/);
+  f.run('quote={}; saveQuote()');
+  assert.equal(f.nodes.quoteSummary.innerHTML,'');
+  assert.equal(f.nodes.quoteSummary.classList.contains('hidden'),true);
+  assert.equal(f.nodes.quoteSend.href,undefined);
+});
+
+test('Decimal quantities use published whole CLP and sum displayed line subtotals',()=>{
+  const f=fixture();
+  const message=setQuote(f,[{id:'a',nombre:'Granel',unidad:'kg',precio:3500.5},{id:'b',nombre:'Otro',precio:'1.001'}],{a:0.5,b:0.5});
+  assert.match(message,/Precio unitario \/ kg: \$3\.501\nSubtotal: \$1\.751/);
+  assert.match(message,/Total referencial: \$2\.252/);
+  assert.match(f.nodes.quoteItems.innerHTML,/\$1\.751/);
+});
+
+test('From prices remain indicative and sale fallback matches the catalog',()=>{
+  const f=fixture();
+  assert.equal(f.run("publishedPrice({precio:3500,precioRebajado:4000})"),3500);
+  assert.equal(f.run("publishedPrice({precio:null,precioRebajado:'2.000'})"),2000);
+  const message=setQuote(f,[{id:'a',nombre:'Desde',precio:'3.500',precioDesde:true}],{a:2});
+  assert.match(message,/Precio unitario: Desde \$3\.500/);
+  assert.match(message,/Subtotal: Desde \$7\.000/);
+  assert.match(message,/Total referencial desde: \$7\.000/);
+  assert.match(message,/Incluye precios «desde»/);
+  assert.match(message,/confirmar disponibilidad, unidades de venta y precio final/);
 });
