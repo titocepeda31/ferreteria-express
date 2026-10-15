@@ -280,4 +280,4 @@ html[data-decorationprefooter="soft-waves"] .business-info::before { content: ""
 .hero-vector { position: absolute; pointer-events: none; z-index: -1; right: 0; top: 6%; width: 46%; height: 86%; background: var(--primary); opacity: .30; -webkit-mask: var(--hero-vector) right center / contain no-repeat; mask: var(--hero-vector) right center / contain no-repeat; }
 html[data-decorationhero="soft-waves"] .hero::before,
 html[data-decorationhero="soft-waves"] .hero::after { display: block; }
-@media (max-width: 600px) { .hero-vector { width: 72%; right: 0; opacity: .18; } }
+@media (max-width: 600px) { .hero-vector { width: 72%; right: 0; height: 54%; opacity: .18; -webkit-mask-position: right top; mask-position: right top; } }
