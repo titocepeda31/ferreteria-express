@@ -42,3 +42,11 @@ test('Saved pattern tiles repeat; illustrations and empty designs reset the patt
   applyStoreAppearance({...value,decorations:{hero:'none'}},null,{businessId});
   assert.equal(f.classes['hero-pattern'],false);assert.equal(f.classes.hidden,true);
 });
+test('Only the registered illustration enables full-color artwork; switching away clears it',()=>{
+  const f=fixture(),businessId='11111111-1111-4111-8111-111111111111';
+  const value={version:1,paletteId:'rose',decorations:{hero:'store-vector'},heroAsset:{name:'tito-ilustracion-calavera.svg',path:businessId+'/decorations/22222222-2222-4222-8222-222222222222.svg'}};
+  applyStoreAppearance(value,null,{businessId});
+  assert.equal(f.classes['has-illustration'],true);assert.equal(f.classes.hidden,true);assert.match(f.tokens['--hero-art'],/assets\/decorations\/calavera-rosas\.webp/);assert.equal(f.tokens['--primary'],'#ad3862');
+  applyStoreAppearance({...value,heroAsset:{...value.heroAsset,name:'https://outside.test/art.webp'}},null,{businessId});
+  assert.equal(f.classes['has-illustration'],false);assert.equal(f.tokens['--hero-art'],'none');
+});

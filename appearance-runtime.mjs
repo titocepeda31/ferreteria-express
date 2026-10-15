@@ -1,4 +1,4 @@
-import {normalizeAppearance,paletteTokens,vectorUrl,HERO_PATTERN_FILES} from './appearance-registry.mjs?v=patterns-1';
+import {normalizeAppearance,paletteTokens,vectorUrl,HERO_PATTERN_FILES,HERO_ILLUSTRATIONS} from './appearance-registry.mjs?v=artwork-1';
 
 export function applyStoreAppearance(input,color,{businessId='',assetOrigin='',preview=false}={}){
   const appearance=normalizeAppearance(input,{businessId,allowPending:preview});
@@ -10,9 +10,13 @@ export function applyStoreAppearance(input,color,{businessId='',assetOrigin='',p
     else root.dataset['decoration'+zone]=id;
   }
   const asset=appearance?.heroAsset;
+  const artwork=appearance?.decorations.hero==='store-vector'&&HERO_ILLUSTRATIONS.find(a=>a.file===asset?.name);
+  const hero=document.getElementById('hero');
+  hero.classList.toggle('has-illustration',!!artwork);
+  hero.style.setProperty('--hero-art',artwork?'url("'+new URL(artwork.image,import.meta.url).href+'")':'none');
   const url=preview&&asset?.svg?'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(asset.svg):vectorUrl(asset,assetOrigin,businessId);
   const visual=document.getElementById('heroDecoration');
-  visual.classList.toggle('hidden',appearance?.decorations.hero!=='store-vector'||!url);
+  visual.classList.toggle('hidden',!!artwork||appearance?.decorations.hero!=='store-vector'||!url);
   visual.classList.toggle('hero-pattern',appearance?.decorations.hero==='store-vector'&&HERO_PATTERN_FILES.includes(asset?.name));
   visual.style.setProperty('--hero-vector',url?'url("'+url.replaceAll('"','%22')+'")':'none');
 }
