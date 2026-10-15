@@ -2138,10 +2138,11 @@ footer { margin-top: 24px; }
 
 
 
+      </div>
+
+      <div id="socialSection" class="social-card hidden" aria-labelledby="socialTitle">
+        <h2 id="socialTitle">Síguenos en redes</h2>
         <div class="socials" id="socialLinks"></div>
-
-
-
       </div>
 
 
@@ -2154,18 +2155,12 @@ footer { margin-top: 24px; }
 
 
 
-      <div class="wrap">
-
-
-
-        <strong id="footerName">FERRETERÍA DEMO</strong>
-
-
-
-        <p>Catálogo digital · Cotizaciones por WhatsApp</p>
-
-
-
+      <div class="wrap footer-content">
+        <div class="footer-brand">
+          <strong id="footerName">FERRETERÍA DEMO</strong>
+          <p>Catálogo digital · Cotizaciones por WhatsApp</p>
+        </div>
+        <a id="footerContact" class="footer-contact hidden"></a>
       </div>
 
 
@@ -2195,7 +2190,7 @@ footer { margin-top: 24px; }
 
 
     <div class="quote-dock">
-      <button type="button" id="quoteFab" class="quote-fab" aria-label="Abrir mi cotización"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 3h2l2.4 11.4a2 2 0 0 0 2 1.6H18a2 2 0 0 0 2-1.6L21 7H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg> <span>Mi cotización</span> <span id="quoteCount" class="quote-badge">0</span></button>
+      <button type="button" id="quoteFab" class="quote-fab is-empty" aria-label="Abrir mi cotización"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 3h2l2.4 11.4a2 2 0 0 0 2 1.6H18a2 2 0 0 0 2-1.6L21 7H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg> <span>Mi cotización</span> <span id="quoteCount" class="quote-badge">0</span></button>
     </div>
     <div id="quotePanel" class="quote-panel hidden" role="presentation">
       <section class="quote-dialog" role="dialog" aria-modal="true" aria-labelledby="quoteTitle" aria-describedby="quoteHelp">
@@ -2535,6 +2530,40 @@ footer { margin-top: 24px; }
       function uiIcon(name) {
         const paths = {"cart":"<path d=\"M3 3h2l2.4 11.4a2 2 0 0 0 2 1.6H18a2 2 0 0 0 2-1.6L21 7H6\"/><circle cx=\"10\" cy=\"20\" r=\"1\"/><circle cx=\"18\" cy=\"20\" r=\"1\"/>","phone":"<path d=\"M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z\"/>","mail":"<rect x=\"3\" y=\"5\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"m3 6 9 7 9-7\"/>","pin":"<path d=\"M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z\"/><circle cx=\"12\" cy=\"10\" r=\"3\"/>","image":"<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"3\"/><circle cx=\"8\" cy=\"8\" r=\"1.5\"/><path d=\"m21 15-6-6L3 21\"/>"};
         return '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' + (paths[name] || paths.image) + '</svg>';
+      }
+      function socialIcon(name) {
+        const paths = {
+          instagram: '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5h.01"/>',
+          facebook: '<path d="M14 21v-8h3l.5-4H14V7c0-1 .4-2 2-2h2V1.5A24 24 0 0 0 15 1c-3 0-5 1.8-5 5v3H7v4h3v8"/>',
+          tiktok: '<path d="M14 3v12.5a4.5 4.5 0 1 1-4-4.5M14 3c1 4 3 5 7 5v4c-3 0-5-1-7-3"/>'
+        };
+        return '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' + paths[name] + '</svg>';
+      }
+      function renderStoreLinks(safeLink) {
+        const networks = ['instagram', 'facebook', 'tiktok'].filter(name => safeLink(config[name]));
+        const labels = {instagram:'Instagram', facebook:'Facebook', tiktok:'TikTok'};
+        $('socialLinks').innerHTML = networks.map(name => '<a target="_blank" rel="noopener" href="' +
+          esc(safeLink(config[name])) + '">' + socialIcon(name) + '<span>' + labels[name] + '</span></a>').join('');
+        $('socialSection').classList.toggle('hidden', !networks.length);
+
+        const contact = $('footerContact');
+        const whatsapp = String(config.whatsapp || '').replace(/\D/g, '');
+        const phone = String(config.telefono || '').replace(/[^+\d]/g, '');
+        const email = String(config.email || '').trim();
+        contact.classList.toggle('hidden', !whatsapp && !phone && !email);
+        if (whatsapp) {
+          contact.href = $('topwa').href;
+          contact.textContent = 'Contactar por WhatsApp ↗';
+        } else if (phone) {
+          contact.href = 'tel:' + phone;
+          contact.textContent = 'Llamar al negocio';
+        } else if (email) {
+          contact.href = 'mailto:' + email;
+          contact.textContent = 'Enviar correo';
+        } else {
+          contact.removeAttribute('href');
+          contact.textContent = '';
+        }
       }
       function imagePlaceholder() {
         return '<span class="image-placeholder">' + uiIcon('image') + '<span>Imagen no disponible</span></span>';
@@ -3312,53 +3341,7 @@ function filter() {
 
 
 
-        $("socialLinks").innerHTML = ["instagram", "facebook", "tiktok"]
-
-
-
-          .filter((k) => safeLink(config[k]))
-
-
-
-          .map(
-
-
-
-            (k) =>
-
-
-
-              '<a target="_blank" rel="noopener" href="' +
-
-
-
-              esc(safeLink(config[k])) +
-
-
-
-              '">' +
-
-
-
-              k[0].toUpperCase() +
-
-
-
-              k.slice(1) +
-
-
-
-              " ↗</a>",
-
-
-
-          )
-
-
-
-          .join("");
-
-
+        renderStoreLinks(safeLink);
 
         if (!remoteLoaded) {
           try {
@@ -3572,6 +3555,7 @@ botonArriba.addEventListener('click', () => {
         const lines = Object.entries(quote).map(([id, qty]) => ({p:products.find(p => String(p.id) === id),qty:Number(qty)}))
           .filter(x => x.p && Number.isFinite(x.qty) && x.qty > 0);
         $('quoteCount').textContent = formatQuoteQty(lines.reduce((n,x) => n+x.qty,0));
+        $('quoteFab').classList.toggle('is-empty', !lines.length);
         const economy = quoteEconomy(lines);
         $('quoteItems').innerHTML = lines.length ? economy.lines.map(({p,qty,unitPrice,unitText,subtotalText}) => {
           const step = quoteStep(p);
