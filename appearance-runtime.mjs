@@ -1,4 +1,4 @@
-import {normalizeAppearance,paletteTokens,vectorUrl} from './appearance-registry.mjs';
+import {normalizeAppearance,paletteTokens,vectorUrl,HERO_PATTERN_FILES} from './appearance-registry.mjs?v=patterns-1';
 
 export function applyStoreAppearance(input,color,{businessId='',assetOrigin='',preview=false}={}){
   const appearance=normalizeAppearance(input,{businessId,allowPending:preview});
@@ -13,6 +13,7 @@ export function applyStoreAppearance(input,color,{businessId='',assetOrigin='',p
   const url=preview&&asset?.svg?'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(asset.svg):vectorUrl(asset,assetOrigin,businessId);
   const visual=document.getElementById('heroDecoration');
   visual.classList.toggle('hidden',appearance?.decorations.hero!=='store-vector'||!url);
+  visual.classList.toggle('hero-pattern',appearance?.decorations.hero==='store-vector'&&HERO_PATTERN_FILES.includes(asset?.name));
   visual.style.setProperty('--hero-vector',url?'url("'+url.replaceAll('"','%22')+'")':'none');
 }
 
