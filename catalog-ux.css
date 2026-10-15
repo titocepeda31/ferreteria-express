@@ -277,7 +277,7 @@ html[data-decorationfooter="none"] footer::before { display: none; }
 html[data-decorationprefooter="none"] .business-info > .social-card { background: var(--primary-contrast); }
 html[data-decorationprefooter="soft-waves"] .business-info { position: relative; isolation: isolate; }
 html[data-decorationprefooter="soft-waves"] .business-info::before { content: ""; position: absolute; z-index: -1; pointer-events: none; right: 0; bottom: 8px; width: 180px; height: 160px; border-radius: 45% 55% 65% 35%; background: var(--primary-soft); }
-.hero-vector { position: absolute; pointer-events: none; z-index: -1; right: 3%; top: 10%; width: 34%; height: 75%; background: var(--primary); opacity: .18; -webkit-mask: var(--hero-vector) center / contain no-repeat; mask: var(--hero-vector) center / contain no-repeat; }
+.hero-vector { position: absolute; pointer-events: none; z-index: -1; right: 0; top: 6%; width: 46%; height: 86%; background: var(--primary); opacity: .30; -webkit-mask: var(--hero-vector) right center / contain no-repeat; mask: var(--hero-vector) right center / contain no-repeat; }
 html[data-decorationhero="soft-waves"] .hero::before,
 html[data-decorationhero="soft-waves"] .hero::after { display: block; }
-@media (max-width: 600px) { .hero-vector { width: 60%; right: -8%; opacity: .09; } }
+@media (max-width: 600px) { .hero-vector { width: 72%; right: 0; opacity: .18; } }
