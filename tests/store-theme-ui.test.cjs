@@ -102,5 +102,6 @@ if (fixturePath) {
 }
 test('New component styles consume theme tokens, without fixed color literals',()=>{
   const themed=css.slice(css.indexOf('/* Store-themed controls:'));
-  assert.doesNotMatch(themed,/#[\da-f]{3,8}\b|rgba?\(|hsla?\(|\b(?:white|black)\b/i);
+  // "white-space" is a layout property, not a fixed color.
+  assert.doesNotMatch(themed,/#[\da-f]{3,8}\b|rgba?\(|hsla?\(|\b(?:white|black)\b(?!-)/i);
 });
