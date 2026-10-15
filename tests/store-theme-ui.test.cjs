@@ -11,13 +11,21 @@ const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<'
 
 function render(config) {
   const nodes = {};
-  for (const id of ['socialLinks','socialSection','footerContact','topwa']) {
-    nodes[id] = {classList:{toggle(name,hidden){nodes[id].hidden=hidden;}}, removeAttribute(name){delete this[name];}};
+  for (const id of ['socialLinks','socialSection','footerContact','topwa','businessHours']) {
+    nodes[id] = {states:{},classList:{toggle(name,enabled){nodes[id].states[name]=enabled;if(name==='hidden')nodes[id].hidden=enabled;}}, removeAttribute(name){delete this[name];}};
   }
   nodes.topwa.href = 'https://wa.me/' + String(config.whatsapp || '').replace(/\D/g,'');
-  vm.runInNewContext(helpers + safeLink + '\nrenderStoreLinks(safeLink);', {config, $:id=>nodes[id], esc:escape, URL});
+  vm.runInNewContext(helpers + safeLink + '\nrenderStoreLinks(safeLink); renderBusinessHours();', {config, $:id=>nodes[id], esc:escape, URL});
   return nodes;
 }
+
+test('Hours preserve configured text verbatim and do not invent an illustrated schedule',()=>{
+  const hours='Lunes: 09:30–13:00\nSábado: solo con reserva\n<Consultar cambios>';
+  assert.equal(render({horarios:hours}).businessHours.textContent,hours);
+  assert.equal(render({horarios:hours}).businessHours.states['is-fallback'],false);
+  assert.equal(render({}).businessHours.textContent,'Consulta nuestros horarios por WhatsApp.');
+  assert.equal(render({}).businessHours.states['is-fallback'],true);
+});
 
 test('Only configured valid socials are shown, with accessible names and icons',()=>{
   const nodes=render({instagram:'https://instagram.com/example',facebook:'javascript:alert(1)',tiktok:'#'});
