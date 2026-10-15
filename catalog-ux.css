@@ -261,7 +261,7 @@ header { background: var(--primary-contrast); border-bottom: 1px solid var(--bor
   .top .contact .ui-icon { width: 18px; height: 18px; }
   .hero { padding: 26px 0 22px; }
   .hero-layout { gap: 20px; }
-  .hero-actions a { flex: 1 1 140px; }
+  .hero-actions a { flex: 1 1 100%; white-space: nowrap; }
   .hero-features { gap: 8px; padding: 12px 8px; }
   .hero-features li { flex-direction: column; align-items: center; text-align: center; gap: 6px; font-size: 12px; }
   .hero-photo img { height: 120px; }
