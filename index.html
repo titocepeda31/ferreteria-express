@@ -1887,7 +1887,7 @@ footer { margin-top: 24px; }
       }
 
 </style>
-    <link rel="stylesheet" href="catalog-ux.css?v=header-hero-2">
+    <link rel="stylesheet" href="catalog-ux.css?v=appearance-1">
 
 
 
@@ -1924,6 +1924,7 @@ footer { margin-top: 24px; }
 
 
     <section class="hero" id="hero" aria-labelledby="heroTitle">
+      <div id="heroDecoration" class="hero-vector hidden" aria-hidden="true"></div>
       <div class="wrap hero-layout">
         <div class="hero-copy">
           <span class="hero-kicker"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5Z"/></svg>Catálogo digital</span>
@@ -2289,6 +2290,11 @@ footer { margin-top: 24px; }
         });
         const business = businesses[0];
         if (!business) return false;
+        // Optional column keeps older databases working until the migration is applied.
+        try {
+          const appearanceRows = await supabasePublic("/rest/v1/businesses", {select:"appearance",id:"eq."+business.id,limit:"1"});
+          business.appearance = appearanceRows[0]?.appearance ?? null;
+        } catch { business.appearance = null; }
 
         const [categories, remoteProducts] = await Promise.all([
           supabasePublic("/rest/v1/categories", {
@@ -2325,6 +2331,7 @@ footer { margin-top: 24px; }
           tiktok: business.tiktok_url || "",
           mensajeWhatsApp: business.whatsapp_message || "",
           color: business.theme_color || "#17733a",
+          appearance: business.appearance,
           catalogType: business.catalog_type || "retail",
           columnas: business.columns_default ?? 3,
           columnasPC: business.columns_desktop ?? 4,
@@ -2928,7 +2935,7 @@ function filter() {
 
 
       const metrics = createCatalogAnalytics({url:SUPABASE_URL,headers:SUPABASE_HEADERS,
-        getBusinessId:()=>remoteAnalyticsReady ? config.id : null,
+        getBusinessId:()=>remoteAnalyticsReady && new URLSearchParams(location.search).get("appearancePreview")!=="1" ? config.id : null,
         storage:{getItem:key=>sessionStorage.getItem(key),setItem:(key,value)=>sessionStorage.setItem(key,value)}
       });
       document.addEventListener('click', event => {
@@ -3412,6 +3419,11 @@ function filter() {
 
 
         renderStoreIntro();
+        try {
+          const appearanceRuntime = await import("./appearance-runtime.mjs?v=1");
+          appearanceRuntime.applyStoreAppearance(config.appearance, config.color, {businessId:config.id,assetOrigin:SUPABASE_URL});
+          appearanceRuntime.connectAppearancePreview(config, SUPABASE_URL);
+        } catch (error) { console.warn("No se pudo aplicar la apariencia; se conserva el tema actual.", error); }
         render();
         renderDestacados();
         // Actualiza el contador guardado después de cargar los productos.
