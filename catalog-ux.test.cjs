@@ -61,6 +61,19 @@ test('Empty quotation hides send/clear and removed or invalid products are not s
   assert.equal(f.nodes.quoteCount.textContent,'0');
   assert.equal(f.nodes.quoteSend.classList.contains('hidden'),true);
   assert.equal(f.nodes.quoteClear.classList.contains('hidden'),true);
+  assert.equal(f.nodes.quoteFab.classList.contains('is-empty'),true);
+});
+
+test('Quotation remains available while its empty/filled theme state follows visible items',()=>{
+  const f=fixture();
+  f.run('renderQuote()');
+  assert.equal(f.nodes.quoteFab.classList.contains('is-empty'),true);
+  f.run("addQuote('timber')");
+  assert.equal(f.nodes.quoteFab.classList.contains('is-empty'),false);
+  f.run('quote={};saveQuote()');
+  assert.equal(f.nodes.quoteFab.classList.contains('is-empty'),true);
+  assert.equal(f.nodes.quoteCount.textContent,'0');
+  assert.equal(f.nodes.quoteFab.classList.contains('hidden'),false);
 });
 
 test('Quantity rerender restores focus on the same action',()=>{
