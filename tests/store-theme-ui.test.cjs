@@ -9,15 +9,41 @@ const helpers = html.slice(html.indexOf('      function socialIcon('), html.inde
 const safeLink = html.slice(html.indexOf('        const safeLink ='), html.indexOf('        let info = []'));
 const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-function render(config) {
+function render(config, products=[]) {
   const nodes = {};
-  for (const id of ['socialLinks','socialSection','footerContact','topwa','businessHours']) {
-    nodes[id] = {states:{},classList:{toggle(name,enabled){nodes[id].states[name]=enabled;if(name==='hidden')nodes[id].hidden=enabled;}}, removeAttribute(name){delete this[name];}};
+  for (const id of ['socialLinks','socialSection','footerContact','topwa','businessHours','brand','heroWA','heroContactFeature','heroVisual','hero']) {
+    nodes[id] = {states:{},classList:{add(name){nodes[id].states[name]=true;},toggle(name,enabled){nodes[id].states[name]=enabled;if(name==='hidden')nodes[id].hidden=enabled;}}, removeAttribute(name){delete this[name];}};
   }
   nodes.topwa.href = 'https://wa.me/' + String(config.whatsapp || '').replace(/\D/g,'');
-  vm.runInNewContext(helpers + safeLink + '\nrenderStoreLinks(safeLink); renderBusinessHours();', {config, $:id=>nodes[id], esc:escape, URL});
+  vm.runInNewContext(helpers + safeLink + '\nrenderStoreLinks(safeLink); renderBusinessHours(); renderStoreIntro();', {config, products, img:p=>'<img src="'+escape(p.imagen)+'">', $:id=>nodes[id], esc:escape, URL});
   return nodes;
 }
+
+test('Header keeps the real name and logo, while hero contact reuses WhatsApp',()=>{
+  const nodes=render({nombre:'Arte & Diseño',logo_url:'https://example.test/logo.png',whatsapp:'+56 9 1234 5678'});
+  assert.match(nodes.brand.innerHTML,/Arte &amp; Diseño/);
+  assert.match(nodes.brand.innerHTML,/https:\/\/example.test\/logo.png/);
+  assert.equal(nodes.heroWA.href,nodes.topwa.href);
+  assert.equal(nodes.heroContactFeature.hidden,false);
+});
+test('Missing logo/photos/contact uses initials and hides unavailable hero content',()=>{
+  const nodes=render({nombre:'Tienda Real',logo_url:'javascript:alert(1)'});
+  assert.match(nodes.brand.innerHTML,/>TR<\/span>/);
+  assert.doesNotMatch(nodes.brand.innerHTML,/<img|javascript:/);
+  assert.equal(nodes.heroWA.hidden,true);
+  assert.equal(nodes.heroWA.href,undefined);
+  assert.equal(nodes.heroContactFeature.hidden,true);
+  assert.equal(nodes.heroVisual.hidden,true);
+});
+test('Hero only uses existing supported product photos without altering product data',()=>{
+  const products=[{imagen:''},{imagen:'javascript:alert(1)'},{imagen:'https://example.test/a.png'},{imagen:'assets/b.png'},{imagen:'assets/c.png'}];
+  const before=JSON.stringify(products),nodes=render({},products);
+  assert.equal(JSON.stringify(products),before);
+  assert.equal((nodes.heroVisual.innerHTML.match(/<img/g)||[]).length,2);
+  assert.match(nodes.heroVisual.innerHTML,/a.png/);
+  assert.match(nodes.heroVisual.innerHTML,/b.png/);
+  assert.doesNotMatch(nodes.heroVisual.innerHTML,/c.png|javascript:/);
+});
 
 test('Hours preserve configured text verbatim and do not invent an illustrated schedule',()=>{
   const hours='Lunes: 09:30–13:00\nSábado: solo con reserva\n<Consultar cambios>';
