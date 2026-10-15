@@ -14,6 +14,7 @@ export const DESIGNS = [
   {id:'none',name:'Sin decoración',zones:ZONES.map(z=>z.id),industries:['all'],resources:[],available:true},
   {id:'soft-waves',name:'Ondas suaves',zones:ZONES.map(z=>z.id),industries:['all'],resources:[{type:'css',name:'soft-waves'}],available:true}
 ];
+export const HERO_ILLUSTRATIONS = [{file:'tito-ilustracion-calavera.svg',image:'assets/decorations/calavera-rosas.webp'}];
 export const HERO_PATTERN_FILES = ['tito-patron-rombos.svg','tito-patron-puntos.svg','tito-patron-arcos.svg'];
 const hex = value => typeof value==='string' && /^#[\da-f]{6}$/i.test(value);
 const plain = value => value && typeof value==='object' && !Array.isArray(value);

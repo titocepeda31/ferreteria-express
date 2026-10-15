@@ -284,3 +284,9 @@ html[data-decorationhero="soft-waves"] .hero::after { display: block; }
 /* Repeating tiles cover the hero; ordinary uploaded illustrations keep their layout. */
 .hero-vector.hero-pattern { inset: 0; width: 100%; height: 100%; opacity: .085; -webkit-mask-size: 96px 96px; mask-size: 96px 96px; -webkit-mask-repeat: repeat; mask-repeat: repeat; -webkit-mask-position: center; mask-position: center; }
 @media (max-width: 600px) { .hero-vector.hero-pattern { -webkit-mask-size: 80px 80px; mask-size: 80px 80px; } }
+/* Bundled neutral artwork keeps its detail; surfaces and actions keep the store palette. */
+.hero.has-illustration::before,.hero.has-illustration::after { display: block; }
+.hero.has-illustration .hero-visual { display: block !important; min-height: 280px; background-image: var(--hero-art); background-size: contain; background-position: center; background-repeat: no-repeat; }
+.hero.has-illustration .hero-visual > * { display: none; }
+@media (min-width: 760px) { .hero.has-illustration .hero-layout { grid-template-columns: minmax(0,1.2fr) minmax(0,1fr); align-items: center; } .hero.has-illustration .hero-visual { min-height: 340px; } }
+@media (max-width: 600px) { .hero.has-illustration .hero-visual { min-height: 220px; max-height: 260px; } }
