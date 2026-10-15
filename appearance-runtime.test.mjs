@@ -32,3 +32,13 @@ test('Invalid stored settings safely keep legacy colors without rendering unknow
   const f=fixture();applyStoreAppearance({version:99,paletteId:'rose'},'#287a4b',{businessId:'a'});
   assert.equal(f.tokens['--primary'],'#287a4b');assert.equal(f.classes.hidden,true);assert.deepEqual(document.documentElement.dataset,{});
 });
+test('Saved pattern tiles repeat; illustrations and empty designs reset the pattern mode',()=>{
+  const f=fixture(),businessId='11111111-1111-4111-8111-111111111111';
+  const value={version:1,paletteId:'purple',decorations:{hero:'store-vector'},heroAsset:{name:'tito-patron-rombos.svg',path:businessId+'/decorations/22222222-2222-4222-8222-222222222222.svg'}};
+  applyStoreAppearance(value,null,{businessId,assetOrigin:'https://project.supabase.co'});
+  assert.equal(f.classes['hero-pattern'],true);assert.equal(f.classes.hidden,false);assert.equal(f.tokens['--primary'],'#71427f');
+  applyStoreAppearance({...value,heroAsset:{...value.heroAsset,name:'tito-calavera.svg'}},null,{businessId});
+  assert.equal(f.classes['hero-pattern'],false);
+  applyStoreAppearance({...value,decorations:{hero:'none'}},null,{businessId});
+  assert.equal(f.classes['hero-pattern'],false);assert.equal(f.classes.hidden,true);
+});

@@ -1887,7 +1887,7 @@ footer { margin-top: 24px; }
       }
 
 </style>
-    <link rel="stylesheet" href="catalog-ux.css?v=hero-vectors-3">
+    <link rel="stylesheet" href="catalog-ux.css?v=patterns-1">
 
 
 
@@ -3420,7 +3420,7 @@ function filter() {
 
         renderStoreIntro();
         try {
-          const appearanceRuntime = await import("./appearance-runtime.mjs?v=1");
+          const appearanceRuntime = await import("./appearance-runtime.mjs?v=patterns-1");
           appearanceRuntime.applyStoreAppearance(config.appearance, config.color, {businessId:config.id,assetOrigin:SUPABASE_URL});
           appearanceRuntime.connectAppearancePreview(config, SUPABASE_URL);
         } catch (error) { console.warn("No se pudo aplicar la apariencia; se conserva el tema actual.", error); }
