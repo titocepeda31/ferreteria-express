@@ -1,0 +1,70 @@
+/* Public catalog refinements. Loaded after the existing theme. */
+html {
+  scroll-padding-top: calc(var(--catalog-header-height, 90px) + 12px);
+  scroll-padding-bottom: calc(var(--catalog-dock-height, 0px) + 16px);
+}
+.top { padding-top: 10px; padding-bottom: 10px; }
+.brand { min-width: 0; overflow-wrap: anywhere; line-height: 1.3; }
+.brand.has-logo { flex-wrap: wrap; }
+.brand-logo { max-width: 100%; }
+.brand-name { font-size: inherit; }
+.top .contact { flex-shrink: 0; min-height: 44px; display: inline-flex; align-items: center; }
+:is(a, button, input, select):focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+.detail > div, .card { min-width: 0; }
+.detail h1 { overflow-wrap: anywhere; line-height: 1.2; margin: 10px 0 16px; }
+#detailCategory, #detailDescription { overflow-wrap: anywhere; }
+#detailPhoto img { min-height: 0; }
+:is(#products, #featured) .card .cat { white-space: normal; overflow-wrap: anywhere; }
+:is(#products, #featured) .card .price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px; }
+:is(#products, #featured) .card-actions { margin-top: auto; align-items: stretch; }
+:is(#products, #featured) .card-actions :is(a, button) { min-height: 44px; min-width: 0; }
+.product-meta { font-size: 13px; color: var(--ink); overflow-wrap: anywhere; }
+.back { min-height: 44px; }
+.quote-panel {
+  padding: max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px))
+    max(12px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+  overscroll-behavior: contain;
+}
+.quote-dialog {
+  display: flex; flex-direction: column; overflow: hidden;
+  max-height: min(90vh, 760px); max-height: min(90dvh, 760px);
+  padding: 20px; min-height: 0;
+}
+.quote-head, #quoteHelp, .quote-actions { flex-shrink: 0; }
+.quote-head h2 { font-size: clamp(20px, 5vw, 24px); }
+.quote-close { width: 44px; height: 44px; flex-shrink: 0; }
+#quoteHelp { margin: 0 0 8px; line-height: 1.4; font-size: 14px; }
+#quoteItems { overflow-y: auto; overscroll-behavior: contain; min-height: 0; margin: 8px 0 16px; padding: 3px; }
+.quote-line { padding: 12px; }
+.quote-line-name { overflow-wrap: anywhere; }
+.quote-line-controls { gap: 6px; }
+.quote-line-controls button { min-width: 44px; min-height: 44px; }
+.quote-line-controls strong { min-width: 3ch; text-align: center; }
+.quote-actions :is(a, button) { min-height: 44px; text-align: center; }
+body.quote-open { overflow: hidden; }
+@media (max-width: 800px) {
+  .detail { gap: 20px; }
+  .detail .photo { aspect-ratio: auto; height: clamp(180px, 65vw, 300px); }
+  .detail .photo img { max-height: 100%; object-fit: contain; }
+}
+@media (max-width: 600px) {
+  body { padding-bottom: calc(var(--catalog-dock-height, 68px) + 16px); }
+  footer { padding-bottom: 28px; }
+  .quote-dock { padding: 8px 16px calc(8px + env(safe-area-inset-bottom, 0px)); }
+  .quote-dock .quote-fab { min-height: 48px; padding: 8px 12px; }
+  #volver-arriba, #volver-arriba.visible { bottom: calc(var(--catalog-dock-height, 68px) + 12px); }
+  .hero { padding: 30px 0; }
+  .business-info { padding-top: 20px; padding-bottom: 20px; }
+  .business-info > div { padding: 18px; }
+  .quote-dialog { padding: 14px; }
+  .quote-actions { align-items: stretch; gap: 8px; }
+  .quote-actions > * { width: 100%; }
+  .quote-line-controls .remove { margin-left: auto; }
+}
+@media (max-width: 490px) {
+  :is(#products, #featured) .card h3 { font-size: 14px; }
+  .detail h1 { font-size: 26px; }
+  .top { gap: 8px; }
+  .brand.has-logo { gap: 4px; }
+  .brand-logo { max-height: 30px; max-width: 130px; }
+}

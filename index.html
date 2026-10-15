@@ -14,7 +14,7 @@
 
 
 
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 
 
 
@@ -1552,15 +1552,8 @@ footer {
 
 :is(#products, #featured) .card-name-link {
 
-  display: -webkit-box;
-
-  -webkit-box-orient: vertical;
-
-  -webkit-line-clamp: 2;
-
-  line-clamp: 2;
-
-  overflow: hidden;
+  display: block;
+  overflow-wrap: anywhere;
 
 }
 
@@ -1894,6 +1887,7 @@ footer { margin-top: 24px; }
       }
 
 </style>
+    <link rel="stylesheet" href="catalog-ux.css">
 
 
 
@@ -1917,7 +1911,7 @@ footer { margin-top: 24px; }
 
 
 
-        <a class="contact" id="topwa" href="#">WhatsApp ↗</a>
+        <a class="contact" id="topwa" href="#" aria-label="Contactar a la tienda por WhatsApp">Contactar ↗</a>
 
 
 
@@ -2204,9 +2198,9 @@ footer { margin-top: 24px; }
       <button type="button" id="quoteFab" class="quote-fab" aria-label="Abrir mi cotización"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 3h2l2.4 11.4a2 2 0 0 0 2 1.6H18a2 2 0 0 0 2-1.6L21 7H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg> <span>Mi cotización</span> <span id="quoteCount" class="quote-badge">0</span></button>
     </div>
     <div id="quotePanel" class="quote-panel hidden" role="presentation">
-      <section class="quote-dialog" role="dialog" aria-modal="true" aria-labelledby="quoteTitle">
+      <section class="quote-dialog" role="dialog" aria-modal="true" aria-labelledby="quoteTitle" aria-describedby="quoteHelp">
         <div class="quote-head"><h2 id="quoteTitle">Mi cotización</h2><button class="quote-close" type="button" id="quoteClose" aria-label="Cerrar">×</button></div>
-        <p class="muted">Selecciona las cantidades y envía tu consulta por WhatsApp.</p>
+        <p class="muted" id="quoteHelp">Selecciona las cantidades y envía tu consulta por WhatsApp.</p>
         <div id="quoteItems"></div>
         <div class="quote-actions"><a class="btn" id="quoteSend" target="_blank" rel="noopener">Enviar por WhatsApp ↗</a><button type="button" class="outline" id="quoteClear">Vaciar cotización</button></div>
       </section>
@@ -3129,7 +3123,7 @@ function filter() {
         $("brand").textContent = $("footerName").textContent = nombreCatalogo;
         const logoUrl = String(config.logo_url || config.logo || "").trim();
         if (/^https?:\/\//i.test(logoUrl)) {
-          $("brand").innerHTML = '<img class="brand-logo" src="' + esc(logoUrl) + '" alt="' + esc(nombreCatalogo) + '">';
+          $("brand").innerHTML = '<img class="brand-logo" src="' + esc(logoUrl) + '" alt=""><span class="brand-name">' + esc(nombreCatalogo) + '</span>';
           $("brand").classList.add("has-logo");
         }
 
@@ -3496,6 +3490,38 @@ botonArriba.addEventListener('click', () => {
       function formatQuoteQty(value) {
         return Number(value).toLocaleString("es-CL", {maximumFractionDigits:2});
       }
+      let quoteOpener = null;
+      let quoteBackground = [];
+      function openQuote() {
+        if (!$('quotePanel').classList.contains('hidden')) return;
+        quoteOpener = document.activeElement;
+        $('quotePanel').classList.remove('hidden');
+        document.body.classList.add('quote-open');
+        quoteBackground = [...document.body.children]
+          .filter(el => el !== $('quotePanel') && !['SCRIPT', 'STYLE'].includes(el.tagName))
+          .map(el => ({el, inert: el.inert}));
+        quoteBackground.forEach(({el}) => { el.inert = true; });
+        $('quoteClose').focus();
+      }
+      function closeQuote() {
+        $('quotePanel').classList.add('hidden');
+        document.body.classList.remove('quote-open');
+        quoteBackground.forEach(({el, inert}) => { el.inert = inert; });
+        const target = quoteOpener?.isConnected ? quoteOpener : $('quoteFab');
+        target.focus({preventScroll:true});
+      }
+      // Replacing quantity rows must not discard keyboard focus.
+      function updateQuoteFromControl(control) {
+        const rowIndex = [...$('quoteItems').children].indexOf(control.closest('.quote-line'));
+        const action = control.hasAttribute('data-quote-remove') ? 'data-quote-remove' : 'data-quote-change';
+        const id = control.getAttribute(action);
+        const delta = control.getAttribute('data-delta');
+        saveQuote();
+        const buttons = [...$('quoteItems').querySelectorAll('button')];
+        const replacement = buttons.find(button => button.getAttribute(action) === id &&
+          (action === 'data-quote-remove' || button.getAttribute('data-delta') === delta));
+        (replacement || $('quoteItems').children[Math.max(0, rowIndex - 1)]?.querySelector('button') || $('quoteClose')).focus();
+      }
       function addQuote(id) {
         id = String(id);
         const product = products.find(p => String(p.id) === id);
@@ -3503,8 +3529,7 @@ botonArriba.addEventListener('click', () => {
         const step = quoteStep(product);
         quote[id] = Math.min(9999, Math.round(((Number(quote[id]) || 0) + step) * 100) / 100);
         saveQuote();
-        $('quotePanel').classList.remove('hidden');
-        $('quoteClose').focus();
+        openQuote();
       }
       function renderQuote() {
         const lines = Object.entries(quote).map(([id, qty]) => ({p:products.find(p => String(p.id) === id),qty:Number(qty)}))
@@ -3536,19 +3561,43 @@ botonArriba.addEventListener('click', () => {
         const add=e.target.closest('[data-quote-add]');
         if(add) { addQuote(add.dataset.quoteAdd); return; }
         const change=e.target.closest('[data-quote-change]');
-        if(change) { const id=change.dataset.quoteChange; const product=products.find(p=>String(p.id)===id); const step=quoteStep(product); quote[id]=Math.max(step,Math.min(9999,Math.round(((Number(quote[id])||step)+Number(change.dataset.delta))*100)/100));saveQuote();return; }
+        if(change) { const id=change.dataset.quoteChange; const product=products.find(p=>String(p.id)===id); const step=quoteStep(product); quote[id]=Math.max(step,Math.min(9999,Math.round(((Number(quote[id])||step)+Number(change.dataset.delta))*100)/100));updateQuoteFromControl(change);return; }
         const remove=e.target.closest('[data-quote-remove]');
-        if(remove) { delete quote[remove.dataset.quoteRemove];saveQuote(); }
+        if(remove) { delete quote[remove.dataset.quoteRemove];updateQuoteFromControl(remove); }
       });
       $('detailAdd').addEventListener('click', () => {
         const id=location.hash.startsWith('#producto=') ? decodeURIComponent(location.hash.slice(10)) : '';
         addQuote(id);
       });
-      $('quoteFab').onclick=()=>{renderQuote();$('quotePanel').classList.remove('hidden');$('quoteClose').focus();};
-      $('quoteClose').onclick=()=>{$('quotePanel').classList.add('hidden');$('quoteFab').focus();};
+      $('quoteFab').onclick=()=>{renderQuote();openQuote();};
+      $('quoteClose').onclick=closeQuote;
       $('quotePanel').onclick=e=>{if(e.target===$('quotePanel'))$('quoteClose').click();};
-      document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('quotePanel').classList.contains('hidden'))$('quoteClose').click();});
-      $('quoteClear').onclick=()=>{quote={};saveQuote();};
+      document.addEventListener('keydown', e => {
+        if ($('quotePanel').classList.contains('hidden')) return;
+        if (e.key === 'Escape') { e.preventDefault(); closeQuote(); return; }
+        if (e.key !== 'Tab') return;
+        const controls = [...$('quotePanel').querySelectorAll('button, a[href]')]
+          .filter(el => el.getClientRects().length && !el.disabled);
+        const first = controls[0], last = controls[controls.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      });
+      $('quoteClear').onclick=()=>{quote={};saveQuote();$('quoteClose').focus();};
+
+      // Match scroll clearance to the actual sticky header and mobile dock,
+      // including wrapped business names, text zoom and device safe areas.
+      function syncCatalogClearance() {
+        const root = document.documentElement.style;
+        root.setProperty('--catalog-header-height', document.querySelector('header').getBoundingClientRect().height + 'px');
+        root.setProperty('--catalog-dock-height', document.querySelector('.quote-dock').getBoundingClientRect().height + 'px');
+      }
+      if ('ResizeObserver' in window) {
+        const clearanceObserver = new ResizeObserver(syncCatalogClearance);
+        clearanceObserver.observe(document.querySelector('header'));
+        clearanceObserver.observe(document.querySelector('.quote-dock'));
+      }
+      window.addEventListener('resize', syncCatalogClearance);
+      syncCatalogClearance();
 
       init();
 
