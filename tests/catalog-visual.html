@@ -13,8 +13,17 @@
 <h1>Revisión responsive · configuraciones existentes</h1>
 <p>Vistas reales del catálogo en marcos de 320, 375 y 430 px. No modifican la configuración de las tiendas.</p>
 <main>
-  <section><h2>EEDO · 320 px</h2><iframe title="EEDO 320" width="320" src="../?catalogo=eedo"></iframe></section>
-  <section><h2>EEDO · 375 px</h2><iframe title="EEDO 375" width="375" src="../?catalogo=eedo"></iframe></section>
-  <section><h2>Plantas Bortega · 430 px</h2><iframe title="Plantas 430" width="430" src="../?catalogo=plantas-bortega"></iframe></section>
+  <section><h2>EEDO · 320 px</h2><iframe title="EEDO 320" width="320" data-catalog="../?catalogo=eedo"></iframe></section>
+  <section><h2>EEDO · 375 px</h2><iframe title="EEDO 375" width="375" data-catalog="../?catalogo=eedo"></iframe></section>
+  <section><h2>Plantas Bortega · 430 px</h2><iframe title="Plantas 430" width="430" data-catalog="../?catalogo=plantas-bortega"></iframe></section>
 </main>
+<script>
+  // Load the current HTML in each review frame after a deployment.
+  const reviewVersion = Date.now();
+  document.querySelectorAll('iframe').forEach(frame => {
+    const url = new URL(frame.dataset.catalog, location.href);
+    url.searchParams.set('review', reviewVersion);
+    frame.src = url.href;
+  });
+</script>
 </html>
