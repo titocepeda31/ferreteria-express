@@ -1,0 +1,86 @@
+/* Public catalog refinements. Loaded after the existing theme. */
+html {
+  scroll-padding-top: calc(var(--catalog-header-height, 90px) + 12px);
+  scroll-padding-bottom: calc(var(--catalog-dock-height, 0px) + 16px);
+}
+.top { padding-top: 10px; padding-bottom: 10px; }
+.brand { min-width: 0; overflow-wrap: anywhere; line-height: 1.3; }
+.brand.has-logo { flex-wrap: wrap; }
+.brand-logo { max-width: 100%; }
+.brand-name { font-size: inherit; }
+.top .contact { flex-shrink: 0; min-height: 44px; display: inline-flex; align-items: center; }
+:is(a, button, input, select):focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+.detail > div, .card { min-width: 0; }
+.detail h1 { overflow-wrap: anywhere; line-height: 1.2; margin: 10px 0 16px; }
+#detailCategory, #detailDescription { overflow-wrap: anywhere; }
+#detailPhoto img { min-height: 0; }
+:is(#products, #featured) .card .cat { white-space: normal; overflow-wrap: anywhere; }
+:is(#products, #featured) .card .price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px; }
+:is(#products, #featured) .card-actions { margin-top: auto; align-items: stretch; }
+:is(#products, #featured) .card-actions :is(a, button) { min-height: 44px; min-width: 0; }
+.product-meta { font-size: 13px; color: var(--ink); overflow-wrap: anywhere; }
+.back { min-height: 44px; }
+.quote-panel {
+  padding: max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px))
+    max(12px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+  overscroll-behavior: contain;
+}
+.quote-dialog {
+  display: flex; flex-direction: column; overflow: hidden;
+  max-height: min(90vh, 760px); max-height: min(90dvh, 760px);
+  padding: 16px; min-height: 0;
+}
+.quote-head, #quoteHelp, .quote-actions { flex-shrink: 0; }
+.quote-head h2 { font-size: clamp(20px, 5vw, 24px); }
+.quote-close { width: 44px; height: 44px; flex-shrink: 0; }
+#quoteHelp { margin: 0 0 4px; line-height: 1.4; font-size: 14px; }
+.quote-content { overflow-y: auto; overscroll-behavior: contain; min-height: 0; margin: 6px 0 10px; padding: 3px; }
+#quoteItems { margin: 0; gap: 8px; }
+.quote-line { padding: 10px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.quote-line-info { min-width: 0; }
+.quote-line-prices { margin: 6px 0 0; font-size: 14px; }
+.quote-price-pending { margin: 4px 0 0; font-size: 13px; color: var(--muted, #67756b); }
+.quote-line-prices > div, .quote-summary dl > div { display: flex; justify-content: space-between; gap: 12px; margin-top: 6px; }
+.quote-line-prices dt, .quote-summary dt { min-width: 0; overflow-wrap: anywhere; }
+.quote-line-prices dd, .quote-summary dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; flex-shrink: 0; max-width: 58%; overflow-wrap: anywhere; }
+.quote-line-prices dd { font-weight: 600; }
+.quote-line-controls { justify-content: flex-start; }
+.quote-line-controls .remove { margin-left: auto; }
+.quote-summary { margin-top: 10px; padding: 10px; background: var(--primary-soft); border: 1px solid var(--border); border-radius: 12px; font-size: 14px; }
+.quote-summary h3 { margin: 0 0 6px; font-size: 15px; }
+.quote-summary dl { margin: 0; }
+.quote-summary dl > div:last-child { padding-top: 8px; border-top: 1px solid var(--border); }
+.quote-summary dd { font-weight: 700; }
+.quote-notice { line-height: 1.4; margin: 8px 0 0; }
+.quote-line-name { overflow-wrap: anywhere; }
+.quote-line-controls { gap: 6px; }
+.quote-line-controls button { min-width: 44px; min-height: 44px; }
+.quote-line-controls strong { min-width: 3ch; text-align: center; }
+.quote-actions :is(a, button) { min-height: 44px; text-align: center; }
+body.quote-open { overflow: hidden; }
+@media (max-width: 800px) {
+  .detail { gap: 20px; }
+  .detail .photo { aspect-ratio: auto; height: clamp(180px, 65vw, 300px); }
+  .detail .photo img { max-height: 100%; object-fit: contain; }
+}
+@media (max-width: 600px) {
+  body { padding-bottom: calc(var(--catalog-dock-height, 68px) + 16px); }
+  footer { padding-bottom: 28px; }
+  .quote-dock { padding: 8px 16px calc(8px + env(safe-area-inset-bottom, 0px)); }
+  .quote-dock .quote-fab { min-height: 48px; padding: 8px 12px; }
+  #volver-arriba, #volver-arriba.visible { bottom: calc(var(--catalog-dock-height, 68px) + 12px); }
+  .hero { padding: 30px 0; }
+  .business-info { padding-top: 20px; padding-bottom: 20px; }
+  .business-info > div { padding: 18px; }
+  .quote-dialog { padding: 12px; }
+  .quote-actions { align-items: stretch; gap: 8px; }
+  .quote-actions > * { width: 100%; }
+  .quote-line-controls .remove { margin-left: auto; }
+}
+@media (max-width: 490px) {
+  :is(#products, #featured) .card h3 { font-size: 14px; }
+  .detail h1 { font-size: 26px; }
+  .top { gap: 8px; }
+  .brand.has-logo { gap: 4px; }
+  .brand-logo { max-height: 30px; max-width: 130px; }
+}
