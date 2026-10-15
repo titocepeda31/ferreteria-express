@@ -3605,10 +3605,21 @@ botonArriba.addEventListener('click', () => {
         $('quoteSend').classList.toggle('hidden', !lines.length);
         $('quoteClear').classList.toggle('hidden', !lines.length);
         if (lines.length) {
-          const msg = 'Hola, quisiera cotizar estos productos:\n\n' +
-            economy.lines.map(({p,qty,unitText,subtotalText},i) => `${i+1}. ${p.nombre} — Cantidad: ${formatQuoteQty(qty)}${p.unidad && p.unidad !== "unidad" ? " " + p.unidad : ""}\nPrecio unitario${p.unidad && p.unidad !== 'unidad' ? ' / ' + p.unidad : ''}: ${unitText}\nSubtotal: ${subtotalText}`).join('\n\n') +
-            '\n\nResumen de cotización · CLP\n' + economy.rows.map(([label, value]) => label + ': ' + value).join('\n') +
-            '\n\n' + economy.notice + '\n¿Me podrían confirmar disponibilidad, unidades de venta y precio final?';
+          const messageSummary = [];
+          if (economy.lines.some(line => line.unitPrice !== null)) {
+            const from = economy.lines.some(line => line.unitPrice !== null && line.p.precioDesde) ? 'Desde ' : '';
+            messageSummary.push((economy.pending ? 'Subtotal conocido: ' : 'Subtotal: ') + from + formatCLP(economy.subtotal));
+          }
+          if (economy.pending) messageSummary.push('Pendiente de precio: ' + economy.pending + (economy.pending === 1 ? ' producto' : ' productos'));
+          const msg = 'Hola, quisiera cotizar:\n\n' +
+            economy.lines.map(({p,qty,unitPrice,unitText,subtotalText}) => {
+              const quantity = formatQuoteQty(qty) + (p.unidad && p.unidad !== 'unidad' ? ' ' + p.unidad : '');
+              return p.nombre + '\n' + (unitPrice === null
+                ? quantity + ' · Precio por confirmar'
+                : quantity + ' × ' + unitText + ' = ' + subtotalText);
+            }).join('\n\n') +
+            '\n\n' + messageSummary.join('\n') +
+            '\n\n¿Me confirman disponibilidad y precio final?';
           $('quoteSend').href = 'https://wa.me/' + String(config.whatsapp || '').replace(/\D/g,'') + '?text=' + encodeURIComponent(msg);
         } else {
           $('quoteSend').removeAttribute('href');
