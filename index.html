@@ -1887,7 +1887,7 @@ footer { margin-top: 24px; }
       }
 
 </style>
-    <link rel="stylesheet" href="catalog-ux.css?v=store-sections-3">
+    <link rel="stylesheet" href="catalog-ux.css?v=header-hero-1">
 
 
 
@@ -1923,42 +1923,24 @@ footer { margin-top: 24px; }
 
 
 
-    <section class="hero" id="hero">
-
-
-
-      <div class="wrap">
-
-
-
-        <h1 id="heroTitle">Todo para tus proyectos</h1>
-
-
-
-        <p id="heroText">
-
-
-
-          Encuentra maderas, herramientas y materiales de construcción. Consulta
-
-
-
-          disponibilidad directamente por WhatsApp.
-
-
-
-        </p>
-
-
-
-        <a class="btn" href="#catalogo">Ver productos ↓</a>
-
-
-
+    <section class="hero" id="hero" aria-labelledby="heroTitle">
+      <div class="wrap hero-layout">
+        <div class="hero-copy">
+          <span class="hero-kicker"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5Z"/></svg>Catálogo digital</span>
+          <h1 id="heroTitle">Todo para tus proyectos</h1>
+          <p id="heroText">Encuentra maderas, herramientas y materiales de construcción. Consulta disponibilidad directamente por WhatsApp.</p>
+          <div class="hero-actions">
+            <a class="btn hero-browse" href="#catalogo"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M5 7h14l2 14H3L5 7Z"/><path d="M8 8V6a4 4 0 0 1 8 0v2"/></svg><span>Ver productos</span><span aria-hidden="true">↓</span></a>
+            <a id="heroWA" class="hero-contact hidden" target="_blank" rel="noopener" aria-label="Contactar a la tienda por WhatsApp"></a>
+          </div>
+        </div>
+        <div id="heroVisual" class="hero-visual" aria-hidden="true"></div>
+        <ul class="hero-features" aria-label="Cómo usar el catálogo">
+          <li><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Explora productos</span></li>
+          <li><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 4h14v17H5Z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg><span>Arma tu cotización</span></li>
+          <li id="heroContactFeature" class="hidden"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M21 11a9 9 0 0 1-9 9H3l2-4a9 9 0 1 1 16-5Z"/></svg><span>Consulta por WhatsApp</span></li>
+        </ul>
       </div>
-
-
-
     </section>
 
 
@@ -2559,6 +2541,30 @@ footer { margin-top: 24px; }
         $("businessHours").textContent = config.horarios || "Consulta nuestros horarios por WhatsApp.";
         $("businessHours").classList.toggle("is-fallback", !config.horarios);
       }
+      function renderStoreIntro() {
+        const name = config.nombre || "Ferretería Demo";
+        const logo = String(config.logo_url || config.logo || "").trim();
+        const initials = name.trim().split(/\s+/).slice(0, 2).map(word => Array.from(word)[0]).join('').toUpperCase();
+        $('brand').innerHTML = (/^https?:\/\//i.test(logo)
+          ? '<img class="brand-logo" src="' + esc(logo) + '" alt="">'
+          : '<span class="brand-monogram" aria-hidden="true">' + esc(initials) + '</span>') + '<span class="brand-name">' + esc(name) + '</span>';
+        $('brand').classList.add('has-logo');
+        $('topwa').innerHTML = '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11a9 9 0 0 1-9 9H3l2-4a9 9 0 1 1 16-5Z"/><path d="M8 7c0 4 2 6 6 7l2-2-3-2-1 1-2-2 1-1-2-2Z"/></svg><span>Contactar <span aria-hidden="true">↗</span></span>';
+        const hasContact = !!String(config.whatsapp || '').replace(/\D/g, '');
+        $('heroWA').classList.toggle('hidden', !hasContact);
+        $('heroContactFeature').classList.toggle('hidden', !hasContact);
+        if (hasContact) {
+          $('heroWA').href = $('topwa').href;
+          $('heroWA').innerHTML = $('topwa').innerHTML;
+        } else {
+          $('heroWA').removeAttribute('href');
+          $('heroWA').innerHTML = '';
+        }
+        const photos = products.filter(p => /^(https?:\/\/|\.\.?\/|assets\/|imagenes\/)/i.test(String(p.imagen || ''))).slice(0, 2);
+        $('heroVisual').classList.toggle('hidden', !photos.length);
+        $('heroVisual').innerHTML = photos.map(p => '<div class="hero-photo">' + img(p) + '</div>').join('');
+        $('hero').classList.toggle('has-photos', !!photos.length);
+      }
       function imagePlaceholder() {
         return '<span class="image-placeholder">' + uiIcon('image') + '<span>Imagen no disponible</span></span>';
       }
@@ -3156,12 +3162,7 @@ function filter() {
 
 
         const nombreCatalogo = config.nombre || "Ferretería Demo";
-        $("brand").textContent = $("footerName").textContent = nombreCatalogo;
-        const logoUrl = String(config.logo_url || config.logo || "").trim();
-        if (/^https?:\/\//i.test(logoUrl)) {
-          $("brand").innerHTML = '<img class="brand-logo" src="' + esc(logoUrl) + '" alt=""><span class="brand-name">' + esc(nombreCatalogo) + '</span>';
-          $("brand").classList.add("has-logo");
-        }
+        $("footerName").textContent = nombreCatalogo;
 
         $("heroTitle").textContent = config.titulo || "Todo para tus proyectos";
 
@@ -3410,6 +3411,7 @@ function filter() {
 
 
 
+        renderStoreIntro();
         render();
         renderDestacados();
         // Actualiza el contador guardado después de cargar los productos.

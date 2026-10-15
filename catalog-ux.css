@@ -218,3 +218,51 @@ footer::before { width: 440px; height: 240px; right: -80px; bottom: -150px; back
   .hours-icon { flex-basis: 36px; height: 36px; }
   .hours-icon .ui-icon { width: 24px; height: 24px; }
 }
+
+/* Header and hero share the active store's semantic palette. */
+header { background: var(--primary-contrast); border-bottom: 1px solid var(--border); box-shadow: 0 3px 14px color-mix(in srgb, var(--ink) 5%, transparent); }
+.top { gap: 16px; padding-top: 12px; padding-bottom: 12px; }
+.brand.has-logo { display: flex; flex: 1; flex-wrap: nowrap; gap: 10px; color: var(--ink); }
+.brand .brand-name { min-width: 0; font-size: 20px; font-weight: 700; line-height: 1.2; }
+.brand .brand-logo, .brand-monogram { width: 44px; height: 44px; min-width: 44px; max-width: 44px; max-height: 44px; flex-shrink: 0; }
+.brand .brand-logo { object-fit: contain; }
+.brand-monogram { display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--primary-soft); color: var(--primary); font-size: 16px; font-weight: 700; }
+.top .contact { gap: 8px; padding: 10px 14px; border-radius: 12px; font-size: 14px; font-weight: 600; background: var(--primary); color: var(--primary-contrast); box-shadow: 0 3px 10px color-mix(in srgb, var(--ink) 8%, transparent); }
+.top .contact:hover { background: var(--primary-hover); }
+.hero { position: relative; isolation: isolate; overflow: clip; padding: 40px 0 28px; }
+.hero::before, .hero::after { content: ""; position: absolute; z-index: -1; pointer-events: none; background: color-mix(in srgb, var(--primary) 7%, transparent); border-radius: 45% 55% 65% 35%; }
+.hero::before { width: 360px; height: 320px; right: -180px; top: -120px; transform: rotate(-25deg); }
+.hero::after { width: 300px; height: 220px; right: -120px; bottom: 20px; transform: rotate(25deg); }
+.hero-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+.hero-copy { min-width: 0; max-width: 640px; }
+.hero-kicker { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; margin-bottom: 16px; border-radius: 9999px; background: var(--primary-soft); color: var(--primary); font-size: 13px; font-weight: 600; }
+.hero-kicker .ui-icon { width: 18px; height: 18px; }
+.hero h1 { max-width: 18ch; margin: 0; font-size: clamp(28px, 4vw, 44px); font-weight: 700; line-height: 1.12; letter-spacing: -.025em; overflow-wrap: anywhere; color: var(--ink); }
+.hero #heroText { max-width: 48ch; margin: 16px 0 22px; font-size: 16px; line-height: 1.6; color: var(--ink); overflow-wrap: anywhere; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.hero-actions a { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 11px 18px; border-radius: 12px; font-size: 15px; font-weight: 600; text-decoration: none; }
+.hero-browse { background: var(--primary); color: var(--primary-contrast); box-shadow: 0 4px 12px color-mix(in srgb, var(--ink) 9%, transparent); }
+.hero-contact { border: 1px solid var(--primary); color: var(--primary); background: var(--primary-contrast); }
+.hero-contact:hover { background: var(--primary-soft); }
+.hero-visual { display: flex; align-items: center; justify-content: center; gap: 12px; min-width: 0; }
+.hero-photo { width: min(44%, 180px); padding: 8px; border-radius: 16px; background: var(--primary-contrast); box-shadow: 0 8px 22px color-mix(in srgb, var(--ink) 12%, transparent); transform: rotate(-5deg); }
+.hero-photo:nth-child(2) { transform: rotate(5deg); }
+.hero-photo img { display: block; width: 100%; height: 180px; object-fit: contain; border-radius: 10px; }
+.hero-features { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(75px, 1fr)); gap: 12px; list-style: none; margin: 0; padding: 16px; border: 1px solid var(--border); border-radius: 16px; background: var(--primary-contrast); color: var(--ink); box-shadow: 0 4px 16px color-mix(in srgb, var(--ink) 5%, transparent); }
+.hero-features li { display: flex; align-items: center; justify-content: center; gap: 10px; min-width: 0; font-size: 13px; line-height: 1.4; }
+.hero-features .ui-icon { color: var(--primary); }
+@media (min-width: 760px) { .hero.has-photos .hero-layout { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); } }
+@media (max-width: 600px) {
+  .top { gap: 10px; }
+  .brand .brand-name { font-size: 17px; }
+  .brand .brand-logo, .brand-monogram { width: 36px; height: 36px; min-width: 36px; max-width: 36px; max-height: 36px; }
+  .brand-monogram { font-size: 13px; }
+  .top .contact { gap: 6px; padding: 10px; font-size: 13px; }
+  .top .contact .ui-icon { width: 18px; height: 18px; }
+  .hero { padding: 26px 0 22px; }
+  .hero-layout { gap: 20px; }
+  .hero-actions a { flex: 1 1 140px; }
+  .hero-features { gap: 8px; padding: 12px 8px; }
+  .hero-features li { flex-direction: column; align-items: center; text-align: center; gap: 6px; font-size: 12px; }
+  .hero-photo img { height: 120px; }
+}
