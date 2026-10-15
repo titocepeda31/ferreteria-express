@@ -2,7 +2,7 @@
 
 
 
-<html lang="es">
+<html lang="es" data-catalog-state="loading">
 
 
 
@@ -18,7 +18,7 @@
 
 
 
-    <title>Ferretería Express · Catálogo</title>
+    <title>Cargando catálogo…</title>
 
 
 
@@ -1891,11 +1891,21 @@ footer { margin-top: 24px; }
 
 
 
+
+    <style>
+      html:not([data-catalog-state="ready"]) body > :not(#catalogLoading):not(script):not(noscript) { display:none!important; }
+      #catalogLoading { min-height:100dvh; display:grid; place-content:center; gap:12px; padding:24px; text-align:center; color:var(--ink); background:var(--background); font:16px/1.5 system-ui,sans-serif; }
+      #catalogLoading[hidden] { display:none; }
+      #catalogLoading p { margin:0; }
+      #catalogRetry { min-height:44px; padding:10px 20px; border:1px solid var(--border); border-radius:12px; background:var(--primary); color:var(--primary-contrast); font:inherit; cursor:pointer; }
+      #catalogRetry:focus-visible { outline:3px solid var(--ink); outline-offset:3px; }
+    </style>
   </head>
 
 
 
-  <body>
+  <body aria-busy="true">
+    <div id="catalogLoading"><p id="catalogLoadMessage" role="status" aria-live="polite">Cargando catálogo…</p><button id="catalogRetry" hidden type="button">Reintentar</button><noscript>Activa JavaScript para ver el catálogo.</noscript></div>
 
 
 
@@ -2275,7 +2285,8 @@ footer { margin-top: 24px; }
       async function supabasePublic(path, params = {}) {
         const query = new URLSearchParams(params);
         const response = await fetch(SUPABASE_URL + path + (query.toString() ? "?" + query.toString() : ""), {
-          headers: SUPABASE_HEADERS
+          headers: SUPABASE_HEADERS,
+          signal: AbortSignal.timeout(12000)
         });
         if (!response.ok) throw new Error("Supabase HTTP " + response.status);
         return response.json();
@@ -3029,8 +3040,11 @@ function filter() {
         try {
           remoteLoaded = await loadRemoteCatalog();
         } catch (error) {
+          if (new URLSearchParams(location.search).has("catalogo")) throw error;
           console.warn("No se pudo cargar el catálogo desde Supabase; se usará la copia estática.", error);
         }
+
+        if (!remoteLoaded && new URLSearchParams(location.search).has("catalogo")) throw new Error("Catálogo no disponible");
 
         if (new URLSearchParams(location.search).get("preview") === "1") {
 
@@ -3346,7 +3360,7 @@ function filter() {
           } catch (e) {}
         }
 
-        if (!products.length) {
+        if (!remoteLoaded && !products.length) {
 
 
 
@@ -3374,7 +3388,7 @@ function filter() {
 
 
 
-        if (!products.length) products = demo;
+        if (!remoteLoaded && !products.length) products = demo;
 
 
 
@@ -3653,7 +3667,21 @@ botonArriba.addEventListener('click', () => {
       window.addEventListener('resize', syncCatalogClearance);
       syncCatalogClearance();
 
-      init();
+      function catalogReady() {
+        document.documentElement.dataset.catalogState = 'ready';
+        document.body.setAttribute('aria-busy', 'false');
+        $('catalogLoading').hidden = true;
+        syncCatalogClearance();
+      }
+      function catalogFailed() {
+        document.documentElement.dataset.catalogState = 'error';
+        document.body.setAttribute('aria-busy', 'false');
+        document.title = 'Catálogo no disponible';
+        $('catalogLoadMessage').textContent = 'No pudimos cargar el catálogo. Revisa tu conexión o inténtalo nuevamente.';
+        $('catalogRetry').hidden = false;
+      }
+      $('catalogRetry').addEventListener('click', () => location.reload());
+      init().then(catalogReady).catch(catalogFailed);
 
 
 
