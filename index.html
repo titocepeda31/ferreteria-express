@@ -1887,7 +1887,7 @@ footer { margin-top: 24px; }
       }
 
 </style>
-    <link rel="stylesheet" href="catalog-ux.css?v=store-theme-ui-1">
+    <link rel="stylesheet" href="catalog-ux.css?v=store-sections-2">
 
 
 
@@ -2126,7 +2126,7 @@ footer { margin-top: 24px; }
 
 
 
-      <div>
+      <div class="hours-card">
 
 
 
@@ -2134,7 +2134,10 @@ footer { margin-top: 24px; }
 
 
 
-        <p id="businessHours"></p>
+        <div class="hours-body">
+          <span class="hours-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+          <p id="businessHours"></p>
+        </div>
 
 
 
@@ -2161,6 +2164,7 @@ footer { margin-top: 24px; }
           <p>Catálogo digital · Cotizaciones por WhatsApp</p>
         </div>
         <a id="footerContact" class="footer-contact hidden"></a>
+        <button id="volver-arriba" type="button" aria-label="Volver arriba" title="Volver arriba">↑</button>
       </div>
 
 
@@ -2171,21 +2175,7 @@ footer { margin-top: 24px; }
 
 
 
-        <button
 
-    id="volver-arriba"
-
-    type="button"
-
-    aria-label="Volver arriba"
-
-    title="Volver arriba"
-
->
-
-    ↑
-
-</button>
 
 
 
@@ -2543,7 +2533,7 @@ footer { margin-top: 24px; }
         const networks = ['instagram', 'facebook', 'tiktok'].filter(name => safeLink(config[name]));
         const labels = {instagram:'Instagram', facebook:'Facebook', tiktok:'TikTok'};
         $('socialLinks').innerHTML = networks.map(name => '<a target="_blank" rel="noopener" href="' +
-          esc(safeLink(config[name])) + '">' + socialIcon(name) + '<span>' + labels[name] + '</span></a>').join('');
+          esc(safeLink(config[name])) + '">' + socialIcon(name) + '<span>' + labels[name] + '</span><svg class="social-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></a>').join('');
         $('socialSection').classList.toggle('hidden', !networks.length);
 
         const contact = $('footerContact');
@@ -2564,6 +2554,10 @@ footer { margin-top: 24px; }
           contact.removeAttribute('href');
           contact.textContent = '';
         }
+      }
+      function renderBusinessHours() {
+        $("businessHours").textContent = config.horarios || "Consulta nuestros horarios por WhatsApp.";
+        $("businessHours").classList.toggle("is-fallback", !config.horarios);
       }
       function imagePlaceholder() {
         return '<span class="image-placeholder">' + uiIcon('image') + '<span>Imagen no disponible</span></span>';
@@ -3333,13 +3327,7 @@ function filter() {
 
 
 
-        $("businessHours").textContent =
-
-
-
-          config.horarios || "Consulta nuestros horarios por WhatsApp.";
-
-
+        renderBusinessHours();
 
         renderStoreLinks(safeLink);
 
