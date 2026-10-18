@@ -1940,6 +1940,15 @@ footer { margin-top: 24px; }
 .request-page .quote-actions{padding-bottom:18px}
 .request-feedback{position:fixed;bottom:calc(var(--catalog-dock-height,84px) + 12px);left:50%;transform:translateX(-50%);width:min(calc(100% - 32px),480px);z-index:90;padding:13px 16px;background:#185c43;color:#fff;border-radius:12px;box-shadow:0 6px 24px #0003;font-size:14px;font-weight:600;text-align:center}
 .request-feedback.hidden{display:none}
+
+/* Real document flow for lodging request: the page scrolls, not a fixed modal. */
+body.request-open{overflow-y:auto!important;overflow-x:hidden}
+body.request-open > :not(#quotePanel):not(script):not(style):not(#requestFeedback){display:none!important}
+body.request-open #quotePanel.request-page{position:relative!important;inset:auto!important;display:block!important;overflow:visible!important;height:auto!important;min-height:100dvh!important;width:100%!important;background:#fff!important;z-index:auto!important;padding:0!important}
+body.request-open #quotePanel.request-page .quote-dialog{overflow:visible!important;max-height:none!important;height:auto!important;min-height:100dvh!important}
+body.request-open .quote-head{position:relative!important}
+body.request-open .quote-content{overflow:visible!important;max-height:none!important}
+body.request-open #quoteItems:empty{display:none!important}
 </style>
     <link rel="stylesheet" href="catalog-ux.css?v=artwork-1">
 
@@ -3794,12 +3803,20 @@ botonArriba.addEventListener('click', () => {
       }
       let quoteOpener = null;
       let quoteBackground = [];
+      let requestScrollY=0;
       function openQuote() {
         $('quotePanel').classList.toggle('request-page',config.catalogType==='lodging');
         if (!$('quotePanel').classList.contains('hidden')) return;
         quoteOpener = document.activeElement;
+        requestScrollY=window.scrollY;
         $('quotePanel').classList.remove('hidden');
         document.body.classList.add('quote-open');
+        if(config.catalogType==='lodging'){
+          document.body.classList.add('request-open');
+          window.scrollTo(0,0);
+          $('quoteClose').focus({preventScroll:true});
+          return;
+        }
         quoteBackground = [...document.body.children]
           .filter(el => el !== $('quotePanel') && !['SCRIPT', 'STYLE'].includes(el.tagName))
           .map(el => ({el, inert: el.inert}));
@@ -3809,8 +3826,11 @@ botonArriba.addEventListener('click', () => {
       function closeQuote() {
         $('quotePanel').classList.add('hidden');
         $('quotePanel').classList.remove('request-page');
+        const wasRequest=document.body.classList.contains('request-open');
+        document.body.classList.remove('request-open');
         document.body.classList.remove('quote-open');
         quoteBackground.forEach(({el, inert}) => { el.inert = inert; });
+        if(wasRequest)window.scrollTo(0,requestScrollY);
         const target = quoteOpener?.isConnected ? quoteOpener : $('quoteFab');
         target.focus({preventScroll:true});
       }
@@ -3901,7 +3921,7 @@ botonArriba.addEventListener('click', () => {
               <button type="button" class="remove" data-quote-remove="${esc(p.id)}">Quitar</button>
             </div>
           </div>`;
-        }).join('') : '<p class="muted">'+(config.catalogType==='lodging'?'Aún no has agregado una estadía ni adicionales.':'Aún no has agregado productos.')+'</p>';
+        }).join('') : (config.catalogType==='lodging'&&stayDraft?'':'<p class="muted">'+(config.catalogType==='lodging'?'Aún no has agregado una estadía ni productos o servicios.':'Aún no has agregado productos.')+'</p>');
         if(config.catalogType==='lodging'&&stayDraft){
           const cabin=products.find(p=>String(p.id)===String(stayDraft.productId));
           if(cabin){const total=Number(stayDraft.nights)*(Number(cabin.precioRebajado??cabin.precio)||0);
