@@ -3209,7 +3209,7 @@ function filter() {
         if(!response.ok)throw new Error((await response.json().catch(()=>({}))).message||"No se pudo consultar disponibilidad");
         return response.json();
       }
-      let bookingPendingKey=null,bookingPendingFingerprint="";
+      // Future: contact fields may become seller-configurable. The current RPC requires both.\n      const BOOKING_CONTACT_REQUIRED=true;\n      let bookingPendingKey=null,bookingPendingFingerprint="";
       $("bookingCheck").addEventListener("click",async()=>{
         const p=bookingSelection(),start=$("bookingArrival").value,end=$("bookingDeparture").value;
         const guests=Number($("bookingGuests").value),status=$("bookingStatus"),btn=$("bookingCheck");
@@ -3893,8 +3893,8 @@ botonArriba.addEventListener('click', () => {
           $('quoteSend').textContent=hasStay?'Registrar solicitud pendiente':'Elegir una estadía';
           $('bookingContact').classList.toggle('hidden',!hasStay);
           if(hasStay&&$('bookingContact').parentElement!==$('quoteContactSlot'))$('quoteContactSlot').appendChild($('bookingContact'));
-          $('quoteContactSlot').classList.toggle('hidden',!hasStay);
-          if(hasStay){$('quoteSummary').insertAdjacentHTML('beforeend','<p><a href="#adicionales" id="quoteBrowseExtras">Ver productos adicionales →</a></p>');}
+          $('quoteContactSlot').classList.toggle('hidden',!hasStay||!BOOKING_CONTACT_REQUIRED);
+          if(hasStay){$('quoteSummary').insertAdjacentHTML('beforeend','<p><a href="#adicionales" id="quoteBrowseExtras">Ver productos y servicios →</a></p>');}
         }
         $('quoteSend').classList.toggle('hidden', config.catalogType==='lodging'?false:!lines.length);
         $('quoteClear').classList.toggle('hidden', !lines.length && !(config.catalogType==='lodging'&&stayDraft));
