@@ -3126,7 +3126,7 @@ function filter() {
         const n=bookingNights(),guests=Number($("bookingGuests").value)||1,price=Number(p.precioRebajado??p.precio);
         const amount=Number.isFinite(price)&&price>0?(price*n).toLocaleString("es-CL"):"Por confirmar";
         const link=new URL(location.pathname+location.search,location.origin).href+"#producto="+encodeURIComponent(p.id);
-        return (code?"Solicitud de reserva":"Cotización de estadía")+"\nCabaña: "+p.nombre+"\nLlegada: "+start+"\nSalida: "+end+"\nPersonas: "+guests+"\nNoches: "+n+"\nTotal estimado: $"+amount+(code?"\nCódigo: #"+code:"\nConsulta sin reserva")+"\nEnlace: "+link;
+        return (code?"Solicitud de reserva":"Cotización de estadía")+"\nCabaña: "+p.nombre+"\nLlegada: "+start+"\nSalida: "+end+"\nPersonas: "+guests+"\nNoches: "+n+"\nEstadía estimada (sin complementos): $"+amount+(code?"\nCódigo: #"+code:"\nConsulta sin reserva")+"\nEnlace: "+link;
       }
       function bookingShareLink(msg){
         const phone=String(config.whatsapp||config.telefono||"").replace(/\D/g,"");
