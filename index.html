@@ -2681,7 +2681,27 @@ footer { margin-top: 24px; }
 
 
 
+      function applyCatalogLanguage() {
+        const presets = {
+          retail: ['¿Qué producto necesitas?', 'Buscar productos en el catálogo…', 'Productos destacados', 'Descubre algunos de nuestros productos.'],
+          lodging: ['¿Qué cabaña buscas?', 'Buscar cabañas por nombre o capacidad…', 'Cabañas destacadas', 'Explora nuestras opciones para tu próxima estadía.'],
+          food: ['¿Qué alimento buscas?', 'Buscar frutas, verduras y alimentos…', 'Productos destacados', 'Descubre nuestra selección de alimentos.'],
+          services: ['¿Qué servicio necesitas?', 'Buscar servicios disponibles…', 'Servicios destacados', 'Conoce los servicios que ofrecemos.'],
+          other: ['¿Qué estás buscando?', 'Buscar en el catálogo…', 'Destacados', 'Explora lo que tenemos para ofrecerte.']
+        };
+        const [question, placeholder, featuredTitle, featuredSubtitle] = presets[config.catalogType] || presets.other;
+        const searchLabel = document.querySelector('label[for="quickSearch"]');
+        const search = document.getElementById('quickSearch');
+        const title = document.getElementById('destacados-titulo');
+        const subtitle = document.querySelector('#inicio-destacados .featured-heading p');
+        if (searchLabel) searchLabel.textContent = question;
+        if (search) { search.placeholder = placeholder; search.setAttribute('aria-label', question); }
+        if (title) title.textContent = featuredTitle;
+        if (subtitle) subtitle.textContent = featuredSubtitle;
+      }
+
       function render() {
+        applyCatalogLanguage();
 
 
 
