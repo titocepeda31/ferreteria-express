@@ -1927,7 +1927,20 @@ footer { margin-top: 24px; }
   #quoteContactSlot{margin:16px 0}
   #quoteContactSlot #bookingContact{padding:14px;border:1px solid var(--border);border-radius:14px}
   #quoteContactSlot label{font-weight:600}
-    .stay-actions{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;width:100%;margin-top:12px}.stay-actions button{min-height:46px!important;padding:10px 8px!important;font-size:14px!important;font-weight:650!important;border-radius:10px!important;white-space:normal}.stay-actions button:first-child{color:var(--primary);border-color:var(--primary)}.stay-actions button.remove{color:#a33;border-color:#e2c9c9}.stay-summary-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.stay-summary-top strong{font-size:1.2rem}.quote-summary:has(.stay-summary-top){padding:14px 16px;margin:10px 0 16px;background:var(--primary-soft);border-radius:12px}.quote-summary:has(.stay-summary-top) p{margin:6px 0;font-size:13px}body:has(#quoteTitle) .quote-dialog{scroll-padding-top:12px}\n</style>
+    .stay-actions{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;width:100%;margin-top:12px}.stay-actions button{min-height:46px!important;padding:10px 8px!important;font-size:14px!important;font-weight:650!important;border-radius:10px!important;white-space:normal}.stay-actions button:first-child{color:var(--primary);border-color:var(--primary)}.stay-actions button.remove{color:#a33;border-color:#e2c9c9}.stay-summary-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.stay-summary-top strong{font-size:1.2rem}.quote-summary:has(.stay-summary-top){padding:14px 16px;margin:10px 0 16px;background:var(--primary-soft);border-radius:12px}.quote-summary:has(.stay-summary-top) p{margin:6px 0;font-size:13px}body:has(#quoteTitle) .quote-dialog{scroll-padding-top:12px}\n
+/* Lodging uses the shared quote DOM as a full-page request review, not a modal sheet. */
+.quote-panel.request-page{inset:0;display:block;padding:0;background:#fff;overflow:auto;overscroll-behavior:contain;z-index:250}
+.quote-panel.request-page .quote-dialog{width:100%;max-width:760px;max-height:none;min-height:100dvh;margin:0 auto;box-shadow:none;border-radius:0;padding:calc(env(safe-area-inset-top) + 14px) 18px calc(env(safe-area-inset-bottom) + 30px);overflow:visible}
+.quote-panel.request-page .quote-head{position:sticky;top:0;z-index:2;background:#fff;padding:12px 0 16px;border-bottom:1px solid var(--border);margin-bottom:16px}
+.quote-panel.request-page .quote-close{width:auto;min-width:86px;border-radius:12px;font-size:14px;padding:8px 12px;font-weight:600;color:var(--primary)}
+.quote-close-label{display:none}.request-page .quote-close-label{display:inline}.request-page .quote-close-x{display:none}
+.request-page #quoteItems{margin:16px 0 22px}.request-page .quote-line{align-items:stretch;flex-direction:column}
+.request-page #quoteSummary{margin-top:0}.request-page #requestContinueShopping{margin:18px 0}
+.request-page #requestBrowseMore{width:100%;min-height:48px;border-radius:12px;font-weight:650}
+.request-page .quote-actions{padding-bottom:18px}
+.request-feedback{position:fixed;bottom:calc(var(--catalog-dock-height,84px) + 12px);left:50%;transform:translateX(-50%);width:min(calc(100% - 32px),480px);z-index:90;padding:13px 16px;background:#185c43;color:#fff;border-radius:12px;box-shadow:0 6px 24px #0003;font-size:14px;font-weight:600;text-align:center}
+.request-feedback.hidden{display:none}
+</style>
     <link rel="stylesheet" href="catalog-ux.css?v=artwork-1">
 
 
@@ -2234,13 +2247,13 @@ footer { margin-top: 24px; }
     </div>
     <div id="quotePanel" class="quote-panel hidden" role="presentation">
       <section class="quote-dialog" role="dialog" aria-modal="true" aria-labelledby="quoteTitle" aria-describedby="quoteHelp">
-        <div class="quote-head"><h2 id="quoteTitle">Mi cotización</h2><button class="quote-close" type="button" id="quoteClose" aria-label="Cerrar">×</button></div>
+        <div class="quote-head"><h2 id="quoteTitle">Mi cotización</h2><button class="quote-close" type="button" id="quoteClose" aria-label="Cerrar"><span class="quote-close-label">Volver</span><span class="quote-close-x">×</span></button></div>
         <p class="muted" id="quoteHelp">Ajusta las cantidades y envía tu cotización.</p>
         <div class="quote-content">
           <div id="quoteItems"></div>
           <div id="quoteSummary" class="quote-summary hidden" role="status" aria-live="polite" aria-atomic="true"></div>
         </div>
-        <div id="quoteContactSlot" class="hidden"></div><div class="quote-actions"><a class="btn" id="quoteSend" target="_blank" rel="noopener">Enviar cotización por WhatsApp</a><button type="button" class="outline" id="quoteClear">Vaciar cotización</button><button type="button" class="outline hidden" id="bookingShareFromQuote">Compartir solicitud</button></div>
+        <div id="quoteContactSlot" class="hidden"></div><div id="requestContinueShopping" class="hidden"><button type="button" class="outline" id="requestBrowseMore">+ Agregar productos y servicios</button></div><div class="quote-actions"><a class="btn" id="quoteSend" target="_blank" rel="noopener">Enviar cotización por WhatsApp</a><button type="button" class="outline" id="quoteClear">Vaciar cotización</button><button type="button" class="outline hidden" id="bookingShareFromQuote">Compartir solicitud</button></div>
       </section>
     </div>
 
@@ -3782,6 +3795,7 @@ botonArriba.addEventListener('click', () => {
       let quoteOpener = null;
       let quoteBackground = [];
       function openQuote() {
+        $('quotePanel').classList.toggle('request-page',config.catalogType==='lodging');
         if (!$('quotePanel').classList.contains('hidden')) return;
         quoteOpener = document.activeElement;
         $('quotePanel').classList.remove('hidden');
@@ -3794,6 +3808,7 @@ botonArriba.addEventListener('click', () => {
       }
       function closeQuote() {
         $('quotePanel').classList.add('hidden');
+        $('quotePanel').classList.remove('request-page');
         document.body.classList.remove('quote-open');
         quoteBackground.forEach(({el, inert}) => { el.inert = inert; });
         const target = quoteOpener?.isConnected ? quoteOpener : $('quoteFab');
@@ -3819,7 +3834,20 @@ botonArriba.addEventListener('click', () => {
         const step = quoteStep(product);
         quote[id] = Math.min(9999, Math.round(((Number(quote[id]) || 0) + step) * 100) / 100);
         saveQuote();
-        openQuote();
+        if(config.catalogType==='lodging'){
+          showRequestFeedback(product.nombre);
+        }else openQuote();
+      }
+      function showRequestFeedback(name){
+        let note=$('requestFeedback');
+        if(!note){
+          note=document.createElement('div');note.id='requestFeedback';note.className='request-feedback';
+          note.setAttribute('role','status');document.body.appendChild(note);
+        }
+        note.textContent=name+' agregado a Mi solicitud · '+$('quoteCount').textContent+' elementos';
+        note.classList.remove('hidden');
+        clearTimeout(showRequestFeedback.timeout);
+        showRequestFeedback.timeout=setTimeout(()=>note.classList.add('hidden'),3500);
       }
       function quoteEconomy(lines) {
         const pricedLines = lines.map(({p, qty}) => {
@@ -3909,10 +3937,11 @@ botonArriba.addEventListener('click', () => {
           if(hasStay){$('quoteSummary').insertAdjacentHTML('beforeend','<div class="quote-line-controls stay-actions"><button type="button" data-stay-edit>Editar estadía</button><button type="button" class="remove" data-stay-remove>Quitar estadía</button></div>');}
           if(!hasStay){$('bookingShareFromQuote').classList.add('hidden');$('quoteSend').removeAttribute('aria-disabled');}
           $('quoteSend').textContent=hasStay?'Registrar solicitud pendiente':'Elegir una estadía';
+          $('requestContinueShopping').classList.remove('hidden');
           $('bookingContact').classList.toggle('hidden',!hasStay);
           if(hasStay&&$('bookingContact').parentElement!==$('quoteContactSlot'))$('quoteContactSlot').appendChild($('bookingContact'));
           $('quoteContactSlot').classList.toggle('hidden',!hasStay||!BOOKING_CONTACT_REQUIRED);
-          if(hasStay){$('quoteSummary').insertAdjacentHTML('beforeend','<p><a href="#adicionales" id="quoteBrowseExtras">Ver productos y servicios →</a></p>');}
+          // Products and services are accessible via a single dedicated navigation action below.
         }
         $('quoteSend').classList.toggle('hidden', config.catalogType==='lodging'?false:!lines.length);
         $('quoteClear').classList.toggle('hidden', !lines.length && !(config.catalogType==='lodging'&&stayDraft));
@@ -4024,6 +4053,7 @@ botonArriba.addEventListener('click', () => {
       });
       $('quoteFab').onclick=()=>{renderQuote();openQuote();};
       $('quoteClose').onclick=closeQuote;
+      $('requestBrowseMore').onclick=()=>{closeQuote();location.hash='#adicionales';window.scrollTo({top:0,behavior:'instant'});};
       $('quoteSummary').addEventListener('click',e=>{if(e.target.closest('#quoteBrowseExtras'))closeQuote();});
       $('quotePanel').onclick=e=>{if(e.target===$('quotePanel'))$('quoteClose').click();};
       document.addEventListener('keydown', e => {
