@@ -2870,6 +2870,7 @@ function productMeta(p) {
     const number = Number(raw);
     return Number.isFinite(number) && number > 0 ? number : NaN;
   };
+  if (/\b\d+\s*personas?\b/i.test(p.nombre || "")) return "";
   const min = parseCapacity(p.capacidadMin);
   const max = parseCapacity(p.capacidadMax);
   if (!Number.isFinite(min) && !Number.isFinite(max)) return "";
@@ -3172,8 +3173,10 @@ function filter() {
         $("bookingArrival").value=localDate;
         const end=new Date(localDate+"T12:00:00");end.setDate(end.getDate()+2);
         $("bookingDeparture").value=end.toISOString().slice(0,10);
-        $("bookingContact").classList.add("hidden");
         updateBookingEstimate();
+        $("bookingContact").classList.add("hidden");
+        $("bookingCheck").disabled=false;
+        $("bookingCheck").textContent="Consultar disponibilidad";
         $("quickBookingOverlay").classList.remove("hidden");
         $("quickBookingClose").focus();
       }
@@ -3211,7 +3214,8 @@ function filter() {
             verifiedBookingKey=key;
             $("bookingContact").classList.remove("hidden");
             btn.textContent="Registrar solicitud pendiente";
-            status.textContent="Fechas disponibles al consultar. Completa tu contacto; el alojamiento debe confirmar.";
+            status.textContent="Fechas disponibles. Completa tu nombre y teléfono para enviar la solicitud.";
+            $("bookingCustomerName").focus();
             return;
           }
           const name=$("bookingCustomerName").value.trim(),phone=$("bookingCustomerPhone").value.trim();
@@ -3224,7 +3228,7 @@ function filter() {
           if(!response.ok)throw new Error((await response.json().catch(()=>({}))).message||"No se pudo registrar");
           const requestId=await response.json();
           const code=String(requestId).slice(0,8);
-          status.textContent="Solicitud #"+code+" registrada y pendiente de confirmación. No es una reserva confirmada.";
+          status.textContent="✓ Solicitud #"+code+" registrada. Está pendiente de confirmación del alojamiento; no es una reserva confirmada.";
           const share=$("bookingWhatsApp");
           share.dataset.message=bookingShareText(p,start,end,code)+"\\nContacto: "+name+"\\nWhatsApp: "+phone+"\\nAdicionales: "+(extras.length?extras.map(x=>{const product=products.find(p=>String(p.analyticsId||p.id)===String(x.product_id));return product?.nombre+" × "+x.quantity;}).join(", "):"Ninguno");
           share.textContent=bookingShareLink(share.dataset.message)?"Abrir WhatsApp (mensaje preparado)":"Copiar solicitud (sin WhatsApp del negocio)";
