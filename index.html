@@ -2108,7 +2108,7 @@ footer { margin-top: 24px; }
 
 
 
-            <div id="bookingHome"><div id="bookingRequest" class="hidden booking-request"><h3>Consultar disponibilidad</h3><p>Selecciona las fechas de tu estadía. La solicitud requiere confirmación del alojamiento.</p><div class="booking-dates"><label>Llegada<input type="date" id="bookingArrival"></label><label>Salida<input type="date" id="bookingDeparture"></label></div><div id="bookingEstimate" class="booking-estimate"></div><p id="bookingStatus" role="status"></p><button class="btn" id="bookingCheck" type="button">Consultar disponibilidad</button><a id="bookingWhatsApp" class="btn outline hidden" target="_blank" rel="noopener noreferrer">Enviar solicitud por WhatsApp ↗</a></div></div><div class="detail-actions">
+            <div id="bookingHome"><div id="bookingRequest" class="hidden booking-request"><h3>Consultar disponibilidad</h3><p>Selecciona las fechas de tu estadía. La solicitud requiere confirmación del alojamiento.</p><div class="booking-dates"><label>Llegada<input type="date" id="bookingArrival"></label><label>Salida<input type="date" id="bookingDeparture"></label></div><label style="display:block;margin-top:12px">Personas <input id="bookingGuests" type="number" min="1" value="2" style="width:85px;padding:8px"></label><div id="bookingEstimate" class="booking-estimate"></div><p id="bookingStatus" role="status"></p><button class="btn" id="bookingCheck" type="button">Consultar disponibilidad</button><a id="bookingQuoteWA" class="btn outline" target="_blank" rel="noopener noreferrer" style="display:block;margin-top:12px;text-align:center">Cotizar estadía por WhatsApp ↗</a><a id="bookingWhatsApp" class="btn outline hidden" target="_blank" rel="noopener noreferrer">Enviar solicitud por WhatsApp ↗</a></div></div><div class="detail-actions">
             <button class="btn" id="detailAdd" type="button">+ Agregar a cotización</button>
             <a class="btn outline" id="detailWA" target="_blank" rel="noopener"
 
@@ -3114,6 +3114,20 @@ function filter() {
         if(!start||!end)return 0;
         return Math.max(0,Math.round((Date.parse(end+"T12:00:00")-Date.parse(start+"T12:00:00"))/86400000));
       }
+      function bookingShareText(p,start,end,code){
+        const n=bookingNights(),guests=Number($("bookingGuests").value)||1,price=Number(p.precioRebajado??p.precio);
+        const amount=Number.isFinite(price)&&price>0?(price*n).toLocaleString("es-CL"):"Por confirmar";
+        const link=new URL(location.pathname+location.search,location.origin).href+"#producto="+encodeURIComponent(p.id);
+        return (code?"Solicitud de reserva":"Cotización de estadía")+"\nCabaña: "+p.nombre+"\nLlegada: "+start+"\nSalida: "+end+"\nPersonas: "+guests+"\nNoches: "+n+"\nTotal estimado: $"+amount+(code?"\nCódigo: #"+code:"\nConsulta sin reserva")+"\nEnlace: "+link;
+      }
+      function bookingShareLink(msg){
+        const phone=String(config.whatsapp||config.telefono||"").replace(/\D/g,"");
+        return phone?"https://wa.me/"+phone+"?text="+encodeURIComponent(msg):"https://api.whatsapp.com/send?text="+encodeURIComponent(msg);
+      }
+      function updateBookingQuote(){
+        const p=bookingSelection();
+        if(p)$("bookingQuoteWA").href=bookingShareLink(bookingShareText(p,$("bookingArrival").value,$("bookingDeparture").value,null));
+      }
       function updateBookingEstimate(){
         const p=bookingSelection(),n=bookingNights(),price=Number(p?.precioRebajado??p?.precio);
         $("bookingEstimate").textContent=n&&Number.isFinite(price)&&price>0?n+" "+(n===1?"noche":"noches")+" · Total estimado: "+new Intl.NumberFormat("es-CL",{style:"currency",currency:"CLP",maximumFractionDigits:0}).format(n*price):n+" noches · Precio a confirmar con el alojamiento";
@@ -3122,6 +3136,7 @@ function filter() {
         $("bookingWhatsApp").removeAttribute("href");
         verifiedBookingKey="";
         $("bookingCheck").textContent="Consultar disponibilidad";
+        updateBookingQuote();
       }
       let verifiedBookingKey="";
       function openQuickBooking(id){
@@ -3148,7 +3163,7 @@ function filter() {
       $("quickBookingClose").onclick=closeQuickBooking;
       $("quickBookingOverlay").addEventListener("click",e=>{if(e.target===$("quickBookingOverlay"))closeQuickBooking();});
       document.addEventListener("click",e=>{const b=e.target.closest("[data-quick-book]");if(b)openQuickBooking(b.dataset.quickBook);});
-      ["bookingArrival","bookingDeparture"].forEach(id=>$(id).addEventListener("change",updateBookingEstimate));
+      ["bookingArrival","bookingDeparture","bookingGuests"].forEach(id=>$(id).addEventListener("change",updateBookingEstimate));
       async function bookingRpc(name,p,start,end){
         const response=await fetch(SUPABASE_URL+"/rest/v1/rpc/"+name,{method:"POST",headers:{...SUPABASE_HEADERS,"Content-Type":"application/json"},body:JSON.stringify({p_product:p.analyticsId,p_start:start,p_end:end})});
         if(!response.ok)throw new Error((await response.json().catch(()=>({}))).message||"No se pudo consultar disponibilidad");
@@ -3175,16 +3190,9 @@ function filter() {
             verifiedBookingKey="";
             btn.textContent="Consultar disponibilidad";
             status.textContent="Solicitud enviada (#"+String(requestId).slice(0,8)+"). Pendiente de confirmación del alojamiento.";
-            const phone=String(config.whatsapp||"").replace(/\D/g,"");
             const waButton=$("bookingWhatsApp");
-            if(phone){
-              const price=Number(p.precioRebajado??p.precio),n=bookingNights();
-              const money=Number.isFinite(price)&&price>0?new Intl.NumberFormat("es-CL",{style:"currency",currency:"CLP",maximumFractionDigits:0}).format(price*n):"Por confirmar";
-              const catalogLink=new URL(location.pathname+location.search,location.origin).href+"#producto="+encodeURIComponent(p.id);
-              const msg="Hola, envié una solicitud de reserva desde el catálogo.\n\nCabaña: "+p.nombre+"\nLlegada: "+start+"\nSalida: "+end+"\nNoches: "+n+"\nTotal estimado: "+money+"\nCódigo de solicitud: #"+String(requestId).slice(0,8)+"\nVer cabaña: "+catalogLink+"\n\nQuedo atento/a a la confirmación. Gracias.";
-              waButton.href="https://wa.me/"+phone+"?text="+encodeURIComponent(msg);
-              waButton.classList.remove("hidden");
-            }
+            waButton.href=bookingShareLink(bookingShareText(p,start,end,String(requestId).slice(0,8)));
+            waButton.classList.remove("hidden");
           }
         }catch(error){status.textContent=error.message||"No se pudo completar la solicitud.";verifiedBookingKey="";btn.textContent="Consultar disponibilidad";}
         finally{btn.disabled=false;}
