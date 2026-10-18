@@ -276,6 +276,11 @@
 
 
 
+      .quick-booking-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;display:flex;align-items:flex-end;justify-content:center;padding:12px;}
+      .quick-booking-overlay.hidden{display:none;}
+      .quick-booking-sheet{background:#fff;border-radius:20px;padding:20px;width:100%;max-width:520px;max-height:90dvh;overflow:auto;position:relative;}
+      .quick-booking-close{position:absolute;right:16px;top:16px;background:white;border:1px solid #ddd;border-radius:50%;width:40px;height:40px;font-size:20px;cursor:pointer;}
+      .quick-booking-sheet h2{padding-right:45px;}
       .booking-estimate{font-weight:650;margin-top:14px;font-size:16px;}
       .booking-request{border:1px solid var(--border);border-radius:14px;padding:16px;margin:18px 0;background:#f7faf7;}
       .booking-dates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
@@ -2058,6 +2063,7 @@ footer { margin-top: 24px; }
 
 
       <div id="secondarySection" class="hidden"><nav class="catalog-nav"><a href="#inicio">← Volver al inicio</a></nav><h2>Productos adicionales <small class="muted" id="secondaryCount"></small></h2><p class="muted">Complementos y servicios del negocio.</p><div id="secondaryCategories" class="extra-category-filters" role="group" aria-label="Filtrar productos adicionales por categoría"></div><div class="grid" id="secondaryProducts"></div></div>
+      <div id="quickBookingOverlay" class="quick-booking-overlay hidden" role="dialog" aria-modal="true" aria-label="Consultar fechas"><div class="quick-booking-sheet"><button type="button" id="quickBookingClose" class="quick-booking-close" aria-label="Cerrar">✕</button><h2 id="quickBookingTitle">Consultar estadía</h2><div id="quickBookingSlot"></div></div></div>
       <div id="detail" class="hidden">
 
 
@@ -2098,7 +2104,7 @@ footer { margin-top: 24px; }
 
 
 
-            <div id="bookingRequest" class="hidden booking-request"><h3>Consultar disponibilidad</h3><p>Selecciona las fechas de tu estadía. La solicitud requiere confirmación del alojamiento.</p><div class="booking-dates"><label>Llegada<input type="date" id="bookingArrival"></label><label>Salida<input type="date" id="bookingDeparture"></label></div><div id="bookingEstimate" class="booking-estimate"></div><p id="bookingStatus" role="status"></p><button class="btn" id="bookingCheck" type="button">Consultar disponibilidad</button><button class="btn hidden" id="bookingSubmit" type="button">Solicitar reserva</button></div><div class="detail-actions">
+            <div id="bookingHome"><div id="bookingRequest" class="hidden booking-request"><h3>Consultar disponibilidad</h3><p>Selecciona las fechas de tu estadía. La solicitud requiere confirmación del alojamiento.</p><div class="booking-dates"><label>Llegada<input type="date" id="bookingArrival"></label><label>Salida<input type="date" id="bookingDeparture"></label></div><div id="bookingEstimate" class="booking-estimate"></div><p id="bookingStatus" role="status"></p><button class="btn" id="bookingCheck" type="button">Consultar disponibilidad</button><button class="btn hidden" id="bookingSubmit" type="button">Solicitar reserva</button></div></div><div class="detail-actions">
             <button class="btn" id="detailAdd" type="button">+ Agregar a cotización</button>
             <a class="btn outline" id="detailWA" target="_blank" rel="noopener"
 
@@ -2889,7 +2895,7 @@ function tarjetaProducto(p) {
 
         <a class="outline" href="${detalle}">Ver detalle</a>
 
-        ${config.catalogType==="lodging"&&p.unidad==="noche" ? `<a class="btn" href="${detalle}">Elegir fechas</a>` : `<button type="button" class="btn quote-add" data-quote-add="${esc(p.id)}">+ Agregar</button>`}
+        ${config.catalogType==="lodging"&&p.unidad==="noche" ? `<button type="button" class="btn" data-quick-book="${esc(p.id)}">Consultar fechas</button>` : `<button type="button" class="btn quote-add" data-quote-add="${esc(p.id)}">+ Agregar</button>`}
 
       </div>
 
@@ -3057,7 +3063,7 @@ function filter() {
           const bookable=config.catalogType==='lodging'&&p.unidad==='noche'&&p.catalogSection!=='adicional';
           $('bookingRequest').classList.toggle('hidden',!bookable);
           $('detailAdd').classList.toggle('hidden',bookable);
-          if(bookable){const today=new Date();const localDate=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);$('bookingArrival').min=localDate;$('bookingDeparture').min=localDate;$('bookingArrival').value=localDate;const tomorrow=new Date(localDate+'T12:00:00');tomorrow.setDate(tomorrow.getDate()+2);$('bookingDeparture').value=tomorrow.toISOString().slice(0,10);$('bookingStatus').textContent='';$('bookingSubmit').classList.add('hidden');updateBookingEstimate();}
+          if(bookable&&!quickBookingProduct){const today=new Date();const localDate=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);$('bookingArrival').min=localDate;$('bookingDeparture').min=localDate;$('bookingArrival').value=localDate;const tomorrow=new Date(localDate+'T12:00:00');tomorrow.setDate(tomorrow.getDate()+2);$('bookingDeparture').value=tomorrow.toISOString().slice(0,10);$('bookingStatus').textContent='';$('bookingSubmit').classList.add('hidden');updateBookingEstimate();}
           $('detailPhoto').innerHTML = img(p);
           $('detailCategory').textContent = (p.categorias || []).join(' · ');
           $('detailName').textContent = p.nombre;
@@ -3088,7 +3094,9 @@ function filter() {
         }
       }
 
+      let quickBookingProduct=null;
       function bookingSelection(){
+        if(quickBookingProduct)return products.find(item=>String(item.id)===quickBookingProduct);
         const id=location.hash.startsWith("#producto=")?decodeURIComponent(location.hash.slice(10)):null;
         return products.find(item=>String(item.id)===id);
       }
@@ -3103,6 +3111,30 @@ function filter() {
         $("bookingStatus").textContent="";
         $("bookingSubmit").classList.add("hidden");
       }
+      function openQuickBooking(id){
+        const p=products.find(item=>String(item.id)===String(id));if(!p)return;
+        quickBookingProduct=String(id);
+        $("quickBookingTitle").textContent=p.nombre;
+        $("quickBookingSlot").appendChild($("bookingRequest"));
+        $("bookingRequest").classList.remove("hidden");
+        const today=new Date(),localDate=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);
+        $("bookingArrival").min=localDate;$("bookingDeparture").min=localDate;
+        $("bookingArrival").value=localDate;
+        const end=new Date(localDate+"T12:00:00");end.setDate(end.getDate()+2);
+        $("bookingDeparture").value=end.toISOString().slice(0,10);
+        updateBookingEstimate();
+        $("quickBookingOverlay").classList.remove("hidden");
+        $("quickBookingClose").focus();
+      }
+      function closeQuickBooking(){
+        $("bookingHome").appendChild($("bookingRequest"));
+        $("quickBookingOverlay").classList.add("hidden");
+        $("bookingRequest").classList.add("hidden");
+        quickBookingProduct=null;
+      }
+      $("quickBookingClose").onclick=closeQuickBooking;
+      $("quickBookingOverlay").addEventListener("click",e=>{if(e.target===$("quickBookingOverlay"))closeQuickBooking();});
+      document.addEventListener("click",e=>{const b=e.target.closest("[data-quick-book]");if(b)openQuickBooking(b.dataset.quickBook);});
       ["bookingArrival","bookingDeparture"].forEach(id=>$(id).addEventListener("change",updateBookingEstimate));
       async function bookingRpc(name,p,start,end){
         const response=await fetch(SUPABASE_URL+"/rest/v1/rpc/"+name,{method:"POST",headers:{...SUPABASE_HEADERS,"Content-Type":"application/json"},body:JSON.stringify({p_product:p.analyticsId,p_start:start,p_end:end})});
