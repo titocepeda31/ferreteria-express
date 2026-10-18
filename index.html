@@ -2183,7 +2183,7 @@ footer { margin-top: 24px; }
           <div id="quoteItems"></div>
           <div id="quoteSummary" class="quote-summary hidden" role="status" aria-live="polite" aria-atomic="true"></div>
         </div>
-        <label for="quoteCustomerPhone">Tu WhatsApp (opcional, para recibir respuesta)</label><input id="quoteCustomerPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+56912345678" style="width:100%;padding:12px;margin:8px 0 12px;border:1px solid #ccc;border-radius:8px"><div class="quote-actions"><a class="btn" id="quoteSend" target="_blank" rel="noopener">Enviar cotización por WhatsApp</a><button type="button" class="outline" id="quoteClear">Vaciar cotización</button></div>
+        <div class="quote-actions"><a class="btn" id="quoteSend" target="_blank" rel="noopener">Enviar cotización por WhatsApp</a><button type="button" class="outline" id="quoteClear">Vaciar cotización</button></div>
       </section>
     </div>
 
@@ -3646,7 +3646,7 @@ botonArriba.addEventListener('click', () => {
           alert('No se puede guardar la solicitud. Actualiza el catálogo y vuelve a intentar.');
           return;
         }
-        const fingerprint = JSON.stringify([config.id, items, $('quoteCustomerPhone').value.trim()]);
+        const fingerprint = JSON.stringify([config.id, items]);
         if (fingerprint !== quoteRequestFingerprint) {
           quoteRequestKey = crypto.randomUUID();
           quoteRequestFingerprint = fingerprint;
@@ -3663,7 +3663,7 @@ botonArriba.addEventListener('click', () => {
               p_business_id: config.id,
               p_idempotency_key: quoteRequestKey,
               p_items: items,
-              p_customer_whatsapp: $('quoteCustomerPhone').value.trim() || null
+              p_customer_whatsapp: null
             }),
             signal: AbortSignal.timeout(15000)
           });
