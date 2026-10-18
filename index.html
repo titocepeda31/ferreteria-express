@@ -1902,10 +1902,10 @@ footer { margin-top: 24px; }
   
 /* Búsqueda visible antes de los productos destacados, especialmente en móvil */
 .quick-find{background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px;margin-top:16px;margin-bottom:12px}
+.hero-category-entry{margin-top:14px}.hero-category-link{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:12px 18px;background:var(--primary);color:var(--primary-contrast);border-radius:12px;font-weight:700;text-decoration:none}.hero-category-link:hover{background:var(--primary-hover)}
 .quick-find label{display:block;font-weight:700;margin-bottom:10px}
 .quick-find input{display:block;width:100%;min-height:48px;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font:inherit;background:#fff;color:var(--ink)}
-.quick-find-actions{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
-.quick-find-actions a{color:var(--primary);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+
 @media(max-width:600px){.quick-find{margin-top:10px;padding:14px}.quick-find-actions{gap:12px}}
   </style>
   </head>
@@ -1954,11 +1954,7 @@ footer { margin-top: 24px; }
           </div>
         </div>
         <div id="heroVisual" class="hero-visual" aria-hidden="true"></div>
-        <ul class="hero-features" aria-label="Cómo usar el catálogo">
-          <li><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Explora productos</span></li>
-          <li><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 4h14v17H5Z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg><span>Arma tu cotización</span></li>
-          <li id="heroContactFeature" class="hidden"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M21 11a9 9 0 0 1-9 9H3l2-4a9 9 0 1 1 16-5Z"/></svg><span>Consulta por WhatsApp</span></li>
-        </ul>
+        <div class="hero-category-entry"><a href="#catalogo" id="heroCategories" class="hero-category-link">Explorar categorías <span aria-hidden="true">→</span></a></div>
       </div>
     </section>
 
@@ -1968,10 +1964,6 @@ footer { margin-top: 24px; }
     <section class="wrap quick-find" id="quickFind" aria-label="Buscar en el catálogo">
       <label for="quickSearch">¿Qué producto necesitas?</label>
       <input id="quickSearch" type="search" placeholder="Buscar madera, tornillos, herramientas…" autocomplete="off" aria-label="Buscar productos desde el inicio" />
-      <div class="quick-find-actions">
-        <a href="#catalogo" id="quickCategories">Explorar categorías →</a>
-        <a href="#inicio-destacados">Ver destacados ↓</a>
-      </div>
     </section>
     <section class="wrap section hidden" id="inicio-destacados" aria-labelledby="destacados-titulo">
       <div class="featured-heading">
@@ -3027,7 +3019,7 @@ function filter() {
         }
       });
       $("search").addEventListener("input", () => { $("quickSearch").value = $("search").value; });
-      $("quickCategories").addEventListener("click", () => {
+      $("heroCategories").addEventListener("click", () => {
         $("search").value = "";
         $("quickSearch").value = "";
         filter();
