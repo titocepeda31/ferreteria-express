@@ -1927,7 +1927,7 @@ footer { margin-top: 24px; }
   #quoteContactSlot{margin:16px 0}
   #quoteContactSlot #bookingContact{padding:14px;border:1px solid var(--border);border-radius:14px}
   #quoteContactSlot label{font-weight:600}
-  </style>
+    .stay-actions{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;width:100%;margin-top:12px}.stay-actions button{min-height:46px!important;padding:10px 8px!important;font-size:14px!important;font-weight:650!important;border-radius:10px!important;white-space:normal}.stay-actions button:first-child{color:var(--primary);border-color:var(--primary)}.stay-actions button.remove{color:#a33;border-color:#e2c9c9}.stay-summary-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.stay-summary-top strong{font-size:1.2rem}.quote-summary:has(.stay-summary-top){padding:14px 16px;margin:10px 0 16px;background:var(--primary-soft);border-radius:12px}.quote-summary:has(.stay-summary-top) p{margin:6px 0;font-size:13px}body:has(#quoteTitle) .quote-dialog{scroll-padding-top:12px}\n</style>
     <link rel="stylesheet" href="catalog-ux.css?v=artwork-1">
 
 
@@ -2854,6 +2854,11 @@ function renderDestacados() {
     ? seleccion.map(tarjetaProducto).join('')
     : '<div class="empty">Todavía no hay productos destacados. Comprueba que la columna Principal llegue desde Drive con valor 1.</div>';
   $('inicio-destacados').dataset.hayDestacados = seleccion.length ? '1' : '0';
+  const primary=products.filter(p=>p.catalogSection!=="adicional");
+  // No redundant 'view all' CTA when every primary item is already on the home page.
+  const allShown=primary.length>0&&primary.length<=12&&primary.every(p=>seleccion.some(x=>String(x.id)===String(p.id)));
+  const footer=document.querySelector('#inicio-destacados .featured-footer');
+  if(footer)footer.classList.toggle('hidden',allShown);
 }
 
 let secondaryCategory = "";
@@ -3872,10 +3877,15 @@ botonArriba.addEventListener('click', () => {
         if(config.catalogType==='lodging'&&stayDraft){
           const cabin=products.find(p=>String(p.id)===String(stayDraft.productId));
           if(cabin){const total=Number(stayDraft.nights)*(Number(cabin.precioRebajado??cabin.precio)||0);
-            const html='<div class="quote-line"><div class="quote-line-info"><div class="quote-line-name">'+esc(cabin.nombre)+'</div><p>Llegada: '+esc(stayDraft.start)+' · Salida: '+esc(stayDraft.end)+'</p><p>'+esc(stayDraft.guests)+' huéspedes · '+esc(stayDraft.nights)+' noches</p><strong>Estadía estimada: '+formatCLP(total)+'</strong><p class="muted">No es una reserva confirmada.</p></div><div class="quote-line-controls"><button type="button" data-stay-edit>Editar fechas</button><button type="button" class="remove" data-stay-remove>Quitar estadía</button></div></div>';
+            const html='<div class="quote-line"><div class="quote-line-info"><div class="quote-line-name">'+esc(cabin.nombre)+'</div><p>Llegada: '+esc(stayDraft.start)+' · Salida: '+esc(stayDraft.end)+'</p><p>'+esc(stayDraft.guests)+' huéspedes · '+esc(stayDraft.nights)+' noches</p><strong>Estadía estimada: '+formatCLP(total)+'</strong><p class="muted">No es una reserva confirmada.</p></div><div class="quote-line-controls stay-actions"><button type="button" data-stay-edit>Editar estadía</button><button type="button" class="remove" data-stay-remove>Quitar</button></div></div>';
             $('quoteItems').insertAdjacentHTML('afterbegin',html);
             if(!lines.length){const empty=$('quoteItems').querySelector('p.muted');if(empty)empty.remove();}
           }
+        }
+        if(config.catalogType==='lodging'){
+          // Same shared quote component; surface total before the item list.
+          const content=$('quoteItems').parentElement;
+          if(content.firstElementChild!==$('quoteSummary'))content.insertBefore($('quoteSummary'),$('quoteItems'));
         }
         $('quoteSummary').classList.toggle('hidden', !lines.length && !(config.catalogType==='lodging'&&stayDraft));
         // Compact presentation only; retain the shared economic model and WhatsApp message.
@@ -3895,7 +3905,7 @@ botonArriba.addEventListener('click', () => {
           const cabin=hasStay?products.find(p=>String(p.id)===String(stayDraft.productId)):null;
           const stayTotal=cabin?Number(stayDraft.nights)*(Number(cabin.precioRebajado??cabin.precio)||0):0;
           $('quoteSummary').classList.toggle('hidden',!hasStay&&!lines.length);
-          $('quoteSummary').innerHTML=(hasStay||lines.length)?'<h3>Resumen de solicitud</h3><dl><div><dt>Estadías</dt><dd>'+(hasStay?1:0)+'</dd></div><div><dt>Adicionales</dt><dd>'+lines.length+'</dd></div><div><dt>Total estimado</dt><dd>'+formatCLP(stayTotal+extraSum)+'</dd></div></dl><p class="quote-notice">Sujeto a disponibilidad y confirmación del alojamiento.</p>':'';
+          $('quoteSummary').innerHTML=(hasStay||lines.length)?'<div class="stay-summary-top"><span>Resumen de solicitud</span><strong>'+formatCLP(stayTotal+extraSum)+'</strong></div><p class="muted">'+(hasStay?'1 estadía':'Sin estadía')+' · '+lines.length+' productos o servicios</p><p class="quote-notice">Total estimado, sujeto a confirmación.</p>':'';
           $('quoteSend').textContent=hasStay?'Registrar solicitud pendiente':'Elegir una estadía';
           $('bookingContact').classList.toggle('hidden',!hasStay);
           if(hasStay&&$('bookingContact').parentElement!==$('quoteContactSlot'))$('quoteContactSlot').appendChild($('bookingContact'));
