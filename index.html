@@ -276,10 +276,10 @@
 
 
 
-      .extras-home-access { margin:18px auto 0; padding:16px 10px 0; border-top:1px solid var(--border); display:flex; flex-direction:column; align-items:center; gap:7px; text-align:center; }
+      .extras-home-access { width:100%; flex-basis:100%; margin:0; padding:0; display:flex; justify-content:center; align-items:center; text-align:center; }
       .extras-home-access.hidden {display:none;}
       .extras-home-access span {font-size:14px; color:#657166; font-weight:400;}
-      .extras-home-access a {font-size:15px; font-weight:650; color:var(--primary); text-decoration:underline; text-underline-offset:4px; padding:6px 10px;}
+      .extras-home-access a {font-size:15px; font-weight:650; color:var(--primary); text-decoration:underline; text-underline-offset:4px; padding:10px 12px;}
       .extras-home-access a span {font-size:inherit; color:inherit; font-weight:inherit;}
       .hero {
 
@@ -1955,6 +1955,7 @@ footer { margin-top: 24px; }
           <p id="heroText">Encuentra maderas, herramientas y materiales de construcción. Consulta disponibilidad directamente por WhatsApp.</p>
           <div class="hero-actions">
             <a class="btn hero-browse" href="#catalogo"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M5 7h14l2 14H3L5 7Z"/><path d="M8 8V6a4 4 0 0 1 8 0v2"/></svg><span>Ver productos</span><span aria-hidden="true">↓</span></a>
+            <div id="extrasHomeLink" class="hidden extras-home-access"><a href="#adicionales">Ver productos adicionales <span aria-hidden="true">→</span></a></div>
             <a id="heroWA" class="hero-contact hidden" target="_blank" rel="noopener" aria-label="Contactar a la tienda por WhatsApp"></a>
           </div>
         </div>
@@ -1982,7 +1983,7 @@ footer { margin-top: 24px; }
         </div>
       </div>
       <div class="grid" id="featured"></div>
-      <div class="featured-footer"><a class="btn" id="primaryCatalogLink" href="#catalogo">Ver todo el catálogo →</a><div id="extrasHomeLink" class="hidden extras-home-access"><span>¿Necesitas algo más para tu estadía?</span><a href="#adicionales">Ver productos adicionales <span aria-hidden="true">→</span></a></div></div>
+      <div class="featured-footer"><a class="btn" id="primaryCatalogLink" href="#catalogo">Ver todo el catálogo →</a></div>
     </section>
 
     <main class="wrap section">
@@ -2706,6 +2707,8 @@ footer { margin-top: 24px; }
         if (title) title.textContent = featuredTitle;
         if (subtitle) subtitle.textContent = featuredSubtitle;
         const mainLink=document.getElementById("primaryCatalogLink");
+        const heroBrowse=document.querySelector(".hero-browse span:not([aria-hidden])");
+        if(heroBrowse) heroBrowse.textContent=config.catalogType==="lodging"?"Ver cabañas":config.catalogType==="services"?"Ver servicios":"Ver productos";
         if(mainLink) mainLink.textContent=config.catalogType==="lodging"?"Ver todas las cabañas →":config.catalogType==="services"?"Ver todos los servicios →":"Ver todo el catálogo →";
       }
 
