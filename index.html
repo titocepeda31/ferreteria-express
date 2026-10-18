@@ -3858,7 +3858,7 @@ botonArriba.addEventListener('click', () => {
           if(cabin){const total=Number(stayDraft.nights)*(Number(cabin.precioRebajado??cabin.precio)||0);
             const html='<div class="quote-line"><div class="quote-line-info"><div class="quote-line-name">'+esc(cabin.nombre)+'</div><p>Llegada: '+esc(stayDraft.start)+' · Salida: '+esc(stayDraft.end)+'</p><p>'+esc(stayDraft.guests)+' huéspedes · '+esc(stayDraft.nights)+' noches</p><strong>Estadía estimada: '+formatCLP(total)+'</strong><p class="muted">No es una reserva confirmada.</p></div><div class="quote-line-controls"><button type="button" data-stay-edit>Editar fechas</button><button type="button" class="remove" data-stay-remove>Quitar estadía</button></div></div>';
             $('quoteItems').insertAdjacentHTML('afterbegin',html);
-            if(!lines.length)$('quoteItems').querySelector('.muted:last-child')?.remove();
+            if(!lines.length){const empty=$('quoteItems').querySelector('p.muted');if(empty)empty.remove();}
           }
         }
         $('quoteSummary').classList.toggle('hidden', !lines.length && !(config.catalogType==='lodging'&&stayDraft));
