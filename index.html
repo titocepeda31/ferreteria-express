@@ -2114,7 +2114,7 @@ footer { margin-top: 24px; }
 
 
 
-            <div id="bookingHome"><div id="bookingRequest" class="hidden booking-request"><h3>Consultar disponibilidad</h3><p>Selecciona las fechas de tu estadía. La solicitud requiere confirmación del alojamiento.</p><div class="booking-dates"><label>Llegada<input type="date" id="bookingArrival"></label><label>Salida<input type="date" id="bookingDeparture"></label></div><label style="display:block;margin-top:12px">Personas <select id="bookingGuests" style="display:block;width:100%;max-width:180px;margin-top:6px;padding:10px" aria-label="Cantidad de personas"><option value="1">1 persona</option><option value="2" selected>2 personas</option></select></label><div id="bookingEstimate" class="booking-estimate"></div><p id="bookingStatus" role="status"></p><button class="btn" id="bookingCheck" type="button">Consultar disponibilidad</button><button id="bookingQuoteWA" type="button" class="booking-wa-action hidden" hidden>Cotizar estadía por WhatsApp ↗</button><button id="bookingWhatsApp" type="button" class="booking-wa-action hidden">Enviar solicitud por WhatsApp ↗</button></div></div><div class="detail-actions">
+            <div id="bookingHome"><div id="bookingRequest" class="hidden booking-request"><h3>Consultar disponibilidad</h3><p>Selecciona las fechas de tu estadía. La solicitud requiere confirmación del alojamiento.</p><div class="booking-dates"><label>Llegada<input type="date" id="bookingArrival"></label><label>Salida<input type="date" id="bookingDeparture"></label></div><label style="display:block;margin-top:12px">Personas <select id="bookingGuests" style="display:block;width:100%;max-width:180px;margin-top:6px;padding:10px" aria-label="Cantidad de personas"><option value="1">1 persona</option><option value="2" selected>2 personas</option></select></label><div id="bookingEstimate" class="booking-estimate"></div><div id="bookingContact" class="hidden"><label style="display:block;margin-top:12px">Nombre de contacto<input id="bookingCustomerName" type="text" autocomplete="name" maxlength="120" placeholder="Tu nombre" style="display:block;width:100%;padding:12px;margin-top:6px"></label><label style="display:block;margin-top:12px">WhatsApp de contacto<input id="bookingCustomerPhone" type="tel" autocomplete="tel" placeholder="+56912345678" style="display:block;width:100%;padding:12px;margin-top:6px"></label><p>Los adicionales que agregues a Mi cotización se incluirán en esta solicitud de estadía.</p></div><p id="bookingStatus" role="status"></p><button class="btn" id="bookingCheck" type="button">Consultar disponibilidad</button><button id="bookingQuoteWA" type="button" class="booking-wa-action hidden" hidden>Cotizar estadía por WhatsApp ↗</button><button id="bookingWhatsApp" type="button" class="booking-wa-action hidden">Enviar solicitud por WhatsApp ↗</button></div></div><div class="detail-actions">
             <button class="btn" id="detailAdd" type="button">+ Agregar a cotización</button>
             <a class="btn outline" id="detailWA" target="_blank" rel="noopener"
 
@@ -3151,6 +3151,7 @@ function filter() {
         $("bookingWhatsApp").classList.add("hidden");
 
         verifiedBookingKey="";
+        $("bookingContact").classList.add("hidden");
         $("bookingCheck").textContent="Consultar disponibilidad";
         updateBookingQuote();
       }
@@ -3166,6 +3167,7 @@ function filter() {
         $("bookingArrival").value=localDate;
         const end=new Date(localDate+"T12:00:00");end.setDate(end.getDate()+2);
         $("bookingDeparture").value=end.toISOString().slice(0,10);
+        $("bookingContact").classList.add("hidden");
         updateBookingEstimate();
         $("quickBookingOverlay").classList.remove("hidden");
         $("quickBookingClose").focus();
@@ -3187,29 +3189,46 @@ function filter() {
         if(!response.ok)throw new Error((await response.json().catch(()=>({}))).message||"No se pudo consultar disponibilidad");
         return response.json();
       }
+      let bookingPendingKey=null,bookingPendingFingerprint="";
       $("bookingCheck").addEventListener("click",async()=>{
         const p=bookingSelection(),start=$("bookingArrival").value,end=$("bookingDeparture").value;
+        const guests=Number($("bookingGuests").value),status=$("bookingStatus"),btn=$("bookingCheck");
         const today=new Date(),localDate=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);
-        const status=$("bookingStatus"),btn=$("bookingCheck");
-        if(!p?.analyticsId||!validBookingGuests(p)||!start||start<localDate||bookingNights()<1||bookingNights()>30){status.textContent="Elige fechas válidas (máximo 30 noches).";return;}
-        const key=p.analyticsId+"|"+start+"|"+end+"|"+$("bookingGuests").value;
+        if(!p?.analyticsId||!validBookingGuests(p)||!start||start<localDate||bookingNights()<1||bookingNights()>30){status.textContent="Revisa las fechas y huéspedes (máximo 30 noches).";return;}
+        const key=[p.analyticsId,start,end,guests].join("|");
         btn.disabled=true;
         try{
           if(verifiedBookingKey!==key){
-            status.textContent="Consultando calendario…";
+            status.textContent="Consultando disponibilidad…";
             const available=await bookingRpc("booking_public_availability",p,start,end);
+            if(key!==[bookingSelection()?.analyticsId,$("bookingArrival").value,$("bookingDeparture").value,Number($("bookingGuests").value)].join("|"))return;
             if(!available){status.textContent="No disponible para esas fechas. Elige otras.";return;}
             verifiedBookingKey=key;
-            btn.textContent="Consultar disponibilidad";
-            status.textContent="Fechas disponibles según calendario. El registro de reservas está pausado hasta completar la persistencia de huéspedes, contacto y adicionales.";
-          }else{
-            status.textContent="Enviando solicitud…";
-            status.textContent="Las fechas están disponibles, pero el registro de reservas está pausado hasta que la solicitud pueda guardar huéspedes, contacto y adicionales. No se ha registrado ninguna reserva.";
-            btn.textContent="Consultar disponibilidad";
-            verifiedBookingKey="";
+            $("bookingContact").classList.remove("hidden");
+            btn.textContent="Registrar solicitud pendiente";
+            status.textContent="Fechas disponibles al consultar. Completa tu contacto; el alojamiento debe confirmar.";
+            return;
           }
-        }catch(error){status.textContent=error.message||"No se pudo completar la solicitud.";verifiedBookingKey="";btn.textContent="Consultar disponibilidad";}
-        finally{btn.disabled=false;}
+          const name=$("bookingCustomerName").value.trim(),phone=$("bookingCustomerPhone").value.trim();
+          if(name.length<2||!/^[+]?[0-9 ]{8,18}$/.test(phone)){status.textContent="Indica tu nombre y WhatsApp de contacto válidos.";return;}
+          const extras=Object.entries(quote).map(([id,qty])=>{const product=products.find(x=>String(x.id)===id);return product?.catalogSection==="adicional"?{product_id:product.analyticsId||product.id,quantity:Number(qty)}:null;}).filter(Boolean);
+          const fingerprint=JSON.stringify([key,name,phone,extras]);
+          if(bookingPendingFingerprint!==fingerprint){bookingPendingFingerprint=fingerprint;bookingPendingKey=crypto.randomUUID();}
+          status.textContent="Registrando solicitud…";
+          const response=await fetch(SUPABASE_URL+"/rest/v1/rpc/booking_public_request_v2",{method:"POST",headers:{...SUPABASE_HEADERS,"Content-Type":"application/json"},body:JSON.stringify({p_product:p.analyticsId,p_start:start,p_end:end,p_guests:guests,p_customer_name:name,p_customer_whatsapp:phone,p_idempotency_key:bookingPendingKey,p_extras:extras}),signal:AbortSignal.timeout(15000)});
+          if(!response.ok)throw new Error((await response.json().catch(()=>({}))).message||"No se pudo registrar");
+          const requestId=await response.json();
+          const code=String(requestId).slice(0,8);
+          status.textContent="Solicitud #"+code+" registrada y pendiente de confirmación. No es una reserva confirmada.";
+          const share=$("bookingWhatsApp");
+          share.dataset.message=bookingShareText(p,start,end,code)+"\\nContacto: "+name+"\\nWhatsApp: "+phone+"\\nAdicionales: "+(extras.length?extras.map(x=>{const product=products.find(p=>String(p.analyticsId||p.id)===String(x.product_id));return product?.nombre+" × "+x.quantity;}).join(", "):"Ninguno");
+          share.textContent=bookingShareLink(share.dataset.message)?"Abrir WhatsApp (mensaje preparado)":"Copiar solicitud (sin WhatsApp del negocio)";
+          share.classList.remove("hidden");
+          btn.textContent="Solicitud registrada";
+          btn.disabled=true;
+          return;
+        }catch(error){status.textContent="No se pudo completar o confirmar el registro: "+(error.message||"Error de red")+". Puedes reintentar con la misma solicitud.";if(verifiedBookingKey===key)btn.textContent="Reintentar registro";}
+        finally{if(btn.textContent!=="Solicitud registrada")btn.disabled=false;}
       });
       $("quickSearch").addEventListener("input", event => {
         $("search").value = event.target.value;
