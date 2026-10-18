@@ -1916,7 +1916,14 @@ footer { margin-top: 24px; }
         .brand-logo { max-width:150px; max-height:40px; }
       }
 
-  body:has(.quick-booking-overlay:not(.hidden)) .quote-dock{pointer-events:none;filter:brightness(.65);}\n  .extras-catalog-access,.extras-booking-access{margin:22px 0;padding:18px;border:1px solid var(--border);border-radius:16px;background:var(--primary-soft)}\n  .extras-catalog-access p,.extras-booking-access p{margin:8px 0 14px}\n  .extras-catalog-access .outline,.extras-booking-access .outline{display:inline-flex;align-items:center;min-height:44px;padding:10px 16px;text-decoration:none}\n</style>
+  body:has(.quick-booking-overlay:not(.hidden)) .quote-dock{pointer-events:none;filter:brightness(.65);}\n  .extras-catalog-access,.extras-booking-access{margin:22px 0;padding:18px;border:1px solid var(--border);border-radius:16px;background:var(--primary-soft)}\n  .extras-catalog-access p,.extras-booking-access p{margin:8px 0 14px}\n  .extras-catalog-access .outline,.extras-booking-access .outline{display:inline-flex;align-items:center;min-height:44px;padding:10px 16px;text-decoration:none}\n  .quick-booking-overlay{align-items:flex-end!important;padding:0!important}
+  .quick-booking-sheet{width:100%!important;max-width:640px!important;max-height:82dvh!important;margin:0 auto!important;border-radius:22px 22px 0 0!important;padding:22px!important;overflow:auto}
+  .quick-booking-sheet .booking-request{padding:0;border:0;background:transparent;box-shadow:none;margin:0}
+  .quick-booking-sheet .booking-estimate{border-radius:12px;padding:12px;background:var(--primary-soft)}
+  #quoteContactSlot{margin:16px 0}
+  #quoteContactSlot #bookingContact{padding:14px;border:1px solid var(--border);border-radius:14px}
+  #quoteContactSlot label{font-weight:600}
+  </style>
     <link rel="stylesheet" href="catalog-ux.css?v=artwork-1">
 
 
@@ -2073,7 +2080,7 @@ footer { margin-top: 24px; }
 
 
       <div id="secondarySection" class="hidden"><nav class="catalog-nav"><a href="#inicio">← Volver al inicio</a></nav><h2>Productos adicionales <small class="muted" id="secondaryCount"></small></h2><p class="muted">Complementos y servicios del negocio.</p><div id="secondaryCategories" class="extra-category-filters" role="group" aria-label="Filtrar productos adicionales por categoría"></div><div class="grid" id="secondaryProducts"></div></div>
-      <div id="quickBookingOverlay" class="quick-booking-overlay hidden" role="dialog" aria-modal="true" aria-label="Consultar fechas"><div class="quick-booking-sheet"><button type="button" id="quickBookingClose" class="quick-booking-close" aria-label="Cerrar">✕</button><h2 id="quickBookingTitle">Consultar estadía</h2><div id="quickBookingSlot"></div><div id="extrasBookingLink" class="hidden extras-booking-access"><p>¿Quieres agregar pan, carbón, hielo u otros complementos?</p><button type="button" class="outline" id="bookingBrowseExtras">Ver productos adicionales →</button></div></div></div>
+      <div id="quickBookingOverlay" class="quick-booking-overlay hidden" role="dialog" aria-modal="true" aria-label="Consultar fechas"><div class="quick-booking-sheet"><button type="button" id="quickBookingClose" class="quick-booking-close" aria-label="Cerrar">✕</button><h2 id="quickBookingTitle">Consultar estadía</h2><div id="quickBookingSlot"></div></div></div>
       <div id="detail" class="hidden">
 
 
@@ -2114,7 +2121,7 @@ footer { margin-top: 24px; }
 
 
 
-            <div id="bookingHome"><div id="bookingRequest" class="hidden booking-request"><h3>Consultar disponibilidad</h3><p>Selecciona las fechas de tu estadía. La solicitud requiere confirmación del alojamiento.</p><div class="booking-dates"><label>Llegada<input type="date" id="bookingArrival"></label><label>Salida<input type="date" id="bookingDeparture"></label></div><label style="display:block;margin-top:12px">Personas <select id="bookingGuests" style="display:block;width:100%;max-width:180px;margin-top:6px;padding:10px" aria-label="Cantidad de personas"><option value="1">1 persona</option><option value="2" selected>2 personas</option></select></label><div id="bookingEstimate" class="booking-estimate"></div><div id="bookingContact" class="hidden"><label style="display:block;margin-top:12px">Nombre de contacto<input id="bookingCustomerName" type="text" autocomplete="name" maxlength="120" placeholder="Tu nombre" style="display:block;width:100%;padding:12px;margin-top:6px"></label><label style="display:block;margin-top:12px">WhatsApp de contacto<input id="bookingCustomerPhone" type="tel" autocomplete="tel" placeholder="+56912345678" style="display:block;width:100%;padding:12px;margin-top:6px"></label><p>Los adicionales que agregues a Mi cotización se incluirán en esta solicitud de estadía.</p></div><p id="bookingStatus" role="status"></p><button class="btn" id="bookingCheck" type="button">Consultar disponibilidad</button><button id="bookingQuoteWA" type="button" class="booking-wa-action hidden" hidden>Cotizar estadía por WhatsApp ↗</button><button id="bookingWhatsApp" type="button" class="booking-wa-action hidden">Enviar solicitud por WhatsApp ↗</button></div></div><div class="detail-actions">
+            <div id="bookingHome"><div id="bookingRequest" class="hidden booking-request"><p class="muted">Elige las fechas y huéspedes. Podrás revisar todo antes de enviar la solicitud.</p><div class="booking-dates"><label>Llegada<input type="date" id="bookingArrival"></label><label>Salida<input type="date" id="bookingDeparture"></label></div><label style="display:block;margin-top:12px">Huéspedes <select id="bookingGuests" style="display:block;width:100%;max-width:180px;margin-top:6px;padding:10px" aria-label="Cantidad de personas"><option value="1">1 persona</option><option value="2" selected>2 personas</option></select></label><div id="bookingEstimate" class="booking-estimate"></div><div id="bookingContact" class="hidden"><label style="display:block;margin-top:12px">Nombre de contacto<input id="bookingCustomerName" type="text" autocomplete="name" maxlength="120" placeholder="Tu nombre" style="display:block;width:100%;padding:12px;margin-top:6px"></label><label style="display:block;margin-top:12px">WhatsApp de contacto<input id="bookingCustomerPhone" type="tel" autocomplete="tel" placeholder="+56912345678" style="display:block;width:100%;padding:12px;margin-top:6px"></label></div><p id="bookingStatus" role="status"></p><button class="btn" id="bookingCheck" type="button">Consultar disponibilidad</button><button id="bookingQuoteWA" type="button" class="booking-wa-action hidden" hidden>Cotizar estadía por WhatsApp ↗</button><button id="bookingWhatsApp" type="button" class="booking-wa-action hidden">Enviar solicitud por WhatsApp ↗</button></div></div><div class="detail-actions">
             <button class="btn" id="detailAdd" type="button">+ Agregar a cotización</button>
             <a class="btn outline" id="detailWA" target="_blank" rel="noopener"
 
@@ -2229,7 +2236,7 @@ footer { margin-top: 24px; }
           <div id="quoteItems"></div>
           <div id="quoteSummary" class="quote-summary hidden" role="status" aria-live="polite" aria-atomic="true"></div>
         </div>
-        <div class="quote-actions"><a class="btn" id="quoteSend" target="_blank" rel="noopener">Enviar cotización por WhatsApp</a><button type="button" class="outline" id="quoteClear">Vaciar cotización</button></div>
+        <div id="quoteContactSlot" class="hidden"></div><div class="quote-actions"><a class="btn" id="quoteSend" target="_blank" rel="noopener">Enviar cotización por WhatsApp</a><button type="button" class="outline" id="quoteClear">Vaciar cotización</button><button type="button" class="outline hidden" id="bookingShareFromQuote">Compartir solicitud</button></div>
       </section>
     </div>
 
@@ -2788,7 +2795,7 @@ footer { margin-top: 24px; }
         const extras=products.filter(p=>p.catalogSection==="adicional");
         $("extrasHomeLink").classList.toggle("hidden",!extras.length);
         $("extrasCatalogLink").classList.toggle("hidden",!extras.length);
-        $("extrasBookingLink").classList.toggle("hidden",!extras.length||config.catalogType!=="lodging");
+
         $("secondaryCount").textContent="("+extras.length+")";
         renderSecondaryCategories();
         $("catalogHeading").firstChild.textContent=config.catalogType==="lodging"?"Nuestras cabañas ":config.catalogType==="services"?"Nuestros servicios ":"Nuestros productos ";
@@ -3160,7 +3167,7 @@ function filter() {
 
         verifiedBookingKey="";
         $("bookingContact").classList.add("hidden");
-        $("bookingCheck").textContent="Consultar disponibilidad";
+        $("bookingCheck").textContent="Agregar estadía a Mi solicitud";
         updateBookingQuote();
       }
       let verifiedBookingKey="";
@@ -3191,12 +3198,12 @@ function filter() {
         quickBookingProduct=null;
       }
       $("quickBookingClose").onclick=closeQuickBooking;
-      $("bookingBrowseExtras").onclick=()=>{closeQuickBooking();location.hash="#adicionales";};
+
       $("quickBookingOverlay").addEventListener("click",e=>{if(e.target===$("quickBookingOverlay"))closeQuickBooking();});
       document.addEventListener("click",e=>{const b=e.target.closest("[data-quick-book]");if(b)openQuickBooking(b.dataset.quickBook);});
       $("bookingQuoteWA").addEventListener("click",()=>{const p=bookingSelection();if(!p||!validBookingGuests(p)||bookingNights()<1)return;window.open(bookingShareLink(bookingShareText(p,$("bookingArrival").value,$("bookingDeparture").value,null)),"_blank","noopener");});
       $("bookingWhatsApp").addEventListener("click",async()=>{const msg=$("bookingWhatsApp").dataset.message;if(!msg)return;const url=bookingShareLink(msg);if(url){window.open(url,"_blank","noopener");return;}try{await navigator.clipboard.writeText(msg);$("bookingStatus").textContent="Solicitud copiada. El negocio no tiene WhatsApp configurado; no se ha enviado ningún mensaje.";}catch(e){$("bookingStatus").textContent="Solicitud registrada, pero no hay WhatsApp configurado. Conserva el código de solicitud.";}});
-      ["bookingArrival","bookingDeparture","bookingGuests"].forEach(id=>$(id).addEventListener("change",()=>{verifiedBookingKey="";$("bookingCheck").textContent="Consultar disponibilidad";$("bookingStatus").textContent="";$("bookingWhatsApp").classList.add("hidden");updateBookingEstimate();}));
+      ["bookingArrival","bookingDeparture","bookingGuests"].forEach(id=>$(id).addEventListener("change",()=>{verifiedBookingKey="";$("bookingCheck").textContent="Agregar estadía a Mi solicitud";$("bookingStatus").textContent="";$("bookingWhatsApp").classList.add("hidden");updateBookingEstimate();}));
       async function bookingRpc(name,p,start,end){
         const response=await fetch(SUPABASE_URL+"/rest/v1/rpc/"+name,{method:"POST",headers:{...SUPABASE_HEADERS,"Content-Type":"application/json"},body:JSON.stringify({p_product:p.analyticsId,p_start:start,p_end:end}),signal:AbortSignal.timeout(15000)});
         if(!response.ok)throw new Error((await response.json().catch(()=>({}))).message||"No se pudo consultar disponibilidad");
@@ -3206,45 +3213,45 @@ function filter() {
       $("bookingCheck").addEventListener("click",async()=>{
         const p=bookingSelection(),start=$("bookingArrival").value,end=$("bookingDeparture").value;
         const guests=Number($("bookingGuests").value),status=$("bookingStatus"),btn=$("bookingCheck");
-        const today=new Date(),localDate=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);
-        if(!p?.analyticsId||!validBookingGuests(p)||!start||start<localDate||bookingNights()<1||bookingNights()>30){status.textContent="Revisa las fechas y huéspedes (máximo 30 noches).";return;}
-        const key=[p.analyticsId,start,end,guests].join("|");
-        btn.disabled=true;
+        const now=new Date(),today=new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,10);
+        if(!p?.analyticsId||!validBookingGuests(p)||!start||start<today||bookingNights()<1||bookingNights()>30){status.textContent="Revisa fechas y huéspedes (máximo 30 noches).";return;}
+        btn.disabled=true;status.textContent="Comprobando disponibilidad…";
         try{
-          if(verifiedBookingKey!==key){
-            status.textContent="Consultando disponibilidad…";
-            const available=await bookingRpc("booking_public_availability",p,start,end);
-            if(key!==[bookingSelection()?.analyticsId,$("bookingArrival").value,$("bookingDeparture").value,Number($("bookingGuests").value)].join("|"))return;
-            if(!available){status.textContent="No disponible para esas fechas. Elige otras.";return;}
-            verifiedBookingKey=key;
-            saveStayDraft({productId:p.id,start,end,guests,nights:bookingNights()});
-            $("bookingContact").classList.remove("hidden");
-            btn.textContent="Registrar solicitud pendiente";
-            status.textContent="Fechas disponibles. Completa tu nombre y teléfono para enviar la solicitud.";
-            $("bookingCustomerName").focus();
-            return;
-          }
-          const name=$("bookingCustomerName").value.trim(),phone=$("bookingCustomerPhone").value.trim();
-          if(name.length<2||!/^[+]?[0-9 ]{8,18}$/.test(phone)){status.textContent="Indica tu nombre y WhatsApp de contacto válidos.";return;}
-          const extras=Object.entries(quote).map(([id,qty])=>{const product=products.find(x=>String(x.id)===id);return product?.catalogSection==="adicional"?{product_id:product.analyticsId||product.id,quantity:Number(qty)}:null;}).filter(Boolean);
-          const fingerprint=JSON.stringify([key,name,phone,extras]);
-          if(bookingPendingFingerprint!==fingerprint){bookingPendingFingerprint=fingerprint;bookingPendingKey=crypto.randomUUID();}
-          status.textContent="Registrando solicitud…";
-          const response=await fetch(SUPABASE_URL+"/rest/v1/rpc/booking_public_request_v2",{method:"POST",headers:{...SUPABASE_HEADERS,"Content-Type":"application/json"},body:JSON.stringify({p_product:p.analyticsId,p_start:start,p_end:end,p_guests:guests,p_customer_name:name,p_customer_whatsapp:phone,p_idempotency_key:bookingPendingKey,p_extras:extras}),signal:AbortSignal.timeout(15000)});
-          if(!response.ok)throw new Error((await response.json().catch(()=>({}))).message||"No se pudo registrar");
-          const requestId=await response.json();
-          const code=String(requestId).slice(0,8);
-          status.textContent="✓ Solicitud #"+code+" registrada. Está pendiente de confirmación del alojamiento; no es una reserva confirmada.";
-          const share=$("bookingWhatsApp");
-          share.dataset.message=bookingShareText(p,start,end,code)+"\\nContacto: "+name+"\\nWhatsApp: "+phone+"\\nAdicionales: "+(extras.length?extras.map(x=>{const product=products.find(p=>String(p.analyticsId||p.id)===String(x.product_id));return product?.nombre+" × "+x.quantity;}).join(", "):"Ninguno");
-          share.textContent=bookingShareLink(share.dataset.message)?"Abrir WhatsApp (mensaje preparado)":"Copiar solicitud (sin WhatsApp del negocio)";
-          share.classList.remove("hidden");
-          btn.textContent="Solicitud registrada";
-          btn.disabled=true;
-          return;
-        }catch(error){status.textContent="No se pudo completar o confirmar el registro: "+(error.message||"Error de red")+". Puedes reintentar con la misma solicitud.";if(verifiedBookingKey===key)btn.textContent="Reintentar registro";}
-        finally{if(btn.textContent!=="Solicitud registrada")btn.disabled=false;}
+          const available=await bookingRpc("booking_public_availability",p,start,end);
+          if(!available){status.textContent="No hay disponibilidad para esas fechas.";return;}
+          if(start!==$("bookingArrival").value||end!==$("bookingDeparture").value||guests!==Number($("bookingGuests").value)||String(p.id)!==String(bookingSelection()?.id))return;
+          saveStayDraft({productId:p.id,start,end,guests,nights:bookingNights()});
+          status.textContent="";
+          closeQuickBooking();
+          openQuote();
+        }catch(e){status.textContent="No se pudo consultar disponibilidad: "+(e.message||"Error de conexión");}
+        finally{btn.disabled=false;}
       });
+      async function submitStayRequest(){
+        const status=$("quoteHelp"),button=$("quoteSend"),draft=stayDraft;
+        const p=draft&&products.find(x=>String(x.id)===String(draft.productId));
+        if(!p){status.textContent="Primero agrega una estadía.";return;}
+        const name=$("bookingCustomerName").value.trim(),phone=$("bookingCustomerPhone").value.trim();
+        if(name.length<2||!/^[+]?[0-9 ]{8,18}$/.test(phone)){status.textContent="Completa nombre y WhatsApp de contacto.";return;}
+        const extras=Object.entries(quote).map(([id,qty])=>{const item=products.find(x=>String(x.id)===id);return item?.catalogSection==="adicional"?{product_id:item.analyticsId||item.id,quantity:Number(qty)}:null;}).filter(Boolean);
+        const fingerprint=JSON.stringify([draft,name,phone,extras]);
+        if(bookingPendingFingerprint!==fingerprint){bookingPendingFingerprint=fingerprint;bookingPendingKey=crypto.randomUUID();}
+        button.setAttribute("aria-disabled","true");status.textContent="Registrando solicitud pendiente…";
+        try{
+          const response=await fetch(SUPABASE_URL+"/rest/v1/rpc/booking_public_request_v2",{method:"POST",headers:{...SUPABASE_HEADERS,"Content-Type":"application/json"},body:JSON.stringify({p_product:p.analyticsId,p_start:draft.start,p_end:draft.end,p_guests:draft.guests,p_customer_name:name,p_customer_whatsapp:phone,p_idempotency_key:bookingPendingKey,p_extras:extras}),signal:AbortSignal.timeout(15000)});
+          if(!response.ok)throw new Error((await response.json().catch(()=>({}))).message||"No se pudo registrar");
+          const id=await response.json(),code=String(id).slice(0,8);
+          status.textContent="Solicitud #"+code+" registrada, pendiente de confirmación del alojamiento. No es una reserva confirmada.";
+          button.textContent="Solicitud registrada";
+          button.setAttribute("aria-disabled","true");
+          const message=bookingShareText(p,draft.start,draft.end,code)+"\\nContacto: "+name+"\\nWhatsApp: "+phone+"\\nProductos y servicios: "+(extras.length?extras.map(x=>{const item=products.find(y=>String(y.analyticsId||y.id)===String(x.product_id));return (item?.nombre||"Producto")+" × "+x.quantity;}).join(", "):"Ninguno");
+          const link=bookingShareLink(message);
+          const share=$("bookingShareFromQuote");
+          share.classList.remove("hidden");
+          share.textContent=link?"Abrir WhatsApp con la solicitud":"Copiar resumen de solicitud";
+          share.onclick=async()=>{if(link)window.open(link,"_blank","noopener");else try{await navigator.clipboard.writeText(message);status.textContent="Resumen copiado. No se envió ningún mensaje.";}catch(e){status.textContent="No se pudo copiar el resumen.";}}; 
+        }catch(e){status.textContent="No se pudo completar la solicitud: "+(e.message||"Error de conexión")+". Puedes reintentar.";button.removeAttribute("aria-disabled");}
+      }
       $("quickSearch").addEventListener("input", event => {
         $("search").value = event.target.value;
         filter();
@@ -3832,7 +3839,7 @@ botonArriba.addEventListener('click', () => {
           $("quoteFab").querySelector("span:not(.quote-badge)").textContent="Mi solicitud";
           $("quoteFab").setAttribute("aria-label","Abrir mi solicitud");
           $("quoteTitle").textContent="Mi solicitud";
-          $("quoteHelp").textContent="Revisa tu estadía y los adicionales. Agregar una estadía no confirma la reserva.";
+          $("quoteHelp").textContent="Revisa tu estadía y los productos o servicios seleccionados. Agregar una estadía no confirma la reserva.";
         }
         const lines = Object.entries(quote).map(([id, qty]) => ({p:products.find(p => String(p.id) === id),qty:Number(qty)}))
           .filter(x => x.p && Number.isFinite(x.qty) && x.qty > 0);
@@ -3883,7 +3890,10 @@ botonArriba.addEventListener('click', () => {
           const stayTotal=cabin?Number(stayDraft.nights)*(Number(cabin.precioRebajado??cabin.precio)||0):0;
           $('quoteSummary').classList.toggle('hidden',!hasStay&&!lines.length);
           $('quoteSummary').innerHTML=(hasStay||lines.length)?'<h3>Resumen de solicitud</h3><dl><div><dt>Estadías</dt><dd>'+(hasStay?1:0)+'</dd></div><div><dt>Adicionales</dt><dd>'+lines.length+'</dd></div><div><dt>Total estimado</dt><dd>'+formatCLP(stayTotal+extraSum)+'</dd></div></dl><p class="quote-notice">Sujeto a disponibilidad y confirmación del alojamiento.</p>':'';
-          $('quoteSend').textContent=hasStay?'Continuar solicitud de estadía':'Agregar una estadía';
+          $('quoteSend').textContent=hasStay?'Registrar solicitud pendiente':'Elegir una estadía';
+          $('bookingContact').classList.toggle('hidden',!hasStay);
+          if(hasStay&&$('bookingContact').parentElement!==$('quoteContactSlot'))$('quoteContactSlot').appendChild($('bookingContact'));
+          $('quoteContactSlot').classList.toggle('hidden',!hasStay);
           if(hasStay){$('quoteSummary').insertAdjacentHTML('beforeend','<p><a href="#adicionales" id="quoteBrowseExtras">Ver productos adicionales →</a></p>');}
         }
         $('quoteSend').classList.toggle('hidden', config.catalogType==='lodging'?false:!lines.length);
@@ -3925,7 +3935,8 @@ botonArriba.addEventListener('click', () => {
       $('quoteSend').addEventListener('click', async event => {
         event.preventDefault();
         if(config.catalogType==='lodging'){
-          const cabin=stayDraft?products.find(p=>String(p.id)===String(stayDraft.productId)):products.find(p=>p.unidad==='noche'&&p.catalogSection!=='adicional');
+          if(stayDraft){await submitStayRequest();return;}
+          const cabin=products.find(p=>p.unidad==='noche'&&p.catalogSection!=='adicional');
           closeQuote();
           if(cabin){openQuickBooking(cabin.id);if(stayDraft&&String(stayDraft.productId)===String(cabin.id)){$('bookingArrival').value=stayDraft.start;$('bookingDeparture').value=stayDraft.end;$('bookingGuests').value=String(stayDraft.guests);updateBookingEstimate();}}
           else $('quoteHelp').textContent='Selecciona una cabaña desde el catálogo.';
