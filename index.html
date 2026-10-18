@@ -2405,7 +2405,7 @@ footer { margin-top: 24px; }
             descripcion: p.description || "",
             descripcionCompleta: p.description || "",
             imagen: p.image_url || "",
-            galleryUrls: typeof p.attributes?.gallery_urls==="string" ? p.attributes.gallery_urls.split(/\\n/).map(x=>x.trim()).filter(x=>/^https?:\\/\\//i.test(x)) : Array.isArray(p.attributes?.gallery_urls)?p.attributes.gallery_urls.filter(x=>/^https?:\\/\\//i.test(x)) : [],
+            galleryUrls: typeof p.attributes?.gallery_urls==="string" ? p.attributes.gallery_urls.split(/\n/).map(x=>x.trim()).filter(x=>/^https?:\/\//i.test(x)) : Array.isArray(p.attributes?.gallery_urls)?p.attributes.gallery_urls.filter(x=>/^https?:\/\//i.test(x)) : [],
             principal: p.is_featured ? "1" : ""
           };
         });
@@ -3070,7 +3070,7 @@ function filter() {
           $('detailWA').classList.toggle('hidden',bookable);
           if(bookable&&!quickBookingProduct){const today=new Date();const localDate=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);$('bookingArrival').min=localDate;$('bookingDeparture').min=localDate;$('bookingArrival').value=localDate;const tomorrow=new Date(localDate+'T12:00:00');tomorrow.setDate(tomorrow.getDate()+2);$('bookingDeparture').value=tomorrow.toISOString().slice(0,10);$('bookingStatus').textContent='';updateBookingEstimate();}
           $('detailPhoto').innerHTML = img(p);
-          const photos=[p.imagen,...(p.galleryUrls||[])].filter(x=>/^https?:\\/\\//i.test(x));
+          const photos=[p.imagen,...(p.galleryUrls||[])].filter(x=>/^https?:\/\//i.test(x));
           $('detailGallery').innerHTML=photos.length>1?photos.map((url,i)=>'<button type="button" data-gallery-index="'+i+'" aria-label="Ver foto '+(i+1)+'"><img src="'+esc(url)+'" alt="Foto '+(i+1)+' de '+esc(p.nombre)+'" loading="lazy"></button>').join(''):'';
           $('detailGallery').onclick=e=>{const button=e.target.closest('[data-gallery-index]');if(!button)return;const url=photos[Number(button.dataset.galleryIndex)];if(url)$('detailPhoto').innerHTML='<img src="'+esc(url)+'" alt="'+esc(p.nombre)+'">';};
           $('detailCategory').textContent = (p.categorias || []).join(' · ');
