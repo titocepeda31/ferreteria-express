@@ -1899,7 +1899,15 @@ footer { margin-top: 24px; }
       #catalogLoading p { margin:0; }
       #catalogRetry { min-height:44px; padding:10px 20px; border:1px solid var(--border); border-radius:12px; background:var(--primary); color:var(--primary-contrast); font:inherit; cursor:pointer; }
       #catalogRetry:focus-visible { outline:3px solid var(--ink); outline-offset:3px; }
-    </style>
+  
+/* Búsqueda visible antes de los productos destacados, especialmente en móvil */
+.quick-find{background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px;margin-top:16px;margin-bottom:12px}
+.quick-find label{display:block;font-weight:700;margin-bottom:10px}
+.quick-find input{display:block;width:100%;min-height:48px;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font:inherit;background:#fff;color:var(--ink)}
+.quick-find-actions{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.quick-find-actions a{color:var(--primary);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+@media(max-width:600px){.quick-find{margin-top:10px;padding:14px}.quick-find-actions{gap:12px}}
+  </style>
   </head>
 
 
@@ -1956,6 +1964,15 @@ footer { margin-top: 24px; }
 
 
 
+
+    <section class="wrap quick-find" id="quickFind" aria-label="Buscar en el catálogo">
+      <label for="quickSearch">¿Qué producto necesitas?</label>
+      <input id="quickSearch" type="search" placeholder="Buscar madera, tornillos, herramientas…" autocomplete="off" aria-label="Buscar productos desde el inicio" />
+      <div class="quick-find-actions">
+        <a href="#catalogo" id="quickCategories">Explorar categorías →</a>
+        <a href="#inicio-destacados">Ver destacados ↓</a>
+      </div>
+    </section>
     <section class="wrap section hidden" id="inicio-destacados" aria-labelledby="destacados-titulo">
       <div class="featured-heading">
         <div>
@@ -2966,6 +2983,7 @@ function filter() {
         metrics.route(p ? 'producto' : portada ? 'inicio' : 'catalogo', p?.analyticsId || null);
         $('catalogo').classList.toggle('hidden', !!p || portada);
         $('hero').classList.toggle('hidden', !!p || catalogoSolicitado);
+        $('quickFind').classList.toggle('hidden', !portada);
         $('inicio-destacados').classList.toggle('hidden', !portada);
         $('detail').classList.toggle('hidden', !p);
         $('businessInfo').classList.toggle('hidden', !portada);
@@ -3000,6 +3018,20 @@ function filter() {
         }
       }
 
+      $("quickSearch").addEventListener("input", event => {
+        $("search").value = event.target.value;
+        filter();
+        if (event.target.value.trim()) {
+          location.hash = "catalogo";
+          requestAnimationFrame(() => $("catalogo").scrollIntoView({block:"start",behavior:"smooth"}));
+        }
+      });
+      $("search").addEventListener("input", () => { $("quickSearch").value = $("search").value; });
+      $("quickCategories").addEventListener("click", () => {
+        $("search").value = "";
+        $("quickSearch").value = "";
+        filter();
+      });
       $("search").oninput = filter;
 
 
