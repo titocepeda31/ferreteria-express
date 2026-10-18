@@ -3130,7 +3130,7 @@ function filter() {
       }
       function bookingShareLink(msg){
         const phone=String(config.whatsapp||config.telefono||"").replace(/\D/g,"");
-        return phone?"https://wa.me/"+phone+"?text="+encodeURIComponent(msg):"https://api.whatsapp.com/send?text="+encodeURIComponent(msg);
+        return phone?"https://wa.me/"+phone+"?text="+encodeURIComponent(msg):null;
       }
       function validBookingGuests(p){const n=Number($("bookingGuests").value);return Number.isInteger(n)&&n>=1&&(!p?.capacidadMax||n<=Number(p.capacidadMax));}
       function updateBookingQuote(){
@@ -3180,10 +3180,10 @@ function filter() {
       $("quickBookingOverlay").addEventListener("click",e=>{if(e.target===$("quickBookingOverlay"))closeQuickBooking();});
       document.addEventListener("click",e=>{const b=e.target.closest("[data-quick-book]");if(b)openQuickBooking(b.dataset.quickBook);});
       $("bookingQuoteWA").addEventListener("click",()=>{const p=bookingSelection();if(!p||!validBookingGuests(p)||bookingNights()<1)return;window.open(bookingShareLink(bookingShareText(p,$("bookingArrival").value,$("bookingDeparture").value,null)),"_blank","noopener");});
-      $("bookingWhatsApp").addEventListener("click",()=>{const msg=$("bookingWhatsApp").dataset.message;if(msg)window.open(bookingShareLink(msg),"_blank","noopener");});
-      ["bookingArrival","bookingDeparture","bookingGuests"].forEach(id=>$(id).addEventListener("change",updateBookingEstimate));
+      $("bookingWhatsApp").addEventListener("click",async()=>{const msg=$("bookingWhatsApp").dataset.message;if(!msg)return;const url=bookingShareLink(msg);if(url){window.open(url,"_blank","noopener");return;}try{await navigator.clipboard.writeText(msg);$("bookingStatus").textContent="Solicitud copiada. El negocio no tiene WhatsApp configurado; no se ha enviado ningún mensaje.";}catch(e){$("bookingStatus").textContent="Solicitud registrada, pero no hay WhatsApp configurado. Conserva el código de solicitud.";}});
+      ["bookingArrival","bookingDeparture","bookingGuests"].forEach(id=>$(id).addEventListener("change",()=>{verifiedBookingKey="";$("bookingCheck").textContent="Consultar disponibilidad";$("bookingStatus").textContent="";$("bookingWhatsApp").classList.add("hidden");updateBookingEstimate();}));
       async function bookingRpc(name,p,start,end){
-        const response=await fetch(SUPABASE_URL+"/rest/v1/rpc/"+name,{method:"POST",headers:{...SUPABASE_HEADERS,"Content-Type":"application/json"},body:JSON.stringify({p_product:p.analyticsId,p_start:start,p_end:end})});
+        const response=await fetch(SUPABASE_URL+"/rest/v1/rpc/"+name,{method:"POST",headers:{...SUPABASE_HEADERS,"Content-Type":"application/json"},body:JSON.stringify({p_product:p.analyticsId,p_start:start,p_end:end}),signal:AbortSignal.timeout(15000)});
         if(!response.ok)throw new Error((await response.json().catch(()=>({}))).message||"No se pudo consultar disponibilidad");
         return response.json();
       }
@@ -3192,7 +3192,7 @@ function filter() {
         const today=new Date(),localDate=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);
         const status=$("bookingStatus"),btn=$("bookingCheck");
         if(!p?.analyticsId||!validBookingGuests(p)||!start||start<localDate||bookingNights()<1||bookingNights()>30){status.textContent="Elige fechas válidas (máximo 30 noches).";return;}
-        const key=p.analyticsId+"|"+start+"|"+end;
+        const key=p.analyticsId+"|"+start+"|"+end+"|"+$("bookingGuests").value;
         btn.disabled=true;
         try{
           if(verifiedBookingKey!==key){
@@ -3204,6 +3204,10 @@ function filter() {
             status.textContent="Fechas disponibles para solicitar. La reserva requiere confirmación del alojamiento.";
           }else{
             status.textContent="Enviando solicitud…";
+            // La RPC vigente no persiste huéspedes, contacto ni adicionales.
+            // No registrar una reserva incompleta hasta contar con contrato servidor validado.
+            status.textContent="La solicitud de reserva está temporalmente deshabilitada: falta guardar huéspedes, contacto y adicionales de forma segura. Puedes consultar fechas, pero no se ha registrado una reserva.";
+            return;
             const requestId=await bookingRpc("booking_public_request",p,start,end);
             verifiedBookingKey="";
             btn.textContent="Consultar disponibilidad";
@@ -3878,6 +3882,8 @@ botonArriba.addEventListener('click', () => {
           quoteRequestKey = crypto.randomUUID();
           quoteRequestFingerprint = fingerprint;
         }
+        const destinationPhone = String(config.whatsapp || "").replace(/\D/g, "");
+        if (!destinationPhone) { $('quoteHelp').textContent = "Esta tienda no tiene WhatsApp configurado. No se registró una solicitud ni se envió un mensaje."; return; }
         quoteSubmitting = true;
         const button = $('quoteSend');
         button.textContent = 'Guardando solicitud…';
