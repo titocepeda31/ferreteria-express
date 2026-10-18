@@ -1916,7 +1916,7 @@ footer { margin-top: 24px; }
         .brand-logo { max-width:150px; max-height:40px; }
       }
 
-  body:has(.quick-booking-overlay:not(.hidden)) .quote-dock{pointer-events:none;filter:brightness(.65);}\n</style>
+  body:has(.quick-booking-overlay:not(.hidden)) .quote-dock{pointer-events:none;filter:brightness(.65);}\n  .extras-catalog-access,.extras-booking-access{margin:22px 0;padding:18px;border:1px solid var(--border);border-radius:16px;background:var(--primary-soft)}\n  .extras-catalog-access p,.extras-booking-access p{margin:8px 0 14px}\n  .extras-catalog-access .outline,.extras-booking-access .outline{display:inline-flex;align-items:center;min-height:44px;padding:10px 16px;text-decoration:none}\n</style>
     <link rel="stylesheet" href="catalog-ux.css?v=artwork-1">
 
 
@@ -2064,7 +2064,7 @@ footer { margin-top: 24px; }
 
 
 
-        <div class="grid" id="products"></div>
+        <div class="grid" id="products"></div><div id="extrasCatalogLink" class="hidden extras-catalog-access"><strong>¿Necesitas algo más para tu estadía?</strong><p>Agrega pan, carbón, hielo u otros complementos a Mi solicitud.</p><a class="outline" href="#adicionales">Ver productos adicionales →</a></div>
 
 
 
@@ -2073,7 +2073,7 @@ footer { margin-top: 24px; }
 
 
       <div id="secondarySection" class="hidden"><nav class="catalog-nav"><a href="#inicio">← Volver al inicio</a></nav><h2>Productos adicionales <small class="muted" id="secondaryCount"></small></h2><p class="muted">Complementos y servicios del negocio.</p><div id="secondaryCategories" class="extra-category-filters" role="group" aria-label="Filtrar productos adicionales por categoría"></div><div class="grid" id="secondaryProducts"></div></div>
-      <div id="quickBookingOverlay" class="quick-booking-overlay hidden" role="dialog" aria-modal="true" aria-label="Consultar fechas"><div class="quick-booking-sheet"><button type="button" id="quickBookingClose" class="quick-booking-close" aria-label="Cerrar">✕</button><h2 id="quickBookingTitle">Consultar estadía</h2><div id="quickBookingSlot"></div></div></div>
+      <div id="quickBookingOverlay" class="quick-booking-overlay hidden" role="dialog" aria-modal="true" aria-label="Consultar fechas"><div class="quick-booking-sheet"><button type="button" id="quickBookingClose" class="quick-booking-close" aria-label="Cerrar">✕</button><h2 id="quickBookingTitle">Consultar estadía</h2><div id="quickBookingSlot"></div><div id="extrasBookingLink" class="hidden extras-booking-access"><p>¿Quieres agregar pan, carbón, hielo u otros complementos?</p><button type="button" class="outline" id="bookingBrowseExtras">Ver productos adicionales →</button></div></div></div>
       <div id="detail" class="hidden">
 
 
@@ -2787,6 +2787,8 @@ footer { margin-top: 24px; }
         $("count").textContent = "(" + products.filter(p=>p.catalogSection!=="adicional").length + ")";
         const extras=products.filter(p=>p.catalogSection==="adicional");
         $("extrasHomeLink").classList.toggle("hidden",!extras.length);
+        $("extrasCatalogLink").classList.toggle("hidden",!extras.length);
+        $("extrasBookingLink").classList.toggle("hidden",!extras.length||config.catalogType!=="lodging");
         $("secondaryCount").textContent="("+extras.length+")";
         renderSecondaryCategories();
         $("catalogHeading").firstChild.textContent=config.catalogType==="lodging"?"Nuestras cabañas ":config.catalogType==="services"?"Nuestros servicios ":"Nuestros productos ";
@@ -3148,7 +3150,7 @@ function filter() {
         const extraLines=Object.entries(quote).map(([id,qty])=>{const item=products.find(x=>String(x.id)===id);return item?.catalogSection==="adicional"?{item,qty:Number(qty)}:null;}).filter(Boolean);
         if(extraLines.length){
           const extraTotal=extraLines.reduce((sum,x)=>sum+(Number(x.item.precioRebajado??x.item.precio)||0)*x.qty,0);
-          $("bookingEstimate").insertAdjacentHTML("beforeend",'<div style="border-top:1px solid var(--border);margin-top:10px;padding-top:10px"><strong>Complementos en Mi cotización</strong>'+extraLines.map(x=>'<div>'+esc(x.item.nombre)+' × '+x.qty+' '+esc(x.item.unidad||"")+'</div>').join("")+'<div>Estimado conjunto: '+money(n*price+extraTotal)+'</div></div>');
+          $("bookingEstimate").insertAdjacentHTML("beforeend",'<div style="border-top:1px solid var(--border);margin-top:10px;padding-top:10px"><strong>Complementos en Mi solicitud</strong>'+extraLines.map(x=>'<div>'+esc(x.item.nombre)+' × '+x.qty+' '+esc(x.item.unidad||"")+'</div>').join("")+'<div>Estimado conjunto: '+money(n*price+extraTotal)+'</div></div>');
         }
         const select=$("bookingGuests"),max=Math.max(1,Math.min(30,Number(p?.capacidadMax)||30)),previous=Number(select.value)||1;
         if(select.options.length!==max){select.innerHTML=Array.from({length:max},(_,i)=>"<option value=\""+(i+1)+"\">"+(i+1)+(i===0?" persona":" personas")+"</option>").join("");select.value=String(Math.min(previous,max));}
@@ -3189,6 +3191,7 @@ function filter() {
         quickBookingProduct=null;
       }
       $("quickBookingClose").onclick=closeQuickBooking;
+      $("bookingBrowseExtras").onclick=()=>{closeQuickBooking();location.hash="#adicionales";};
       $("quickBookingOverlay").addEventListener("click",e=>{if(e.target===$("quickBookingOverlay"))closeQuickBooking();});
       document.addEventListener("click",e=>{const b=e.target.closest("[data-quick-book]");if(b)openQuickBooking(b.dataset.quickBook);});
       $("bookingQuoteWA").addEventListener("click",()=>{const p=bookingSelection();if(!p||!validBookingGuests(p)||bookingNights()<1)return;window.open(bookingShareLink(bookingShareText(p,$("bookingArrival").value,$("bookingDeparture").value,null)),"_blank","noopener");});
@@ -3881,6 +3884,7 @@ botonArriba.addEventListener('click', () => {
           $('quoteSummary').classList.toggle('hidden',!hasStay&&!lines.length);
           $('quoteSummary').innerHTML=(hasStay||lines.length)?'<h3>Resumen de solicitud</h3><dl><div><dt>Estadías</dt><dd>'+(hasStay?1:0)+'</dd></div><div><dt>Adicionales</dt><dd>'+lines.length+'</dd></div><div><dt>Total estimado</dt><dd>'+formatCLP(stayTotal+extraSum)+'</dd></div></dl><p class="quote-notice">Sujeto a disponibilidad y confirmación del alojamiento.</p>':'';
           $('quoteSend').textContent=hasStay?'Continuar solicitud de estadía':'Agregar una estadía';
+          if(hasStay){$('quoteSummary').insertAdjacentHTML('beforeend','<p><a href="#adicionales" id="quoteBrowseExtras">Ver productos adicionales →</a></p>');}
         }
         $('quoteSend').classList.toggle('hidden', config.catalogType==='lodging'?false:!lines.length);
         $('quoteClear').classList.toggle('hidden', !lines.length && !(config.catalogType==='lodging'&&stayDraft));
@@ -3991,6 +3995,7 @@ botonArriba.addEventListener('click', () => {
       });
       $('quoteFab').onclick=()=>{renderQuote();openQuote();};
       $('quoteClose').onclick=closeQuote;
+      $('quoteSummary').addEventListener('click',e=>{if(e.target.closest('#quoteBrowseExtras'))closeQuote();});
       $('quotePanel').onclick=e=>{if(e.target===$('quotePanel'))$('quoteClose').click();};
       document.addEventListener('keydown', e => {
         if ($('quotePanel').classList.contains('hidden')) return;
