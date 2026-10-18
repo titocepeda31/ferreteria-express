@@ -3068,7 +3068,7 @@ function filter() {
           $('bookingRequest').classList.toggle('hidden',!bookable);
           $('detailAdd').classList.toggle('hidden',bookable);
           $('detailWA').classList.toggle('hidden',bookable);
-          if(bookable&&!quickBookingProduct){const today=new Date();const localDate=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);$('bookingArrival').min=localDate;$('bookingDeparture').min=localDate;$('bookingArrival').value=localDate;const tomorrow=new Date(localDate+'T12:00:00');tomorrow.setDate(tomorrow.getDate()+2);$('bookingDeparture').value=tomorrow.toISOString().slice(0,10);$('bookingStatus').textContent='';$('bookingSubmit').classList.add('hidden');updateBookingEstimate();}
+          if(bookable&&!quickBookingProduct){const today=new Date();const localDate=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);$('bookingArrival').min=localDate;$('bookingDeparture').min=localDate;$('bookingArrival').value=localDate;const tomorrow=new Date(localDate+'T12:00:00');tomorrow.setDate(tomorrow.getDate()+2);$('bookingDeparture').value=tomorrow.toISOString().slice(0,10);$('bookingStatus').textContent='';updateBookingEstimate();}
           $('detailPhoto').innerHTML = img(p);
           const photos=[p.imagen,...(p.galleryUrls||[])].filter(x=>/^https?:\\/\\//i.test(x));
           $('detailGallery').innerHTML=photos.length>1?photos.map((url,i)=>'<button type="button" data-gallery-index="'+i+'" aria-label="Ver foto '+(i+1)+'"><img src="'+esc(url)+'" alt="Foto '+(i+1)+' de '+esc(p.nombre)+'" loading="lazy"></button>').join(''):'';
@@ -3117,7 +3117,6 @@ function filter() {
         const p=bookingSelection(),n=bookingNights(),price=Number(p?.precioRebajado??p?.precio);
         $("bookingEstimate").textContent=n&&Number.isFinite(price)&&price>0?n+" "+(n===1?"noche":"noches")+" · Total estimado: "+new Intl.NumberFormat("es-CL",{style:"currency",currency:"CLP",maximumFractionDigits:0}).format(n*price):n+" noches · Precio a confirmar con el alojamiento";
         $("bookingStatus").textContent="";
-        verifiedBookingKey="";
         verifiedBookingKey="";
         $("bookingCheck").textContent="Consultar disponibilidad";
       }
