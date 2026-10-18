@@ -2579,7 +2579,6 @@ footer { margin-top: 24px; }
         $('topwa').innerHTML = '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11a9 9 0 0 1-9 9H3l2-4a9 9 0 1 1 16-5Z"/><path d="M8 7c0 4 2 6 6 7l2-2-3-2-1 1-2-2 1-1-2-2Z"/></svg><span>Contactar <span aria-hidden="true">↗</span></span>';
         const hasContact = !!String(config.whatsapp || '').replace(/\D/g, '');
         $('heroWA').classList.toggle('hidden', !hasContact);
-        $('heroContactFeature').classList.toggle('hidden', !hasContact);
         if (hasContact) {
           $('heroWA').href = $('topwa').href;
           $('heroWA').innerHTML = $('topwa').innerHTML;
