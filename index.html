@@ -3144,6 +3144,11 @@ function filter() {
         const p=bookingSelection(),n=bookingNights(),price=Number(p?.precioRebajado??p?.precio);
         const money=value=>new Intl.NumberFormat("es-CL",{style:"currency",currency:"CLP",maximumFractionDigits:0}).format(value);
         $("bookingEstimate").innerHTML=n&&Number.isFinite(price)&&price>0?'<div style="display:flex;justify-content:space-between;gap:8px"><span>Precio por noche</span><strong>'+money(price)+'</strong></div><div style="display:flex;justify-content:space-between;gap:8px;margin-top:6px"><span>'+n+' '+(n===1?"noche":"noches")+' × '+money(price)+'</span><strong>'+money(n*price)+'</strong></div><div style="border-top:1px solid #d4ddd7;margin-top:10px;padding-top:10px">Total estimado: '+money(n*price)+'</div>':"Precio a confirmar con el alojamiento";
+        const extraLines=Object.entries(quote).map(([id,qty])=>{const item=products.find(x=>String(x.id)===id);return item?.catalogSection==="adicional"?{item,qty:Number(qty)}:null;}).filter(Boolean);
+        if(extraLines.length){
+          const extraTotal=extraLines.reduce((sum,x)=>sum+(Number(x.item.precioRebajado??x.item.precio)||0)*x.qty,0);
+          $("bookingEstimate").insertAdjacentHTML("beforeend",'<div style="border-top:1px solid var(--border);margin-top:10px;padding-top:10px"><strong>Complementos en Mi cotización</strong>'+extraLines.map(x=>'<div>'+esc(x.item.nombre)+' × '+x.qty+' '+esc(x.item.unidad||"")+'</div>').join("")+'<div>Estimado conjunto: '+money(n*price+extraTotal)+'</div></div>');
+        }
         const select=$("bookingGuests"),max=Math.max(1,Math.min(30,Number(p?.capacidadMax)||30)),previous=Number(select.value)||1;
         if(select.options.length!==max){select.innerHTML=Array.from({length:max},(_,i)=>"<option value=\""+(i+1)+"\">"+(i+1)+(i===0?" persona":" personas")+"</option>").join("");select.value=String(Math.min(previous,max));}
         select.parentElement.firstChild.textContent="Personas (máx. "+max+") ";
