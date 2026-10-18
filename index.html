@@ -276,6 +276,7 @@
 
 
 
+      .booking-estimate{font-weight:650;margin-top:14px;font-size:16px;}
       .booking-request{border:1px solid var(--border);border-radius:14px;padding:16px;margin:18px 0;background:#f7faf7;}
       .booking-dates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
       .booking-dates label{font-size:14px;font-weight:650;min-width:0;}
@@ -2097,7 +2098,7 @@ footer { margin-top: 24px; }
 
 
 
-            <div id="bookingRequest" class="hidden booking-request"><h3>Consultar disponibilidad</h3><p>Selecciona las fechas de tu estadía. La solicitud requiere confirmación del alojamiento.</p><div class="booking-dates"><label>Llegada<input type="date" id="bookingArrival"></label><label>Salida<input type="date" id="bookingDeparture"></label></div><p id="bookingStatus" role="status"></p><button class="btn" id="bookingSubmit" type="button">Solicitar reserva</button></div><div class="detail-actions">
+            <div id="bookingRequest" class="hidden booking-request"><h3>Consultar disponibilidad</h3><p>Selecciona las fechas de tu estadía. La solicitud requiere confirmación del alojamiento.</p><div class="booking-dates"><label>Llegada<input type="date" id="bookingArrival"></label><label>Salida<input type="date" id="bookingDeparture"></label></div><div id="bookingEstimate" class="booking-estimate"></div><p id="bookingStatus" role="status"></p><button class="btn" id="bookingCheck" type="button">Consultar disponibilidad</button><button class="btn hidden" id="bookingSubmit" type="button">Solicitar reserva</button></div><div class="detail-actions">
             <button class="btn" id="detailAdd" type="button">+ Agregar a cotización</button>
             <a class="btn outline" id="detailWA" target="_blank" rel="noopener"
 
@@ -3055,7 +3056,7 @@ function filter() {
         if (p) {
           const bookable=config.catalogType==='lodging'&&p.unidad==='noche'&&p.catalogSection!=='adicional';
           $('bookingRequest').classList.toggle('hidden',!bookable);
-          if(bookable){const today=new Date();const localDate=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);$('bookingArrival').min=localDate;$('bookingDeparture').min=localDate;$('bookingArrival').value=localDate;const tomorrow=new Date(localDate+'T12:00:00');tomorrow.setDate(tomorrow.getDate()+2);$('bookingDeparture').value=tomorrow.toISOString().slice(0,10);$('bookingStatus').textContent='';}
+          if(bookable){const today=new Date();const localDate=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);$('bookingArrival').min=localDate;$('bookingDeparture').min=localDate;$('bookingArrival').value=localDate;const tomorrow=new Date(localDate+'T12:00:00');tomorrow.setDate(tomorrow.getDate()+2);$('bookingDeparture').value=tomorrow.toISOString().slice(0,10);$('bookingStatus').textContent='';$('bookingSubmit').classList.add('hidden');updateBookingEstimate();}
           $('detailPhoto').innerHTML = img(p);
           $('detailCategory').textContent = (p.categorias || []).join(' · ');
           $('detailName').textContent = p.nombre;
@@ -3086,6 +3087,37 @@ function filter() {
         }
       }
 
+      function bookingSelection(){
+        const id=location.hash.startsWith("#producto=")?decodeURIComponent(location.hash.slice(10)):null;
+        return products.find(item=>String(item.id)===id);
+      }
+      function bookingNights(){
+        const start=$("bookingArrival").value,end=$("bookingDeparture").value;
+        if(!start||!end)return 0;
+        return Math.max(0,Math.round((Date.parse(end+"T12:00:00")-Date.parse(start+"T12:00:00"))/86400000));
+      }
+      function updateBookingEstimate(){
+        const p=bookingSelection(),n=bookingNights(),price=Number(p?.precioRebajado??p?.precio);
+        $("bookingEstimate").textContent=n&&Number.isFinite(price)&&price>0?n+" "+(n===1?"noche":"noches")+" · Total estimado: "+new Intl.NumberFormat("es-CL",{style:"currency",currency:"CLP",maximumFractionDigits:0}).format(n*price):n+" noches · Precio a confirmar con el alojamiento";
+        $("bookingStatus").textContent="";
+        $("bookingSubmit").classList.add("hidden");
+      }
+      ["bookingArrival","bookingDeparture"].forEach(id=>$(id).addEventListener("change",updateBookingEstimate));
+      async function bookingRpc(name,p,start,end){
+        const response=await fetch(SUPABASE_URL+"/rest/v1/rpc/"+name,{method:"POST",headers:{...SUPABASE_HEADERS,"Content-Type":"application/json"},body:JSON.stringify({p_product:p.analyticsId,p_start:start,p_end:end})});
+        if(!response.ok)throw new Error((await response.json().catch(()=>({}))).message||"No se pudo consultar disponibilidad");
+        return response.json();
+      }
+      $("bookingCheck").addEventListener("click",async()=>{
+        const p=bookingSelection(),start=$("bookingArrival").value,end=$("bookingDeparture").value;
+        const today=new Date(),localDate=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);
+        if(!p?.analyticsId||!start||start<localDate||bookingNights()<1||bookingNights()>30){$("bookingStatus").textContent="Elige fechas válidas (máximo 30 noches).";return;}
+        const btn=$("bookingCheck");btn.disabled=true;$("bookingStatus").textContent="Consultando calendario…";
+        try{const available=await bookingRpc("booking_public_availability",p,start,end);
+          $("bookingStatus").textContent=available?"Disponible para solicitar reserva. El alojamiento debe confirmarla.":"No disponible para esas fechas. Elige otras.";
+          $("bookingSubmit").classList.toggle("hidden",!available);
+        }catch(e){$("bookingStatus").textContent=e.message;}finally{btn.disabled=false;}
+      });
       $("bookingSubmit").addEventListener("click",async()=>{
         const id=location.hash.startsWith("#producto=")?decodeURIComponent(location.hash.slice(10)):null;
         const p=products.find(item=>String(item.id)===id);
@@ -3097,9 +3129,10 @@ function filter() {
         button.disabled=true;status.textContent="Consultando disponibilidad…";
         const rpc=async(name)=>{const response=await fetch(SUPABASE_URL+"/rest/v1/rpc/"+name,{method:"POST",headers:{...SUPABASE_HEADERS,"Content-Type":"application/json"},body:JSON.stringify({p_product:p.analyticsId,p_start:start,p_end:end})});if(!response.ok)throw new Error((await response.json().catch(()=>({}))).message||"No se pudo completar la consulta");return response.json();};
         try{
-          const available=await rpc("booking_public_availability");
+          const available=await bookingRpc("booking_public_availability",p,start,end);
           if(!available){status.textContent="La cabaña no está disponible para esas fechas. Prueba otras.";return;}
-          const requestId=await rpc("booking_public_request");
+          $("bookingSubmit").classList.add("hidden");
+          const requestId=await bookingRpc("booking_public_request",p,start,end);
           status.textContent="Solicitud registrada (#"+String(requestId).slice(0,8)+"). Pendiente de confirmación por el alojamiento.";
           const phone=String(config.whatsapp||"").replace(/\\D/g,"");
           if(phone){const msg="Hola, solicité una reserva para "+p.nombre+" desde "+start+" hasta "+end+". Código: "+String(requestId).slice(0,8)+". ¿Me confirman disponibilidad?";window.open("https://wa.me/"+phone+"?text="+encodeURIComponent(msg),"_blank","noopener");}
