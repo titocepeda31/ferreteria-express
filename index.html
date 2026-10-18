@@ -3671,16 +3671,17 @@ botonArriba.addEventListener('click', () => {
           const data = await response.json();
           const saved = Array.isArray(data) ? data[0] : data;
           if (!saved?.request_number) throw new Error('La solicitud no devolvió una referencia válida');
-          const phone = String(config.whatsapp || '').replace(/\\D/g, '');
+          const phone = String(config.whatsapp || '').replace(/\D/g, '');
           if (!phone) throw new Error('La tienda no tiene WhatsApp configurado');
           const original = new URL(button.href || 'https://wa.me/' + phone);
           const detail = original.searchParams.get('text') || 'Hola, quisiera solicitar una cotización.';
-          const message = 'Solicitud #' + saved.request_number + '\\n\\n' + detail;
+          const message = 'Solicitud #' + saved.request_number + '\n\n' + detail;
           const url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message);
-          window.location.assign(url);
+          $('quoteHelp').textContent = 'Solicitud #' + saved.request_number + ' registrada correctamente. Abriendo WhatsApp para enviar el mensaje a la tienda.';
           button.textContent = 'Abrir WhatsApp nuevamente';
+          window.location.assign(url);
         } catch (error) {
-          alert(error.message + '. La solicitud no se enviará por WhatsApp. Puedes reintentar.');
+          $('quoteHelp').textContent = 'No se pudo registrar la solicitud: ' + error.message + '. Reintenta antes de abrir WhatsApp.';
         } finally {
           quoteSubmitting = false;
           button.removeAttribute('aria-disabled');
