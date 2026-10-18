@@ -284,6 +284,7 @@
       .detail-gallery{display:flex;gap:8px;overflow-x:auto;margin-top:10px;}
       .detail-gallery button{padding:0;border:2px solid transparent;border-radius:9px;overflow:hidden;background:none;flex:0 0 82px;cursor:pointer;}
       .detail-gallery button img{width:82px;height:70px;object-fit:cover;display:block;}
+      #bookingWhatsApp{display:block;text-align:center;margin-top:10px;padding:13px;} #bookingWhatsApp.hidden{display:none;}
       .booking-estimate{font-weight:650;margin-top:14px;font-size:16px;}
       .booking-request{border:1px solid var(--border);border-radius:14px;padding:16px;margin:18px 0;background:#f7faf7;}
       .booking-dates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
@@ -2107,7 +2108,7 @@ footer { margin-top: 24px; }
 
 
 
-            <div id="bookingHome"><div id="bookingRequest" class="hidden booking-request"><h3>Consultar disponibilidad</h3><p>Selecciona las fechas de tu estadía. La solicitud requiere confirmación del alojamiento.</p><div class="booking-dates"><label>Llegada<input type="date" id="bookingArrival"></label><label>Salida<input type="date" id="bookingDeparture"></label></div><div id="bookingEstimate" class="booking-estimate"></div><p id="bookingStatus" role="status"></p><button class="btn" id="bookingCheck" type="button">Consultar disponibilidad</button></div></div><div class="detail-actions">
+            <div id="bookingHome"><div id="bookingRequest" class="hidden booking-request"><h3>Consultar disponibilidad</h3><p>Selecciona las fechas de tu estadía. La solicitud requiere confirmación del alojamiento.</p><div class="booking-dates"><label>Llegada<input type="date" id="bookingArrival"></label><label>Salida<input type="date" id="bookingDeparture"></label></div><div id="bookingEstimate" class="booking-estimate"></div><p id="bookingStatus" role="status"></p><button class="btn" id="bookingCheck" type="button">Consultar disponibilidad</button><a id="bookingWhatsApp" class="btn outline hidden" target="_blank" rel="noopener noreferrer">Enviar solicitud por WhatsApp ↗</a></div></div><div class="detail-actions">
             <button class="btn" id="detailAdd" type="button">+ Agregar a cotización</button>
             <a class="btn outline" id="detailWA" target="_blank" rel="noopener"
 
@@ -3117,6 +3118,8 @@ function filter() {
         const p=bookingSelection(),n=bookingNights(),price=Number(p?.precioRebajado??p?.precio);
         $("bookingEstimate").textContent=n&&Number.isFinite(price)&&price>0?n+" "+(n===1?"noche":"noches")+" · Total estimado: "+new Intl.NumberFormat("es-CL",{style:"currency",currency:"CLP",maximumFractionDigits:0}).format(n*price):n+" noches · Precio a confirmar con el alojamiento";
         $("bookingStatus").textContent="";
+        $("bookingWhatsApp").classList.add("hidden");
+        $("bookingWhatsApp").removeAttribute("href");
         verifiedBookingKey="";
         $("bookingCheck").textContent="Consultar disponibilidad";
       }
@@ -3172,6 +3175,16 @@ function filter() {
             verifiedBookingKey="";
             btn.textContent="Consultar disponibilidad";
             status.textContent="Solicitud enviada (#"+String(requestId).slice(0,8)+"). Pendiente de confirmación del alojamiento.";
+            const phone=String(config.whatsapp||"").replace(/\D/g,"");
+            const waButton=$("bookingWhatsApp");
+            if(phone){
+              const price=Number(p.precioRebajado??p.precio),n=bookingNights();
+              const money=Number.isFinite(price)&&price>0?new Intl.NumberFormat("es-CL",{style:"currency",currency:"CLP",maximumFractionDigits:0}).format(price*n):"Por confirmar";
+              const catalogLink=new URL(location.pathname+location.search,location.origin).href+"#producto="+encodeURIComponent(p.id);
+              const msg="Hola, envié una solicitud de reserva desde el catálogo.\n\nCabaña: "+p.nombre+"\nLlegada: "+start+"\nSalida: "+end+"\nNoches: "+n+"\nTotal estimado: "+money+"\nCódigo de solicitud: #"+String(requestId).slice(0,8)+"\nVer cabaña: "+catalogLink+"\n\nQuedo atento/a a la confirmación. Gracias.";
+              waButton.href="https://wa.me/"+phone+"?text="+encodeURIComponent(msg);
+              waButton.classList.remove("hidden");
+            }
           }
         }catch(error){status.textContent=error.message||"No se pudo completar la solicitud.";verifiedBookingKey="";btn.textContent="Consultar disponibilidad";}
         finally{btn.disabled=false;}
