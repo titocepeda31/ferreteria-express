@@ -1954,7 +1954,11 @@ footer { margin-top: 24px; }
           </div>
         </div>
         <div id="heroVisual" class="hero-visual" aria-hidden="true"></div>
-        <div class="hero-category-entry"><a href="#catalogo" id="heroCategories" class="hero-category-link">Explorar categorías <span aria-hidden="true">→</span></a></div>
+        <ul class="hero-features" aria-label="Cómo usar el catálogo">
+          <li><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Explora productos</span></li>
+          <li><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 4h14v17H5Z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg><span>Arma tu cotización</span></li>
+          <li id="heroContactFeature" class="hidden"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M21 11a9 9 0 0 1-9 9H3l2-4a9 9 0 1 1 16-5Z"/></svg><span>Consulta por WhatsApp</span></li>
+        </ul>
       </div>
     </section>
 
@@ -2579,6 +2583,7 @@ footer { margin-top: 24px; }
         $('topwa').innerHTML = '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11a9 9 0 0 1-9 9H3l2-4a9 9 0 1 1 16-5Z"/><path d="M8 7c0 4 2 6 6 7l2-2-3-2-1 1-2-2 1-1-2-2Z"/></svg><span>Contactar <span aria-hidden="true">↗</span></span>';
         const hasContact = !!String(config.whatsapp || '').replace(/\D/g, '');
         $('heroWA').classList.toggle('hidden', !hasContact);
+        $('heroContactFeature').classList.toggle('hidden', !hasContact);
         if (hasContact) {
           $('heroWA').href = $('topwa').href;
           $('heroWA').innerHTML = $('topwa').innerHTML;
@@ -3018,11 +3023,7 @@ function filter() {
         }
       });
       $("search").addEventListener("input", () => { $("quickSearch").value = $("search").value; });
-      $("heroCategories").addEventListener("click", () => {
-        $("search").value = "";
-        $("quickSearch").value = "";
-        filter();
-      });
+
       $("search").oninput = filter;
 
 
