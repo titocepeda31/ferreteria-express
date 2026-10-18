@@ -276,6 +276,10 @@
 
 
 
+      .extra-category-filters {display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 24px;}
+      .extra-category-filters button {border:1px solid var(--border);border-radius:999px;background:#fff;color:var(--ink);padding:9px 15px;font:inherit;font-size:14px;cursor:pointer;}
+      .extra-category-filters button[aria-pressed="true"] {background:var(--primary);color:#fff;border-color:var(--primary);}
+      .extra-category-filters:empty {display:none;}
       .extras-home-access { width:100%; flex-basis:100%; margin:0; padding:0; display:flex; justify-content:center; align-items:center; text-align:center; }
       .extras-home-access.hidden {display:none;}
       .extras-home-access span {font-size:14px; color:#657166; font-weight:400;}
@@ -2047,7 +2051,7 @@ footer { margin-top: 24px; }
 
 
 
-      <div id="secondarySection" class="hidden"><nav class="catalog-nav"><a href="#inicio">← Volver al inicio</a></nav><h2>Productos adicionales <small class="muted" id="secondaryCount"></small></h2><p class="muted">Complementos y servicios del negocio.</p><div class="grid" id="secondaryProducts"></div></div>
+      <div id="secondarySection" class="hidden"><nav class="catalog-nav"><a href="#inicio">← Volver al inicio</a></nav><h2>Productos adicionales <small class="muted" id="secondaryCount"></small></h2><p class="muted">Complementos y servicios del negocio.</p><div id="secondaryCategories" class="extra-category-filters" role="group" aria-label="Filtrar productos adicionales por categoría"></div><div class="grid" id="secondaryProducts"></div></div>
       <div id="detail" class="hidden">
 
 
@@ -2761,7 +2765,7 @@ footer { margin-top: 24px; }
         const extras=products.filter(p=>p.catalogSection==="adicional");
         $("extrasHomeLink").classList.toggle("hidden",!extras.length);
         $("secondaryCount").textContent="("+extras.length+")";
-        $("secondaryProducts").innerHTML=extras.map(tarjetaProducto).join("");
+        renderSecondaryCategories();
         $("catalogHeading").firstChild.textContent=config.catalogType==="lodging"?"Nuestras cabañas ":config.catalogType==="services"?"Nuestros servicios ":"Nuestros productos ";
 
 
@@ -2816,6 +2820,26 @@ function renderDestacados() {
   $('inicio-destacados').dataset.hayDestacados = seleccion.length ? '1' : '0';
 }
 
+let secondaryCategory = "";
+function renderSecondaryCategories() {
+  const extras = products.filter(p=>p.catalogSection==="adicional");
+  const cats = [...new Set(extras.flatMap(p=>p.categorias||[]))].sort((a,b)=>a.localeCompare(b,"es"));
+  if (!cats.includes(secondaryCategory)) secondaryCategory="";
+  const container=$("secondaryCategories");
+  container.innerHTML=cats.length>1
+    ? [{name:"Todas",value:""},...cats.map(name=>({name,value:name}))].map(item=>
+      '<button type="button" data-extra-category="'+esc(item.value)+'" aria-pressed="'+String(secondaryCategory===item.value)+'">'+esc(item.name)+'</button>').join("")
+    : "";
+  const visible=extras.filter(p=>!secondaryCategory||(p.categorias||[]).includes(secondaryCategory));
+  $("secondaryProducts").innerHTML=visible.map(tarjetaProducto).join("") || '<div class="empty">No hay productos en esta categoría.</div>';
+  $("secondaryCount").textContent="("+visible.length+")";
+}
+$("secondaryCategories").addEventListener("click",event=>{
+  const button=event.target.closest("button[data-extra-category]");
+  if(!button)return;
+  secondaryCategory=button.dataset.extraCategory;
+  renderSecondaryCategories();
+});
 function productMeta(p) {
   const parseCapacity = value => {
     const raw = String(value ?? "").trim();
