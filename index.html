@@ -2033,7 +2033,7 @@ footer { margin-top: 24px; }
 
 
 
-        <div class="grid" id="products"></div>
+        <div class="grid" id="products"></div><section id="secondarySection" class="hidden" style="margin-top:40px"><h2>Productos y servicios adicionales</h2><p class="muted">También puedes cotizar estos productos y servicios por WhatsApp.</p><div class="grid" id="secondaryProducts"></div></section>
 
 
 
@@ -2328,7 +2328,7 @@ footer { margin-top: 24px; }
             order: "name.asc"
           }),
           supabasePublic("/rest/v1/products", {
-            select: "id,external_id,name,description,price,sale_price,image_url,is_featured,category_id,sale_unit,price_from,capacity_min,capacity_max",
+            select: "id,external_id,name,description,price,sale_price,image_url,is_featured,category_id,sale_unit,price_from,capacity_min,capacity_max,attributes",
             business_id: "eq." + business.id,
             is_active: "eq.true",
             order: "created_at.asc"
@@ -2373,6 +2373,7 @@ footer { margin-top: 24px; }
             precioDesde: Boolean(p.price_from),
             capacidadMin: p.capacity_min ?? null,
             capacidadMax: p.capacity_max ?? null,
+            catalogSection: p.attributes?.catalog_section || "principal",
             categoria: category,
             categorias: category ? [category] : [],
             descripcion: p.description || "",
@@ -2792,7 +2793,7 @@ function esDestacado(p) {
 }
 
 function renderDestacados() {
-  const seleccion = products.filter(esDestacado).slice(0, 12);
+  const seleccion = products.filter(p=>p.catalogSection!=="adicional"&&esDestacado(p)).slice(0, 12);
   $('featured').innerHTML = seleccion.length
     ? seleccion.map(tarjetaProducto).join('')
     : '<div class="empty">Todavía no hay productos destacados. Comprueba que la columna Principal llegue desde Drive con valor 1.</div>';
