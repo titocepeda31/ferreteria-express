@@ -281,6 +281,9 @@
       .quick-booking-sheet{background:#fff;border-radius:20px;padding:20px;width:100%;max-width:520px;max-height:90dvh;overflow:auto;position:relative;}
       .quick-booking-close{position:absolute;right:16px;top:16px;background:white;border:1px solid #ddd;border-radius:50%;width:40px;height:40px;font-size:20px;cursor:pointer;}
       .quick-booking-sheet h2{padding-right:45px;}
+      .detail-gallery{display:flex;gap:8px;overflow-x:auto;margin-top:10px;}
+      .detail-gallery button{padding:0;border:2px solid transparent;border-radius:9px;overflow:hidden;background:none;flex:0 0 82px;cursor:pointer;}
+      .detail-gallery button img{width:82px;height:70px;object-fit:cover;display:block;}
       .booking-estimate{font-weight:650;margin-top:14px;font-size:16px;}
       .booking-request{border:1px solid var(--border);border-radius:14px;padding:16px;margin:18px 0;background:#f7faf7;}
       .booking-dates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
@@ -2076,7 +2079,7 @@ footer { margin-top: 24px; }
 
 
 
-          <div class="photo" id="detailPhoto"></div>
+          <div><div class="photo" id="detailPhoto"></div><div id="detailGallery" class="detail-gallery"></div></div>
 
 
 
@@ -2402,6 +2405,7 @@ footer { margin-top: 24px; }
             descripcion: p.description || "",
             descripcionCompleta: p.description || "",
             imagen: p.image_url || "",
+            galleryUrls: typeof p.attributes?.gallery_urls==="string" ? p.attributes.gallery_urls.split(/\\n/).map(x=>x.trim()).filter(x=>/^https?:\\/\\//i.test(x)) : Array.isArray(p.attributes?.gallery_urls)?p.attributes.gallery_urls.filter(x=>/^https?:\\/\\//i.test(x)) : [],
             principal: p.is_featured ? "1" : ""
           };
         });
@@ -3065,6 +3069,9 @@ function filter() {
           $('detailAdd').classList.toggle('hidden',bookable);
           if(bookable&&!quickBookingProduct){const today=new Date();const localDate=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);$('bookingArrival').min=localDate;$('bookingDeparture').min=localDate;$('bookingArrival').value=localDate;const tomorrow=new Date(localDate+'T12:00:00');tomorrow.setDate(tomorrow.getDate()+2);$('bookingDeparture').value=tomorrow.toISOString().slice(0,10);$('bookingStatus').textContent='';$('bookingSubmit').classList.add('hidden');updateBookingEstimate();}
           $('detailPhoto').innerHTML = img(p);
+          const photos=[p.imagen,...(p.galleryUrls||[])].filter(x=>/^https?:\\/\\//i.test(x));
+          $('detailGallery').innerHTML=photos.length>1?photos.map((url,i)=>'<button type="button" data-gallery-index="'+i+'" aria-label="Ver foto '+(i+1)+'"><img src="'+esc(url)+'" alt="Foto '+(i+1)+' de '+esc(p.nombre)+'" loading="lazy"></button>').join(''):'';
+          $('detailGallery').onclick=e=>{const button=e.target.closest('[data-gallery-index]');if(!button)return;const url=photos[Number(button.dataset.galleryIndex)];if(url)$('detailPhoto').innerHTML='<img src="'+esc(url)+'" alt="'+esc(p.nombre)+'">';};
           $('detailCategory').textContent = (p.categorias || []).join(' · ');
           $('detailName').textContent = p.nombre;
           $('detailPrice').innerHTML =
