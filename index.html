@@ -3200,21 +3200,13 @@ function filter() {
             const available=await bookingRpc("booking_public_availability",p,start,end);
             if(!available){status.textContent="No disponible para esas fechas. Elige otras.";return;}
             verifiedBookingKey=key;
-            btn.textContent="Solicitar reserva";
-            status.textContent="Fechas disponibles para solicitar. La reserva requiere confirmación del alojamiento.";
+            btn.textContent="Consultar disponibilidad";
+            status.textContent="Fechas disponibles según calendario. El registro de reservas está pausado hasta completar la persistencia de huéspedes, contacto y adicionales.";
           }else{
             status.textContent="Enviando solicitud…";
-            // La RPC vigente no persiste huéspedes, contacto ni adicionales.
-            // No registrar una reserva incompleta hasta contar con contrato servidor validado.
-            status.textContent="La solicitud de reserva está temporalmente deshabilitada: falta guardar huéspedes, contacto y adicionales de forma segura. Puedes consultar fechas, pero no se ha registrado una reserva.";
-            return;
-            const requestId=await bookingRpc("booking_public_request",p,start,end);
-            verifiedBookingKey="";
+            status.textContent="Las fechas están disponibles, pero el registro de reservas está pausado hasta que la solicitud pueda guardar huéspedes, contacto y adicionales. No se ha registrado ninguna reserva.";
             btn.textContent="Consultar disponibilidad";
-            status.textContent="Solicitud enviada (#"+String(requestId).slice(0,8)+"). Pendiente de confirmación del alojamiento.";
-            const waButton=$("bookingWhatsApp");
-            waButton.dataset.message=bookingShareText(p,start,end,String(requestId).slice(0,8));
-            waButton.classList.remove("hidden");
+            verifiedBookingKey="";
           }
         }catch(error){status.textContent=error.message||"No se pudo completar la solicitud.";verifiedBookingKey="";btn.textContent="Consultar disponibilidad";}
         finally{btn.disabled=false;}
