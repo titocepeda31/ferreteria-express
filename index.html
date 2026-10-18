@@ -1916,7 +1916,11 @@ footer { margin-top: 24px; }
         .brand-logo { max-width:150px; max-height:40px; }
       }
 
-  body:has(.quick-booking-overlay:not(.hidden)) .quote-dock{pointer-events:none;filter:brightness(.65);}\n  .extras-catalog-access,.extras-booking-access{margin:22px 0;padding:18px;border:1px solid var(--border);border-radius:16px;background:var(--primary-soft)}\n  .extras-catalog-access p,.extras-booking-access p{margin:8px 0 14px}\n  .extras-catalog-access .outline,.extras-booking-access .outline{display:inline-flex;align-items:center;min-height:44px;padding:10px 16px;text-decoration:none}\n  .quick-booking-overlay{align-items:flex-end!important;padding:0!important}
+  body:has(.quick-booking-overlay:not(.hidden)) .quote-dock{pointer-events:none;filter:brightness(.65);}
+  .extras-catalog-access,.extras-booking-access{margin:20px 0;padding:18px;border:1px solid #dbe5df;border-radius:16px;background:#f3f7f5;box-sizing:border-box;max-width:100%}
+  .extras-catalog-access p,.extras-booking-access p{margin:7px 0 14px;color:#56675f;line-height:1.45;font-size:14px}.extras-catalog-access strong{font-size:16px;line-height:1.35;display:block}
+  .extras-catalog-access .outline,.extras-booking-access .outline{display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 14px;text-decoration:none;border-radius:10px;font-size:14px;font-weight:650;white-space:normal;text-align:center;width:100%;box-sizing:border-box;background:white}
+  .quick-booking-overlay{align-items:flex-end!important;padding:0!important}
   .quick-booking-sheet{width:100%!important;max-width:640px!important;max-height:82dvh!important;margin:0 auto!important;border-radius:22px 22px 0 0!important;padding:22px!important;overflow:auto}
   .quick-booking-sheet .booking-request{padding:0;border:0;background:transparent;box-shadow:none;margin:0}
   .quick-booking-sheet .booking-estimate{border-radius:12px;padding:12px;background:var(--primary-soft)}
@@ -2071,7 +2075,7 @@ footer { margin-top: 24px; }
 
 
 
-        <div class="grid" id="products"></div><div id="extrasCatalogLink" class="hidden extras-catalog-access"><strong>¿Necesitas algo más para tu estadía?</strong><p>Agrega pan, carbón, hielo u otros complementos a Mi solicitud.</p><a class="outline" href="#adicionales">Ver productos adicionales →</a></div>
+        <div class="grid" id="products"></div><div id="extrasCatalogLink" class="hidden extras-catalog-access"><div class="extras-catalog-copy"><strong>Productos y servicios para tu estadía</strong><p>¿Necesitas pan, carbón o hielo? Puedes agregarlos a tu solicitud.</p></div><a class="outline" href="#adicionales">Explorar productos y servicios <span aria-hidden="true">→</span></a></div>
 
 
 
@@ -3209,7 +3213,9 @@ function filter() {
         if(!response.ok)throw new Error((await response.json().catch(()=>({}))).message||"No se pudo consultar disponibilidad");
         return response.json();
       }
-      // Future: contact fields may become seller-configurable. The current RPC requires both.\n      const BOOKING_CONTACT_REQUIRED=true;\n      let bookingPendingKey=null,bookingPendingFingerprint="";
+      // Contact fields can become configurable after updating the server contract.
+      const BOOKING_CONTACT_REQUIRED=true;
+      let bookingPendingKey=null,bookingPendingFingerprint="";
       $("bookingCheck").addEventListener("click",async()=>{
         const p=bookingSelection(),start=$("bookingArrival").value,end=$("bookingDeparture").value;
         const guests=Number($("bookingGuests").value),status=$("bookingStatus"),btn=$("bookingCheck");
