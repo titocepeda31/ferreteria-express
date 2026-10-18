@@ -287,6 +287,10 @@
       #bookingWhatsApp{display:block;text-align:center;margin-top:10px;padding:13px;} #bookingWhatsApp.hidden{display:none;}
       .booking-request .booking-wa-action{display:block!important;width:100%;margin-top:12px;padding:14px 10px;background:#fff!important;color:#176343!important;border:2px solid #176343!important;border-radius:10px;font:inherit;font-weight:750;opacity:1!important;cursor:pointer;line-height:1.4;}
       .booking-request .booking-wa-action.hidden{display:none!important;}
+      #detailAdd.hidden,#detailWA.hidden,#bookingQuoteWA.hidden,#bookingWhatsApp.hidden{display:none!important;}
+      .booking-request{background:#fff;box-shadow:none;}
+      .booking-request #bookingCheck{margin-top:16px;}
+      #detailAdd[hidden],#detailWA[hidden]{display:none!important;}
       .booking-estimate{font-weight:650;margin-top:14px;font-size:16px;}
       .booking-request{border:1px solid var(--border);border-radius:14px;padding:16px;margin:18px 0;background:#f7faf7;}
       .booking-dates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
@@ -2110,7 +2114,7 @@ footer { margin-top: 24px; }
 
 
 
-            <div id="bookingHome"><div id="bookingRequest" class="hidden booking-request"><h3>Consultar disponibilidad</h3><p>Selecciona las fechas de tu estadía. La solicitud requiere confirmación del alojamiento.</p><div class="booking-dates"><label>Llegada<input type="date" id="bookingArrival"></label><label>Salida<input type="date" id="bookingDeparture"></label></div><label style="display:block;margin-top:12px">Personas <select id="bookingGuests" style="display:block;width:100%;max-width:180px;margin-top:6px;padding:10px" aria-label="Cantidad de personas"><option value="1">1 persona</option><option value="2" selected>2 personas</option></select></label><div id="bookingEstimate" class="booking-estimate"></div><p id="bookingStatus" role="status"></p><button class="btn" id="bookingCheck" type="button">Consultar disponibilidad</button><button id="bookingQuoteWA" type="button" class="booking-wa-action">Cotizar estadía por WhatsApp ↗</button><button id="bookingWhatsApp" type="button" class="booking-wa-action hidden">Enviar solicitud por WhatsApp ↗</button></div></div><div class="detail-actions">
+            <div id="bookingHome"><div id="bookingRequest" class="hidden booking-request"><h3>Consultar disponibilidad</h3><p>Selecciona las fechas de tu estadía. La solicitud requiere confirmación del alojamiento.</p><div class="booking-dates"><label>Llegada<input type="date" id="bookingArrival"></label><label>Salida<input type="date" id="bookingDeparture"></label></div><label style="display:block;margin-top:12px">Personas <select id="bookingGuests" style="display:block;width:100%;max-width:180px;margin-top:6px;padding:10px" aria-label="Cantidad de personas"><option value="1">1 persona</option><option value="2" selected>2 personas</option></select></label><div id="bookingEstimate" class="booking-estimate"></div><p id="bookingStatus" role="status"></p><button class="btn" id="bookingCheck" type="button">Consultar disponibilidad</button><button id="bookingQuoteWA" type="button" class="booking-wa-action hidden" hidden>Cotizar estadía por WhatsApp ↗</button><button id="bookingWhatsApp" type="button" class="booking-wa-action hidden">Enviar solicitud por WhatsApp ↗</button></div></div><div class="detail-actions">
             <button class="btn" id="detailAdd" type="button">+ Agregar a cotización</button>
             <a class="btn outline" id="detailWA" target="_blank" rel="noopener"
 
@@ -3071,6 +3075,8 @@ function filter() {
           $('bookingRequest').classList.toggle('hidden',!bookable);
           $('detailAdd').classList.toggle('hidden',bookable);
           $('detailWA').classList.toggle('hidden',bookable);
+          $('detailAdd').hidden=bookable;
+          $('detailWA').hidden=bookable;
           if(bookable&&!quickBookingProduct){const today=new Date();const localDate=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);$('bookingArrival').min=localDate;$('bookingDeparture').min=localDate;$('bookingArrival').value=localDate;const tomorrow=new Date(localDate+'T12:00:00');tomorrow.setDate(tomorrow.getDate()+2);$('bookingDeparture').value=tomorrow.toISOString().slice(0,10);$('bookingStatus').textContent='';updateBookingEstimate();}
           $('detailPhoto').innerHTML = img(p);
           const photos=[p.imagen,...(p.galleryUrls||[])].filter(x=>/^https?:\/\//i.test(x));
@@ -3131,6 +3137,7 @@ function filter() {
         const p=bookingSelection();
         const btn=$("bookingQuoteWA");const valid=p&&validBookingGuests(p)&&bookingNights()>0&&bookingNights()<=30;
         btn.disabled=!valid;
+        btn.classList.add("hidden");
         btn.title=valid?"Preparar mensaje de cotización":"Selecciona fechas y huéspedes válidos";
       }
       function updateBookingEstimate(){
