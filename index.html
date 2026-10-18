@@ -2902,7 +2902,7 @@ function tarjetaProducto(p) {
 
         <a class="outline" href="${detalle}">Ver detalle</a>
 
-        ${config.catalogType==="lodging"&&p.unidad==="noche" ? `<button type="button" class="btn" data-quick-book="${esc(p.id)}">Consultar fechas</button>` : `<button type="button" class="btn quote-add" data-quote-add="${esc(p.id)}">+ Agregar</button>`}
+        ${config.catalogType==="lodging"&&p.unidad==="noche" ? `<button type="button" class="btn quote-add" data-quote-add="${esc(p.id)}">+ Agregar a cotización</button>` : `<button type="button" class="btn quote-add" data-quote-add="${esc(p.id)}">+ Agregar</button>`}
 
       </div>
 
@@ -3068,9 +3068,9 @@ function filter() {
         $('businessInfo').classList.toggle('hidden', !portada);
         if (p) {
           const bookable=config.catalogType==='lodging'&&p.unidad==='noche'&&p.catalogSection!=='adicional';
-          $('bookingRequest').classList.toggle('hidden',!bookable);
-          $('detailAdd').classList.toggle('hidden',bookable);
-          $('detailWA').classList.toggle('hidden',bookable);
+          $('bookingRequest').classList.add('hidden');
+          $('detailAdd').classList.remove('hidden');
+          $('detailWA').classList.remove('hidden');
           if(bookable&&!quickBookingProduct){const today=new Date();const localDate=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);$('bookingArrival').min=localDate;$('bookingDeparture').min=localDate;$('bookingArrival').value=localDate;const tomorrow=new Date(localDate+'T12:00:00');tomorrow.setDate(tomorrow.getDate()+2);$('bookingDeparture').value=tomorrow.toISOString().slice(0,10);$('bookingStatus').textContent='';updateBookingEstimate();}
           $('detailPhoto').innerHTML = img(p);
           const photos=[p.imagen,...(p.galleryUrls||[])].filter(x=>/^https?:\/\//i.test(x));
@@ -3756,7 +3756,6 @@ botonArriba.addEventListener('click', () => {
         id = String(id);
         const product = products.find(p => String(p.id) === id);
         if (!product) return;
-        if(config.catalogType==="lodging"&&product.unidad==="noche"){closeQuote();location.hash="#producto="+encodeURIComponent(product.id);return;}
         const step = quoteStep(product);
         quote[id] = Math.min(9999, Math.round(((Number(quote[id]) || 0) + step) * 100) / 100);
         saveQuote();
@@ -3787,7 +3786,6 @@ botonArriba.addEventListener('click', () => {
         return {lines: pricedLines, rows, pending, subtotal, notice};
       }
       function renderQuote() {
-        if(config.catalogType==='lodging'){let changed=false;for(const id of Object.keys(quote)){const p=products.find(x=>String(x.id)===id);if(p?.unidad==='noche'){delete quote[id];changed=true;}}if(changed)try{localStorage.setItem(QUOTE_KEY,JSON.stringify(quote));}catch(e){}}
         const lines = Object.entries(quote).map(([id, qty]) => ({p:products.find(p => String(p.id) === id),qty:Number(qty)}))
           .filter(x => x.p && Number.isFinite(x.qty) && x.qty > 0);
         $('quoteCount').textContent = formatQuoteQty(lines.reduce((n,x) => n+x.qty,0));
