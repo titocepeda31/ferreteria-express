@@ -3625,6 +3625,67 @@ botonArriba.addEventListener('click', () => {
           $('quoteSend').removeAttribute('href');
         }
       }
+      // El catálogo no confirma envíos: solamente registra la solicitud antes de abrir WhatsApp.
+      let quoteSubmitting = false;
+      let quoteRequestKey = null;
+      let quoteRequestFingerprint = '';
+      function quotePayload() {
+        const lines = Object.entries(quote).map(([id, quantity]) => ({
+          product: products.find(p => String(p.id) === id), quantity: Number(quantity)
+        })).filter(x => x.product && Number.isFinite(x.quantity) && x.quantity > 0);
+        return lines.map(({product, quantity}) => ({
+          product_id: product.analyticsId || product.id,
+          quantity
+        }));
+      }
+      $('quoteSend').addEventListener('click', async event => {
+        event.preventDefault();
+        if (quoteSubmitting) return;
+        const items = quotePayload();
+        if (!config.id || !items.length) {
+          alert('No se puede guardar la solicitud. Actualiza el catálogo y vuelve a intentar.');
+          return;
+        }
+        const fingerprint = JSON.stringify([config.id, items]);
+        if (fingerprint !== quoteRequestFingerprint) {
+          quoteRequestKey = crypto.randomUUID();
+          quoteRequestFingerprint = fingerprint;
+        }
+        quoteSubmitting = true;
+        const button = $('quoteSend');
+        button.textContent = 'Guardando solicitud…';
+        button.setAttribute('aria-disabled', 'true');
+        try {
+          const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/create_quote_request', {
+            method: 'POST',
+            headers: {...SUPABASE_HEADERS, 'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              p_business_id: config.id,
+              p_idempotency_key: quoteRequestKey,
+              p_items: items
+            }),
+            signal: AbortSignal.timeout(15000)
+          });
+          if (!response.ok) throw new Error('No fue posible guardar la solicitud (' + response.status + ')');
+          const data = await response.json();
+          const saved = Array.isArray(data) ? data[0] : data;
+          if (!saved?.request_number) throw new Error('La solicitud no devolvió una referencia válida');
+          const phone = String(config.whatsapp || '').replace(/\\D/g, '');
+          if (!phone) throw new Error('La tienda no tiene WhatsApp configurado');
+          const original = new URL(button.href || 'https://wa.me/' + phone);
+          const detail = original.searchParams.get('text') || 'Hola, quisiera solicitar una cotización.';
+          const message = 'Solicitud #' + saved.request_number + '\\n\\n' + detail;
+          const url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message);
+          window.open(url, '_blank', 'noopener');
+          button.textContent = 'Abrir WhatsApp nuevamente';
+        } catch (error) {
+          alert(error.message + '. La solicitud no se enviará por WhatsApp. Puedes reintentar.');
+        } finally {
+          quoteSubmitting = false;
+          button.removeAttribute('aria-disabled');
+          if (button.textContent === 'Guardando solicitud…') button.textContent = 'Enviar cotización por WhatsApp';
+        }
+      });
       document.addEventListener('click', e => {
         const add=e.target.closest('[data-quote-add]');
         if(add) { addQuote(add.dataset.quoteAdd); return; }
