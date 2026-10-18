@@ -1980,6 +1980,7 @@ footer { margin-top: 24px; }
       <div class="featured-footer"><a class="btn" href="#catalogo">Ver todo el catálogo →</a></div>
     </section>
 
+    <section id="extrasHomeLink" class="wrap section hidden"><a class="btn outline" href="#adicionales">Ver productos adicionales →</a></section>
     <main class="wrap section">
 
 
@@ -1989,7 +1990,7 @@ footer { margin-top: 24px; }
 
 
 
-        <h2>Nuestros productos <small class="muted" id="count"></small></h2>
+        <h2 id="catalogHeading">Nuestros productos <small class="muted" id="count"></small></h2>
 
 
 
@@ -2033,7 +2034,7 @@ footer { margin-top: 24px; }
 
 
 
-        <div class="grid" id="products"></div><section id="secondarySection" class="hidden" style="margin-top:40px"><h2>Productos y servicios adicionales</h2><p class="muted">También puedes cotizar estos productos y servicios por WhatsApp.</p><div class="grid" id="secondaryProducts"></div></section>
+        <div class="grid" id="products"></div>
 
 
 
@@ -2041,6 +2042,7 @@ footer { margin-top: 24px; }
 
 
 
+      <div id="secondarySection" class="hidden"><nav class="catalog-nav"><a href="#inicio">← Volver al inicio</a></nav><h2>Productos adicionales <small class="muted" id="secondaryCount"></small></h2><p class="muted">Complementos y servicios del negocio.</p><div class="grid" id="secondaryProducts"></div></div>
       <div id="detail" class="hidden">
 
 
@@ -2592,7 +2594,7 @@ footer { margin-top: 24px; }
           $('heroWA').removeAttribute('href');
           $('heroWA').innerHTML = '';
         }
-        const photos = products.filter(p => /^(https?:\/\/|\.\.?\/|assets\/|imagenes\/)/i.test(String(p.imagen || ''))).slice(0, 2);
+        const photos = products.filter(p =>p.catalogSection!=="adicional" && /^(https?:\/\/|\.\.?\/|assets\/|imagenes\/)/i.test(String(p.imagen || ''))).slice(0, 2);
         $('heroVisual').classList.toggle('hidden', !photos.length);
         $('heroVisual').innerHTML = photos.map(p => '<div class="hero-photo">' + img(p) + '</div>').join('');
         $('hero').classList.toggle('has-photos', !!photos.length);
@@ -2710,7 +2712,7 @@ footer { margin-top: 24px; }
 
 
 
-          ...new Set(products.flatMap((p) => p.categorias || [])),
+          ...new Set(products.filter(p=>p.catalogSection!=="adicional").flatMap((p) => p.categorias || [])),
 
 
 
@@ -2746,7 +2748,12 @@ footer { margin-top: 24px; }
 
 
 
-        $("count").textContent = "(" + products.length + ")";
+        $("count").textContent = "(" + products.filter(p=>p.catalogSection!=="adicional").length + ")";
+        const extras=products.filter(p=>p.catalogSection==="adicional");
+        $("extrasHomeLink").classList.toggle("hidden",!extras.length);
+        $("secondaryCount").textContent="("+extras.length+")";
+        $("secondaryProducts").innerHTML=extras.map(tarjetaProducto).join("");
+        $("catalogHeading").firstChild.textContent=config.catalogType==="lodging"?"Nuestras cabañas ":config.catalogType==="services"?"Nuestros servicios ":"Nuestros productos ";
 
 
 
@@ -2927,7 +2934,7 @@ function filter() {
 
   const c = $('category').value;
 
-  productosFiltrados = products.filter(p =>
+  productosFiltrados = products.filter(p =>p.catalogSection!=="adicional" &&
 
     (!q || norm([p.nombre, p.descripcion, ...(p.categorias || [])].join(' ')).includes(q)) &&
 
@@ -2995,11 +3002,14 @@ function filter() {
         const id = hash.startsWith('#producto=')
           ? decodeURIComponent(hash.slice('#producto='.length)) : null;
         const p = products.find(x => String(x.id) === id);
+        const adicionalesSolicitados=hash==='#adicionales';
         const catalogoSolicitado = hash === '#catalogo' || (!!id && !p);
-        const portada = !p && !catalogoSolicitado;
+        const portada = !p && !catalogoSolicitado && !adicionalesSolicitados;
         metrics.route(p ? 'producto' : portada ? 'inicio' : 'catalogo', p?.analyticsId || null);
-        $('catalogo').classList.toggle('hidden', !!p || portada);
-        $('hero').classList.toggle('hidden', !!p || catalogoSolicitado);
+        $('catalogo').classList.toggle('hidden', !!p || portada || adicionalesSolicitados);
+        $('secondarySection').classList.toggle('hidden',!adicionalesSolicitados);
+        $('extrasHomeLink').classList.toggle('hidden',!portada || !products.some(x=>x.catalogSection==='adicional'));
+        $('hero').classList.toggle('hidden', !portada);
         $('quickFind').classList.toggle('hidden', !portada);
         $('inicio-destacados').classList.toggle('hidden', !portada);
         $('detail').classList.toggle('hidden', !p);
@@ -3031,7 +3041,7 @@ function filter() {
           window.scrollTo(0, 0);
         } else {
           document.title = (config.nombre || 'Ferretería') + (portada ? ' · Inicio' : ' · Catálogo');
-          if (catalogoSolicitado || hash === '#inicio') window.scrollTo(0, 0);
+          if (catalogoSolicitado || adicionalesSolicitados || hash === '#inicio') window.scrollTo(0, 0);
         }
       }
 
