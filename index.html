@@ -2154,7 +2154,8 @@ body.request-open #quoteItems:empty{display:none!important}
 
 
 
-        <div class="toolbar">
+        <div id="catalogLodgingSearch" class="quick-find hidden" aria-label="Buscar disponibilidad de cabañas"></div>
+        <div class="toolbar" id="catalogProductToolbar">
 
 
 
@@ -2937,6 +2938,7 @@ body.request-open #quoteItems:empty{display:none!important}
 
 
 
+let catalogAvailabilityIds=null;
 let productosFiltrados = [];
 
 let productosVisibles = 0;
@@ -3130,6 +3132,7 @@ function filter() {
   const c = $('category').value;
 
   productosFiltrados = products.filter(p =>p.catalogSection!=="adicional" &&
+    (config.catalogType!=="lodging"||!catalogAvailabilityIds||catalogAvailabilityIds.has(String(p.id))) &&
 
     (!q || norm([p.nombre, p.descripcion, ...(p.categorias || [])].join(' ')).includes(q)) &&
 
@@ -3206,7 +3209,14 @@ function filter() {
         $('extrasHomeLink').classList.toggle('hidden',!portada || !products.some(x=>x.catalogSection==='adicional'));
         $('hero').classList.toggle('hidden', !portada);
         $('quickFind').classList.toggle('hidden', !portada);
-        $('lodgingHomeSearch').classList.toggle('hidden',!portada||config.catalogType!=='lodging');
+        const lodgingCatalog=config.catalogType==='lodging'&&catalogoSolicitado;
+        $('catalogLodgingSearch').classList.toggle('hidden',!lodgingCatalog);
+        $('catalogProductToolbar').classList.toggle('hidden',config.catalogType==='lodging');
+        if(config.catalogType==='lodging'){
+          const slot=lodgingCatalog?$('catalogLodgingSearch'):$('quickFind');
+          if($('lodgingHomeSearch').parentElement!==slot)slot.appendChild($('lodgingHomeSearch'));
+        }
+        $('lodgingHomeSearch').classList.toggle('hidden',config.catalogType!=='lodging'||(!portada&&!catalogoSolicitado));
         $('quickFind').querySelector('label[for="quickSearch"]').classList.toggle('hidden',config.catalogType==='lodging');
         $('quickSearch').classList.toggle('hidden',config.catalogType==='lodging');
         $('inicio-destacados').classList.toggle('hidden', !portada);
@@ -3415,6 +3425,7 @@ function filter() {
       });
       $("lodgingHomeSearch").addEventListener("submit",async e=>{
         e.preventDefault();
+        const fromCatalog=$('lodgingHomeSearch').parentElement===$('catalogLodgingSearch');
         const today=localToday(),start=$("homeArrival").value,guests=Number($("homeGuests").value),nights=Number($("homeNights").value),status=$("homeSearchStatus");
         if(!start||start<today){status.textContent="Selecciona una fecha de llegada desde hoy en adelante.";return;}
         const end=plusDays(start,nights),cabins=products.filter(p=>p.unidad==="noche"&&p.catalogSection!=="adicional"&&p.analyticsId&&(!p.capacidadMax||Number(p.capacidadMax)>=guests));
@@ -3432,6 +3443,12 @@ function filter() {
           status.textContent=available.length?available.length+" "+(available.length===1?"cabaña disponible":"cabañas disponibles")+" para tu viaje del "+new Date(start+"T12:00:00").toLocaleDateString("es-CL",{day:"numeric",month:"long"})+" al "+new Date(end+"T12:00:00").toLocaleDateString("es-CL",{day:"numeric",month:"long"})+". Selecciona una.":"No hay disponibilidad confirmada para esas fechas. Prueba otra llegada o menos noches.";
           if(unverified.length)status.textContent+=" No se pudo comprobar "+unverified.length+" "+(unverified.length===1?"cabaña":"cabañas")+"; puedes reintentar.";
           activeLodgingSearch={start,end,nights,guests};
+          catalogAvailabilityIds=new Set(available.map(x=>String(x.p.id)));
+          if(fromCatalog){
+            filter();
+            status.textContent=available.length?available.length+' cabaña(s) con disponibilidad confirmada para las fechas elegidas.':status.textContent;
+            return;
+          }
           setLodgingSearchHeading(activeLodgingSearch);
           const featured=$("featured");
           homeAvailabilityVersion++;
