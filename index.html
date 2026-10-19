@@ -3332,6 +3332,8 @@ function filter() {
         $("bookingContact").classList.add("hidden");
         $("bookingCheck").textContent="Agregar estadía a Mi solicitud";
         updateBookingQuote();
+        $("bookingCheck").disabled=!validBookingGuests(p);
+        $("bookingCheck").title=!validBookingGuests(p)?"Ajusta la cantidad de huéspedes para continuar":"";
       }
       let verifiedBookingKey="";
       function openQuickBooking(id){
@@ -3418,12 +3420,18 @@ function filter() {
           const results=await Promise.all(cabins.map(async p=>({p,available:await bookingRpc("booking_public_availability",p,start,end).catch(()=>null)})));
           if(version!==homeSearchVersion)return;
           const available=results.filter(x=>x.available===true);
+          const unverified=results.filter(x=>x.available===null);
+          if(unverified.length===results.length){
+            status.textContent="No se pudo comprobar disponibilidad por un problema de conexión. Reintenta la búsqueda.";
+            return; // Conservar resultados anteriores; no afirmar que están ocupadas.
+          }
           status.textContent=available.length?available.length+" "+(available.length===1?"cabaña disponible":"cabañas disponibles")+" para tu viaje del "+new Date(start+"T12:00:00").toLocaleDateString("es-CL",{day:"numeric",month:"long"})+" al "+new Date(end+"T12:00:00").toLocaleDateString("es-CL",{day:"numeric",month:"long"})+". Selecciona una.":"No hay disponibilidad confirmada para esas fechas. Prueba otra llegada o menos noches.";
+          if(unverified.length)status.textContent+=" No se pudo comprobar "+unverified.length+" "+(unverified.length===1?"cabaña":"cabañas")+"; puedes reintentar.";
           activeLodgingSearch={start,end,nights,guests};
           setLodgingSearchHeading(activeLodgingSearch);
           const featured=$("featured");
           homeAvailabilityVersion++;
-          featured.innerHTML=available.length?available.map(x=>tarjetaProducto(x.p)).join(""):'<div class="empty">No hay cabañas disponibles para esas fechas.</div>';
+          featured.innerHTML=available.length?available.map(x=>tarjetaProducto(x.p)).join(""):unverified.length?'<div class="empty">No se confirmó disponibilidad entre las cabañas comprobadas. Algunas no pudieron verificarse. Reintenta para conocer todas las opciones.</div>':'<div class="empty">No hay cabañas disponibles para esas fechas.</div>';
           // The delegated booking click handler reads activeLodgingSearch for every card.
           $("inicio-destacados").scrollIntoView({behavior:"smooth",block:"start"});
         }catch(error){status.textContent="No fue posible consultar disponibilidad. Intenta nuevamente.";}
@@ -3477,7 +3485,7 @@ function filter() {
           btn.dataset.availability=available===true?"free":available===false?"occupied":"unknown";
           btn.classList.toggle("available",available===true);
           btn.classList.toggle("occupied",available===false);
-          btn.title=available===true?"Disponible":available===false?"Ocupado o bloqueado":"Sin comprobar";
+          btn.title=available===true?"Disponible":available===false?"Ocupado o bloqueado (puede ser salida)":"Sin comprobar";
           btn.setAttribute("aria-label",day+": "+btn.title);
           markCalendarSelection();
         });
@@ -3487,7 +3495,9 @@ function filter() {
       $("availabilityDays").addEventListener("click",e=>{
         const btn=e.target.closest("[data-day]");if(!btn||btn.disabled)return;
         const day=btn.dataset.day,hint=$("availabilitySelectionHint");
-        if(btn.dataset.availability==="occupied"){
+        // Una fecha ocupada puede ser salida: se reservan noches [llegada, salida).
+        const canCheckout=calendarArrivalPending&&day>$("bookingArrival").value;
+        if(btn.dataset.availability==="occupied"&&!canCheckout){
           hint.textContent="El "+new Date(day+"T12:00:00").toLocaleDateString("es-CL",{day:"numeric",month:"long"})+" está ocupado o bloqueado. Elige un día verde.";
           hint.classList.add("is-error");
           btn.classList.add("unavailable-tapped");setTimeout(()=>btn.classList.remove("unavailable-tapped"),1200);
