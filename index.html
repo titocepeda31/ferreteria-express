@@ -4434,7 +4434,7 @@ botonArriba.addEventListener('click', () => {
           $('quoteSend').textContent=bookingRequestRegisteredFingerprint?(savedBookingRetry?.status==='registered'?'Recuperar comprobante':'Solicitud registrada'):hasStay?'Registrar solicitud pendiente':(lines.length?'Consultar productos por WhatsApp':'Elegir una estadía');
           if(hasStay&&savedBookingRetry?.status==='registered'){
             const receiptPending=$('bookingReceipt').classList.contains('hidden')||$('bookingReceipt').textContent.includes('Comprobante pendiente de consulta');
-            $('quoteSend').disabled=!bookingRequestSubmitting&&!receiptPending;
+            $('quoteSend').disabled=bookingRequestSubmitting||!receiptPending;
             if(receiptPending&&!bookingRequestSubmitting)$('quoteSend').removeAttribute('aria-disabled');
           }
           $('quoteSend').removeAttribute("href");
