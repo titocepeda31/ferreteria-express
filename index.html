@@ -3628,6 +3628,17 @@ function filter() {
       try{savedBookingRetry=JSON.parse(sessionStorage.getItem(BOOKING_RETRY_KEY)||"null");}catch(e){}
       function persistBookingRetry(entry){savedBookingRetry=entry;try{if(entry)sessionStorage.setItem(BOOKING_RETRY_KEY,JSON.stringify(entry));else sessionStorage.removeItem(BOOKING_RETRY_KEY);}catch(e){}}
       function requestRetryFingerprint(draft,name,phone,extras){return JSON.stringify([draft,name,phone,extras]);}
+      function bookingDraftExtras(){
+        return Object.entries(quote).map(([id,qty])=>{const item=products.find(x=>String(x.id)===id);return item?.catalogSection==="adicional"?{product_id:item.analyticsId||item.id,quantity:Number(qty)}:null;}).filter(Boolean);
+      }
+      function recoverableBookingRetry(){
+        if(savedBookingRetry?.status!=="registered"||!savedBookingRetry.id||!savedBookingRetry.key)return null;
+        try{
+          const [draft,name,phone,extras]=JSON.parse(savedBookingRetry.fingerprint);
+          if(JSON.stringify(draft)!==JSON.stringify(stayDraft)||JSON.stringify(extras)!==JSON.stringify(bookingDraftExtras()))return null;
+          return {...savedBookingRetry,contact:{name,phone}};
+        }catch(e){return null;}
+      }
       let bookingRequestSubmitting=false,bookingRequestRegisteredFingerprint="";
       function invalidateBookingReceipt(){
         if(!bookingRequestRegisteredFingerprint)return;
@@ -3717,20 +3728,24 @@ function filter() {
         const p=draft&&products.find(x=>String(x.id)===String(draft.productId));
         if(!p){status.textContent="Primero agrega una estadía.";return;}
         if(bookingRequestSubmitting)return;
-        const name=$("bookingCustomerName").value.trim(),phone=$("bookingCustomerPhone").value.trim();
-        if(name.length<2||!/^[+]?[0-9 ]{8,18}$/.test(phone)){status.textContent="Completa nombre y WhatsApp de contacto.";return;}
-        const extras=Object.entries(quote).map(([id,qty])=>{const item=products.find(x=>String(x.id)===id);return item?.catalogSection==="adicional"?{product_id:item.analyticsId||item.id,quantity:Number(qty)}:null;}).filter(Boolean);
-        const fingerprint=requestRetryFingerprint(draft,name,phone,extras);
-        if(savedBookingRetry?.fingerprint===fingerprint&&savedBookingRetry?.status==="registered"){
+        const retry=recoverableBookingRetry();
+        if(retry){
           bookingRequestSubmitting=true;button.disabled=true;button.setAttribute("aria-disabled","true");
           status.textContent="La solicitud ya está registrada. Recuperando comprobante…";
+          let recovered=false;
           try{
-            const receipt=await fetchPersistedBookingReceipt(savedBookingRetry.id,savedBookingRetry.key);
-            showPersistedBookingReceipt(receipt,{name,phone});
+            const receipt=await fetchPersistedBookingReceipt(retry.id,retry.key);
+            bookingRequestRegisteredFingerprint=retry.fingerprint;
+            showPersistedBookingReceipt(receipt,retry.contact);
+            recovered=true;
           }catch(e){status.textContent="La solicitud ya existe, pero no se pudo recuperar el comprobante. Reintenta con conexión; no se creará otra solicitud.";button.textContent="Recuperar comprobante";}
-          finally{bookingRequestSubmitting=false;button.disabled=false;button.removeAttribute("aria-disabled");}
+          finally{bookingRequestSubmitting=false;button.disabled=recovered;if(recovered)button.setAttribute("aria-disabled","true");else button.removeAttribute("aria-disabled");}
           return;
         }
+        const name=$("bookingCustomerName").value.trim(),phone=$("bookingCustomerPhone").value.trim();
+        if(name.length<2||!/^[+]?[0-9 ]{8,18}$/.test(phone)){status.textContent="Completa nombre y WhatsApp de contacto.";return;}
+        const extras=bookingDraftExtras();
+        const fingerprint=requestRetryFingerprint(draft,name,phone,extras);
         if(bookingRequestRegisteredFingerprint===fingerprint){status.textContent="Esta solicitud ya fue registrada. Si el comprobante no aparece, vuelve a abrir Mi solicitud para recuperarlo.";return;}
         if(bookingPendingFingerprint!==fingerprint){
           bookingPendingFingerprint=fingerprint;
@@ -4431,11 +4446,16 @@ botonArriba.addEventListener('click', () => {
           $('quoteSummary').innerHTML=(hasStay||lines.length)?'<div class="stay-summary-top"><span>Resumen de solicitud</span><strong>'+formatCLP(stayTotal+extraSum)+'</strong></div><p class="muted">'+(hasStay?'1 estadía':'Sin estadía')+' · '+lines.length+' productos o servicios</p><p class="quote-notice">Total estimado, sujeto a confirmación.</p>':'';
           if(hasStay){$('quoteSummary').insertAdjacentHTML('beforeend','<div class="quote-line-controls stay-actions"><button type="button" data-stay-edit>Editar estadía</button><button type="button" class="remove" data-stay-remove>Quitar estadía</button></div>');}
           if(!hasStay){$('bookingShareFromQuote').classList.add('hidden');$('bookingReceipt').classList.add('hidden');$('bookingShareNotice').textContent='';$('quoteSend').removeAttribute('aria-disabled');$('quoteSend').disabled=false;}
-          $('quoteSend').textContent=bookingRequestRegisteredFingerprint?(savedBookingRetry?.status==='registered'?'Recuperar comprobante':'Solicitud registrada'):hasStay?'Registrar solicitud pendiente':(lines.length?'Consultar productos por WhatsApp':'Elegir una estadía');
-          if(hasStay&&savedBookingRetry?.status==='registered'){
+          const recovery=hasStay&&recoverableBookingRetry();
+          $('quoteSend').textContent=hasStay?'Registrar solicitud pendiente':(lines.length?'Consultar productos por WhatsApp':'Elegir una estadía');
+          $('quoteSend').disabled=bookingRequestSubmitting;
+          if(bookingRequestSubmitting)$('quoteSend').setAttribute('aria-disabled','true');else $('quoteSend').removeAttribute('aria-disabled');
+          if(recovery){
             const receiptPending=$('bookingReceipt').classList.contains('hidden')||$('bookingReceipt').textContent.includes('Comprobante pendiente de consulta');
+            $('quoteSend').textContent=receiptPending?'Recuperar comprobante':'Solicitud registrada';
             $('quoteSend').disabled=bookingRequestSubmitting||!receiptPending;
-            if(receiptPending&&!bookingRequestSubmitting)$('quoteSend').removeAttribute('aria-disabled');
+            if($('quoteSend').disabled)$('quoteSend').setAttribute('aria-disabled','true');else $('quoteSend').removeAttribute('aria-disabled');
+            if(receiptPending)$('quoteHelp').textContent='Tu solicitud ya está registrada. Recupera el comprobante sin volver a ingresar el contacto ni crear otra solicitud.';
           }
           $('quoteSend').removeAttribute("href");
           const browse=$('requestContinueShopping'),actions=$('quoteSend').closest('.quote-actions');
@@ -4641,4 +4661,5 @@ botonArriba.addEventListener('click', () => {
 
 
 </html>
+
 
