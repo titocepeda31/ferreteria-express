@@ -3663,13 +3663,13 @@ function filter() {
         lines.push("Total estimado registrado: "+(receipt.estimated_total==null?"Sin importe registrado":formatCLP(Number(receipt.estimated_total))));
         if(contact){lines.push("Contacto: "+contact.name,"WhatsApp de contacto: "+contact.phone);}
         lines.push("Este comprobante no acredita un pago.");
-        return lines.join("\\n");
+        return lines.join("\n");
       }
       function showPersistedBookingReceipt(receipt,contact){
         const text=persistedBookingText(receipt,contact);
         const code=String(receipt.id).slice(0,8);
         $("bookingReceipt").classList.remove("hidden");
-        $("bookingReceipt").innerHTML="<strong>Comprobante registrado #"+esc(code)+"</strong><p>"+esc(text).replace(/\\n/g,"<br>")+"</p>";
+        $("bookingReceipt").innerHTML="<strong>Comprobante registrado #"+esc(code)+"</strong><p>"+esc(text).replace(/\n/g,"<br>")+"</p>";
         $("quoteHelp").textContent="Solicitud registrada. Los importes se consultaron desde Supabase.";
         $("quoteSend").disabled=true;
         $("quoteSend").textContent="Solicitud registrada";
