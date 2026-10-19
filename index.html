@@ -1979,6 +1979,14 @@ body.request-open #quoteItems:empty{display:none!important}
 .availability-day.selected-range{background:#b6e6d1!important;color:#164b38!important;border:2px solid #499b78}
 .availability-day.selected-conflict{background:#a71f29!important;color:#fff!important;border:3px solid #6c0d15!important;opacity:1}
 #bookingStatus.booking-error{background:#fff0f0;border:2px solid #ba3030;border-radius:12px;padding:12px 14px;color:#8b1717;font-weight:700}
+
+.availability-day.available{background:#e9f6ec!important;color:#275f3a!important;border:1px solid #b4d6bd!important}
+.availability-day.occupied{background:#fff0f0!important;color:#aa5757!important;border:1px solid #ebc4c4!important;cursor:pointer}
+.availability-day.selected-start,.availability-day.selected-end{background:#c8e9d3!important;color:#154d2b!important;border:2px solid #368254!important;box-shadow:0 0 0 2px #fff!important}
+.availability-day.selected-range{background:#e0f2e5!important;color:#275f3a!important;border:2px solid #96c5a3!important}
+.availability-day.selected-conflict,.availability-day.unavailable-tapped{background:#ffe0df!important;color:#a22a2a!important;border:2px solid #ca5a5a!important}
+.availability-selection-hint{margin-top:14px;padding:12px 14px;background:#eaf6ef;color:#20583a;border-radius:10px;font-size:14px;font-weight:650}
+.availability-selection-hint.is-error{background:#fff0f0;color:#a12e2e}
 </style>
     <link rel="stylesheet" href="catalog-ux.css?v=artwork-1">
 
@@ -2177,7 +2185,7 @@ body.request-open #quoteItems:empty{display:none!important}
 
 
 
-            <div id="bookingHome"><div id="bookingRequest" class="hidden booking-request"><p class="muted">Elige las fechas y huéspedes. Podrás revisar todo antes de enviar la solicitud.</p><div class="booking-dates"><label>Llegada<input type="date" id="bookingArrival"></label><label>Salida<input type="date" id="bookingDeparture"></label></div><div id="bookingAvailabilityCalendar" class="booking-availability-calendar hidden"><div class="availability-header"><strong>Disponibilidad por noche</strong><div><button type="button" id="availabilityPrev">‹</button><button type="button" id="availabilityNext">›</button></div></div><p id="availabilityPeriod" class="muted"></p><div class="availability-key">🟢 Disponible · 🔴 Ocupado · ⚪ Sin comprobar</div><div id="availabilityDays" class="availability-days"></div><p class="muted">Elige llegada y salida. La disponibilidad se comprueba nuevamente al continuar.</p></div><label style="display:block;margin-top:12px">Huéspedes <select id="bookingGuests" style="display:block;width:100%;max-width:180px;margin-top:6px;padding:10px" aria-label="Cantidad de personas"><option value="1">1 persona</option><option value="2" selected>2 personas</option></select></label><div id="bookingEstimate" class="booking-estimate"></div><div id="bookingContact" class="hidden"><label style="display:block;margin-top:12px">Nombre de contacto<input id="bookingCustomerName" type="text" autocomplete="name" maxlength="120" placeholder="Tu nombre" style="display:block;width:100%;padding:12px;margin-top:6px"></label><label style="display:block;margin-top:12px">WhatsApp de contacto<input id="bookingCustomerPhone" type="tel" autocomplete="tel" placeholder="+56912345678" style="display:block;width:100%;padding:12px;margin-top:6px"></label></div><p id="bookingStatus" role="status"></p><button class="btn" id="bookingCheck" type="button">Consultar disponibilidad</button><button id="bookingQuoteWA" type="button" class="booking-wa-action hidden" hidden>Cotizar estadía por WhatsApp ↗</button><button id="bookingWhatsApp" type="button" class="booking-wa-action hidden">Enviar solicitud por WhatsApp ↗</button></div></div><div class="detail-actions">
+            <div id="bookingHome"><div id="bookingRequest" class="hidden booking-request"><p class="muted">Elige las fechas y huéspedes. Podrás revisar todo antes de enviar la solicitud.</p><div class="booking-dates"><label>Llegada<input type="date" id="bookingArrival"></label><label>Salida<input type="date" id="bookingDeparture"></label></div><div id="bookingAvailabilityCalendar" class="booking-availability-calendar hidden"><div class="availability-header"><strong>Disponibilidad por noche</strong><div><button type="button" id="availabilityPrev">‹</button><button type="button" id="availabilityNext">›</button></div></div><p id="availabilityPeriod" class="muted"></p><div class="availability-key">🟢 Disponible · 🔴 Ocupado · ⚪ Sin comprobar</div><div id="availabilityDays" class="availability-days"></div><div id="availabilitySelectionHint" class="availability-selection-hint" role="status" aria-live="polite">Toca un día disponible para elegir tu llegada.</div><p class="muted">Primero elige la llegada y después la salida. Los días rosados no están disponibles.</p></div><label style="display:block;margin-top:12px">Huéspedes <select id="bookingGuests" style="display:block;width:100%;max-width:180px;margin-top:6px;padding:10px" aria-label="Cantidad de personas"><option value="1">1 persona</option><option value="2" selected>2 personas</option></select></label><div id="bookingEstimate" class="booking-estimate"></div><div id="bookingContact" class="hidden"><label style="display:block;margin-top:12px">Nombre de contacto<input id="bookingCustomerName" type="text" autocomplete="name" maxlength="120" placeholder="Tu nombre" style="display:block;width:100%;padding:12px;margin-top:6px"></label><label style="display:block;margin-top:12px">WhatsApp de contacto<input id="bookingCustomerPhone" type="tel" autocomplete="tel" placeholder="+56912345678" style="display:block;width:100%;padding:12px;margin-top:6px"></label></div><p id="bookingStatus" role="status"></p><button class="btn" id="bookingCheck" type="button">Consultar disponibilidad</button><button id="bookingQuoteWA" type="button" class="booking-wa-action hidden" hidden>Cotizar estadía por WhatsApp ↗</button><button id="bookingWhatsApp" type="button" class="booking-wa-action hidden">Enviar solicitud por WhatsApp ↗</button></div></div><div class="detail-actions">
             <button class="btn" id="detailAdd" type="button">+ Agregar a cotización</button>
             <a class="btn outline" id="detailWA" target="_blank" rel="noopener"
 
@@ -3266,7 +3274,11 @@ function filter() {
         const end=new Date(localDate+"T12:00:00");end.setDate(end.getDate()+2);
         $("bookingDeparture").value=end.toISOString().slice(0,10);
         updateBookingEstimate();
-        calendarOffset=0;calendarArrivalPending=false;renderAvailabilityCalendar();
+        calendarOffset=0;calendarArrivalPending=false;
+        $("bookingArrival").value="";$("bookingDeparture").value="";
+        $("availabilitySelectionHint").textContent="Toca un día disponible para elegir tu llegada.";
+        $("availabilitySelectionHint").classList.remove("is-error");
+        renderAvailabilityCalendar();
         $("bookingContact").classList.add("hidden");
         $("bookingCheck").disabled=false;
         $("bookingCheck").textContent="Consultar disponibilidad";
@@ -3318,9 +3330,9 @@ function filter() {
         const start=$("bookingArrival").value,end=$("bookingDeparture").value;
         $("availabilityDays").querySelectorAll("[data-day]").forEach(btn=>{
           const day=btn.dataset.day;
-          btn.classList.toggle("selected-start",day===start);
-          btn.classList.toggle("selected-end",day===end);
-          btn.classList.toggle("selected-range",day>start&&day<end);
+          btn.classList.toggle("selected-start",day===start&&btn.classList.contains("available"));
+          btn.classList.toggle("selected-end",day===end&&!!start&&btn.classList.contains("available"));
+          btn.classList.toggle("selected-range",!!start&&!!end&&day>start&&day<end&&btn.classList.contains("available"));
           btn.classList.toggle("selected-conflict",day>=start&&day<end&&btn.classList.contains("occupied"));
           btn.setAttribute("aria-pressed",String(day===start||day===end));
         });
@@ -3338,7 +3350,8 @@ function filter() {
         limitedAvailability(p,days,(day,available)=>{
           if(version!==calendarVersion||String(p.id)!==String(bookingSelection()?.id))return;
           const btn=grid.querySelector('[data-day="'+day+'"]');if(!btn)return;
-          btn.disabled=available!==true;
+          btn.disabled=available===null;
+          btn.dataset.availability=available===true?"free":available===false?"occupied":"unknown";
           btn.classList.toggle("available",available===true);
           btn.classList.toggle("occupied",available===false);
           btn.title=available===true?"Disponible":available===false?"Ocupado o bloqueado":"Sin comprobar";
@@ -3350,14 +3363,29 @@ function filter() {
       $("availabilityNext").onclick=()=>{calendarOffset=Math.min(12,calendarOffset+1);renderAvailabilityCalendar();};
       $("availabilityDays").addEventListener("click",e=>{
         const btn=e.target.closest("[data-day]");if(!btn||btn.disabled)return;
-        const day=btn.dataset.day;
-        if(!calendarArrivalPending||day<=$("bookingArrival").value){
-          $("bookingArrival").value=day;$("bookingDeparture").value=plusDays(day,1);calendarArrivalPending=true;
-          $("bookingStatus").textContent="Llegada seleccionada. Ahora elige la salida.";
-        }else{
-          $("bookingDeparture").value=day;calendarArrivalPending=false;
-          $("bookingStatus").textContent="Fechas seleccionadas. Comprueba la estadía completa.";
+        const day=btn.dataset.day,hint=$("availabilitySelectionHint");
+        if(btn.dataset.availability==="occupied"){
+          hint.textContent="El "+new Date(day+"T12:00:00").toLocaleDateString("es-CL",{day:"numeric",month:"long"})+" está ocupado o bloqueado. Elige un día verde.";
+          hint.classList.add("is-error");
+          btn.classList.add("unavailable-tapped");setTimeout(()=>btn.classList.remove("unavailable-tapped"),1200);
+          return;
         }
+        hint.classList.remove("is-error");
+        if(!calendarArrivalPending||day<=$("bookingArrival").value){
+          $("bookingArrival").value=day;$("bookingDeparture").value="";calendarArrivalPending=true;
+          hint.textContent="Llegada: "+new Date(day+"T12:00:00").toLocaleDateString("es-CL",{day:"numeric",month:"long"})+". Ahora toca la fecha de salida.";
+        }else{
+          const p=bookingSelection(),start=$("bookingArrival").value;
+          const nights=Math.round((Date.parse(day+"T12:00:00")-Date.parse(start+"T12:00:00"))/86400000);
+          const blocked=Array.from({length:Math.min(nights,31)},(_,i)=>plusDays(start,i)).find(d=>availabilityCache.get(String(p.analyticsId)+"|"+d)===false);
+          if(blocked||nights>30){
+            hint.textContent=blocked?"No se puede reservar: el "+new Date(blocked+"T12:00:00").toLocaleDateString("es-CL",{day:"numeric",month:"long"})+" está ocupado.":"La estadía no puede superar 30 noches.";
+            hint.classList.add("is-error");markCalendarSelection();return;
+          }
+          $("bookingDeparture").value=day;calendarArrivalPending=false;
+          hint.textContent="Llegada y salida seleccionadas: "+nights+" "+(nights===1?"noche":"noches")+". Pulsa Consultar disponibilidad para continuar.";
+        }
+        $("bookingStatus").textContent="";
         updateBookingEstimate();
         markCalendarSelection();
       });
@@ -3407,6 +3435,8 @@ function filter() {
         try{
           const available=await bookingRpc("booking_public_availability",p,start,end);
           if(!available){
+            $("availabilitySelectionHint").textContent="La estadía incluye una noche ocupada. Elige otra fecha verde.";
+            $("availabilitySelectionHint").classList.add("is-error");
             status.textContent="La estadía se cruza con una noche ocupada o bloqueada. Las noches en conflicto están destacadas en el calendario.";
             status.classList.add("booking-error");
             const nights=Array.from({length:Math.min(30,bookingNights())},(_,i)=>plusDays(start,i));
