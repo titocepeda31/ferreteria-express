@@ -1987,6 +1987,14 @@ body.request-open #quoteItems:empty{display:none!important}
 .availability-day.selected-conflict,.availability-day.unavailable-tapped{background:#ffe0df!important;color:#a22a2a!important;border:2px solid #ca5a5a!important}
 .availability-selection-hint{margin-top:14px;padding:12px 14px;background:#eaf6ef;color:#20583a;border-radius:10px;font-size:14px;font-weight:650}
 .availability-selection-hint.is-error{background:#fff0f0;color:#a12e2e}
+
+.lodging-home-search{margin-top:0}.lodging-home-search h2{margin:0 0 14px;font-size:22px}
+.lodging-home-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.lodging-home-fields label{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600}
+.lodging-home-fields input,.lodging-home-fields select{width:100%;min-width:0;min-height:48px;padding:10px;border:1px solid #cbd5cf;border-radius:10px;background:white;font:inherit}
+.lodging-home-search button{width:100%;min-height:48px}
+#homeSearchStatus{margin:10px 0 0}
+@media(max-width:600px){.lodging-home-fields{grid-template-columns:1fr 1fr}.lodging-home-fields label:first-child{grid-column:1/-1}}
 </style>
     <link rel="stylesheet" href="catalog-ux.css?v=artwork-1">
 
@@ -2070,6 +2078,7 @@ body.request-open #quoteItems:empty{display:none!important}
     <section class="wrap quick-find" id="quickFind" aria-label="Buscar en el catálogo">
       <label for="quickSearch">¿Qué producto necesitas?</label>
       <input id="quickSearch" type="search" placeholder="Buscar madera, tornillos, herramientas…" autocomplete="off" aria-label="Buscar productos desde el inicio" />
+      <form id="lodgingHomeSearch" class="hidden lodging-home-search"><h2>Encuentra tu cabaña</h2><div class="lodging-home-fields"><label>Fecha de llegada<input type="date" id="homeArrival" required></label><label>Noches<select id="homeNights"><option value="1">1 noche</option><option value="2" selected>2 noches</option><option value="3">3 noches</option><option value="4">4 noches</option><option value="5">5 noches</option><option value="7">7 noches</option></select></label><label>Personas<select id="homeGuests"><option value="1">1 persona</option><option value="2" selected>2 personas</option><option value="3">3 personas</option><option value="4">4 personas</option><option value="5">5 personas</option><option value="6">6 personas</option></select></label></div><button class="btn" type="submit" id="homeSearchButton">Buscar disponibilidad</button><p id="homeSearchStatus" role="status"></p></form>
     </section>
     <section class="wrap section hidden" id="inicio-destacados" aria-labelledby="destacados-titulo">
       <div class="featured-heading">
@@ -3147,6 +3156,9 @@ function filter() {
         $('extrasHomeLink').classList.toggle('hidden',!portada || !products.some(x=>x.catalogSection==='adicional'));
         $('hero').classList.toggle('hidden', !portada);
         $('quickFind').classList.toggle('hidden', !portada);
+        $('lodgingHomeSearch').classList.toggle('hidden',!portada||config.catalogType!=='lodging');
+        $('quickFind').querySelector('label[for="quickSearch"]').classList.toggle('hidden',config.catalogType==='lodging');
+        $('quickSearch').classList.toggle('hidden',config.catalogType==='lodging');
         $('inicio-destacados').classList.toggle('hidden', !portada);
         $('detail').classList.toggle('hidden', !p);
         $('businessInfo').classList.toggle('hidden', !portada);
@@ -3275,8 +3287,10 @@ function filter() {
         $("bookingDeparture").value=end.toISOString().slice(0,10);
         updateBookingEstimate();
         calendarOffset=0;calendarArrivalPending=false;
-        $("bookingArrival").value="";$("bookingDeparture").value="";
-        $("availabilitySelectionHint").textContent="Toca un día disponible para elegir tu llegada.";
+        const preferred=homeBookingPrefill&&homeBookingPrefill.productId===String(p.id)?homeBookingPrefill:null;
+        $("bookingArrival").value=preferred?.start||"";$("bookingDeparture").value=preferred?.end||"";
+        if(preferred){$("bookingGuests").value=String(preferred.guests);homeBookingPrefill=null;}
+        $("availabilitySelectionHint").textContent=preferred?"Fechas precargadas desde la búsqueda. Revisa los días y confirma disponibilidad.":"Toca un día disponible para elegir tu llegada.";
         $("availabilitySelectionHint").classList.remove("is-error");
         renderAvailabilityCalendar();
         $("bookingContact").classList.add("hidden");
@@ -3301,7 +3315,17 @@ function filter() {
       document.addEventListener("click",e=>{const b=e.target.closest("[data-quick-book]");if(b)openQuickBooking(b.dataset.quickBook);});
       $("bookingQuoteWA").addEventListener("click",()=>{const p=bookingSelection();if(!p||!validBookingGuests(p)||bookingNights()<1)return;window.open(bookingShareLink(bookingShareText(p,$("bookingArrival").value,$("bookingDeparture").value,null)),"_blank","noopener");});
       $("bookingWhatsApp").addEventListener("click",async()=>{const msg=$("bookingWhatsApp").dataset.message;if(!msg)return;const url=bookingShareLink(msg);if(url){window.open(url,"_blank","noopener");return;}try{await navigator.clipboard.writeText(msg);$("bookingStatus").textContent="Solicitud copiada. El negocio no tiene WhatsApp configurado; no se ha enviado ningún mensaje.";}catch(e){$("bookingStatus").textContent="Solicitud registrada, pero no hay WhatsApp configurado. Conserva el código de solicitud.";}});
-      ["bookingArrival","bookingDeparture","bookingGuests"].forEach(id=>$(id).addEventListener("change",()=>{verifiedBookingKey="";$("bookingCheck").textContent="Agregar estadía a Mi solicitud";$("bookingStatus").textContent="";$("bookingWhatsApp").classList.add("hidden");updateBookingEstimate();markCalendarSelection();}));
+      ["bookingArrival","bookingDeparture","bookingGuests"].forEach(id=>$(id).addEventListener("change",()=>{
+        const start=$("bookingArrival"),end=$("bookingDeparture"),today=localToday();
+        start.min=today;end.min=start.value&&start.value>=today?plusDays(start.value,1):today;
+        if(start.value&&start.value<today){start.value="";end.value="";$("availabilitySelectionHint").textContent="No se pueden seleccionar fechas anteriores a hoy.";}
+        else if(start.value&&(!end.value||end.value<=start.value||end.value<end.min)){
+          end.value=plusDays(start.value,1);
+          $("availabilitySelectionHint").textContent="Salida ajustada automáticamente al "+new Date(end.value+"T12:00:00").toLocaleDateString("es-CL",{day:"numeric",month:"long"})+"; puedes cambiarla.";
+        }
+        if(end.value&&end.value<today){end.value="";}
+        verifiedBookingKey="";$("bookingCheck").textContent="Consultar disponibilidad";$("bookingStatus").textContent="";$("bookingWhatsApp").classList.add("hidden");updateBookingEstimate();markCalendarSelection();
+      }));
       async function bookingRpc(name,p,start,end){
         const response=await fetch(SUPABASE_URL+"/rest/v1/rpc/"+name,{method:"POST",headers:{...SUPABASE_HEADERS,"Content-Type":"application/json"},body:JSON.stringify({p_product:p.analyticsId,p_start:start,p_end:end}),signal:AbortSignal.timeout(15000)});
         if(!response.ok)throw new Error((await response.json().catch(()=>({}))).message||"No se pudo consultar disponibilidad");
@@ -3309,6 +3333,32 @@ function filter() {
       }
 
       const availabilityCache=new Map(),availabilityPending=new Map();
+      let homeBookingPrefill=null,homeSearchVersion=0;
+      $("homeArrival").min=new Date().toLocaleDateString("en-CA");
+      $("homeArrival").addEventListener("change",()=>{
+        const today=localToday();
+        $("homeArrival").min=today;
+        if($("homeArrival").value<today)$("homeArrival").value=today;
+      });
+      $("lodgingHomeSearch").addEventListener("submit",async e=>{
+        e.preventDefault();
+        const today=localToday(),start=$("homeArrival").value,guests=Number($("homeGuests").value),nights=Number($("homeNights").value),status=$("homeSearchStatus");
+        if(!start||start<today){status.textContent="Selecciona una fecha de llegada desde hoy en adelante.";return;}
+        const end=plusDays(start,nights),cabins=products.filter(p=>p.unidad==="noche"&&p.catalogSection!=="adicional"&&p.analyticsId&&(!p.capacidadMax||Number(p.capacidadMax)>=guests));
+        if(!cabins.length){status.textContent="No hay cabañas para esa cantidad de personas.";return;}
+        const version=++homeSearchVersion,btn=$("homeSearchButton");btn.disabled=true;status.textContent="Consultando disponibilidad de las cabañas…";
+        try{
+          const results=await Promise.all(cabins.map(async p=>({p,available:await bookingRpc("booking_public_availability",p,start,end).catch(()=>null)})));
+          if(version!==homeSearchVersion)return;
+          const available=results.filter(x=>x.available===true);
+          status.textContent=available.length?available.length+" "+(available.length===1?"cabaña disponible":"cabañas disponibles")+" para "+nights+" "+(nights===1?"noche":"noches")+". Selecciona una.":"No hay disponibilidad confirmada para esas fechas. Prueba otra llegada o menos noches.";
+          const featured=$("featured");
+          featured.innerHTML=available.length?available.map(x=>tarjetaProducto(x.p)).join(""):'<div class="empty">No hay cabañas disponibles para esas fechas.</div>';
+          featured.querySelectorAll("[data-quick-book]").forEach(button=>button.addEventListener("click",()=>{homeBookingPrefill={productId:button.dataset.quickBook,start,end,guests};openQuickBooking(button.dataset.quickBook);}));
+          $("inicio-destacados").scrollIntoView({behavior:"smooth",block:"start"});
+        }finally{btn.disabled=false;}
+      });
+
       const dayISO=date=>{const d=new Date(date);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");};
       const plusDays=(iso,n)=>{const d=new Date(iso+"T12:00:00");d.setDate(d.getDate()+n);return dayISO(d);};
       const localToday=()=>dayISO(new Date());
@@ -3386,6 +3436,7 @@ function filter() {
           hint.textContent="Llegada y salida seleccionadas: "+nights+" "+(nights===1?"noche":"noches")+". Pulsa Consultar disponibilidad para continuar.";
         }
         $("bookingStatus").textContent="";
+        $("bookingDeparture").min=$("bookingArrival").value?plusDays($("bookingArrival").value,1):localToday();
         updateBookingEstimate();
         markCalendarSelection();
       });
@@ -3429,7 +3480,7 @@ function filter() {
       $("bookingCheck").addEventListener("click",async()=>{
         const p=bookingSelection(),start=$("bookingArrival").value,end=$("bookingDeparture").value;
         const guests=Number($("bookingGuests").value),status=$("bookingStatus"),btn=$("bookingCheck");
-        const now=new Date(),today=new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,10);
+        const today=localToday();
         if(!p?.analyticsId||!validBookingGuests(p)||!start||start<today||bookingNights()<1||bookingNights()>30){status.textContent="Revisa fechas y huéspedes (máximo 30 noches).";return;}
         btn.disabled=true;status.classList.remove("booking-error");status.textContent="Comprobando disponibilidad…";
         try{
