@@ -3722,11 +3722,13 @@ function filter() {
         const extras=Object.entries(quote).map(([id,qty])=>{const item=products.find(x=>String(x.id)===id);return item?.catalogSection==="adicional"?{product_id:item.analyticsId||item.id,quantity:Number(qty)}:null;}).filter(Boolean);
         const fingerprint=requestRetryFingerprint(draft,name,phone,extras);
         if(savedBookingRetry?.fingerprint===fingerprint&&savedBookingRetry?.status==="registered"){
+          bookingRequestSubmitting=true;button.disabled=true;button.setAttribute("aria-disabled","true");
           status.textContent="La solicitud ya está registrada. Recuperando comprobante…";
           try{
             const receipt=await fetchPersistedBookingReceipt(savedBookingRetry.id,savedBookingRetry.key);
             showPersistedBookingReceipt(receipt,{name,phone});
-          }catch(e){status.textContent="La solicitud ya existe, pero no se pudo recuperar el comprobante. Reintenta con conexión; no se creará otra solicitud.";}
+          }catch(e){status.textContent="La solicitud ya existe, pero no se pudo recuperar el comprobante. Reintenta con conexión; no se creará otra solicitud.";button.textContent="Recuperar comprobante";}
+          finally{bookingRequestSubmitting=false;button.disabled=false;button.removeAttribute("aria-disabled");}
           return;
         }
         if(bookingRequestRegisteredFingerprint===fingerprint){status.textContent="Esta solicitud ya fue registrada. Usa el botón de WhatsApp para compartirla.";return;}
@@ -3749,8 +3751,8 @@ function filter() {
           }catch(e){
             $("bookingReceipt").classList.remove("hidden");
             $("bookingReceipt").innerHTML="<strong>Solicitud #"+esc(code)+" registrada</strong><p>Comprobante pendiente de consulta. No se mostrará un total calculado localmente.</p>";
-            status.textContent="Solicitud registrada, pero falló la consulta del comprobante. Puedes volver a abrir Mi solicitud y recuperar el comprobante sin registrar otra.";
-            button.textContent="Solicitud registrada";
+            status.textContent="Solicitud registrada, pero falló la consulta del comprobante. Pulsa Recuperar comprobante; no se creará otra solicitud.";
+            button.textContent="Recuperar comprobante";button.disabled=false;button.removeAttribute("aria-disabled");
             $("requestContinueShopping").classList.add("hidden");
           }
         }catch(e){status.textContent="No se pudo confirmar el resultado: "+(e.message||"Error de conexión")+". Si reintentas, se reutilizará el mismo identificador para evitar duplicaciones, siempre que el servidor respete la clave de idempotencia.";button.removeAttribute("aria-disabled");button.disabled=false;}finally{bookingRequestSubmitting=false;}
@@ -4429,7 +4431,8 @@ botonArriba.addEventListener('click', () => {
           $('quoteSummary').innerHTML=(hasStay||lines.length)?'<div class="stay-summary-top"><span>Resumen de solicitud</span><strong>'+formatCLP(stayTotal+extraSum)+'</strong></div><p class="muted">'+(hasStay?'1 estadía':'Sin estadía')+' · '+lines.length+' productos o servicios</p><p class="quote-notice">Total estimado, sujeto a confirmación.</p>':'';
           if(hasStay){$('quoteSummary').insertAdjacentHTML('beforeend','<div class="quote-line-controls stay-actions"><button type="button" data-stay-edit>Editar estadía</button><button type="button" class="remove" data-stay-remove>Quitar estadía</button></div>');}
           if(!hasStay){$('bookingShareFromQuote').classList.add('hidden');$('bookingReceipt').classList.add('hidden');$('bookingShareNotice').textContent='';$('quoteSend').removeAttribute('aria-disabled');$('quoteSend').disabled=false;}
-          $('quoteSend').textContent=bookingRequestRegisteredFingerprint?'Solicitud registrada':hasStay?'Registrar solicitud pendiente':(lines.length?'Consultar productos por WhatsApp':'Elegir una estadía');
+          $('quoteSend').textContent=bookingRequestRegisteredFingerprint?(savedBookingRetry?.status==='registered'?'Recuperar comprobante':'Solicitud registrada'):hasStay?'Registrar solicitud pendiente':(lines.length?'Consultar productos por WhatsApp':'Elegir una estadía');
+          if(hasStay&&savedBookingRetry?.status==='registered'){$('quoteSend').disabled=false;$('quoteSend').removeAttribute('aria-disabled');}
           $('quoteSend').removeAttribute("href");
           const browse=$('requestContinueShopping'),actions=$('quoteSend').closest('.quote-actions');
           if(browse)browse.classList.toggle("hidden",!!bookingRequestRegisteredFingerprint);
