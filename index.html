@@ -2273,7 +2273,7 @@ body.request-open #quoteItems:empty{display:none!important}
           <div id="quoteItems"></div>
           <div id="quoteSummary" class="quote-summary hidden" role="status" aria-live="polite" aria-atomic="true"></div>
         </div>
-        <div id="quoteContactSlot" class="hidden"></div><div id="requestContinueShopping" class="hidden"><button type="button" class="outline" id="requestBrowseMore">+ Agregar productos y servicios</button></div><div class="quote-actions"><a class="btn" id="quoteSend" target="_blank" rel="noopener">Enviar cotización por WhatsApp</a><button type="button" class="outline" id="quoteClear">Vaciar cotización</button><button type="button" class="outline hidden" id="bookingShareFromQuote">Compartir solicitud</button></div>
+        <div id="quoteContactSlot" class="hidden"></div><div id="bookingReceipt" class="hidden" role="status"></div><p id="bookingShareNotice" role="status"></p><div id="requestContinueShopping" class="hidden"><button type="button" class="outline" id="requestBrowseMore">+ Agregar productos y servicios</button></div><div class="quote-actions"><button type="button" class="btn" id="quoteSend">Enviar cotización por WhatsApp</button><button type="button" class="outline" id="quoteClear">Vaciar cotización</button><button type="button" class="outline hidden" id="bookingShareFromQuote">Compartir solicitud</button></div>
       </section>
     </div>
 
@@ -3193,7 +3193,7 @@ function filter() {
         return [
           code?"Solicitud de estadía pendiente #"+code:"Consulta de estadía",
           "Cabaña: "+p.nombre,"Llegada: "+date(draft.start),"Salida: "+date(draft.end),
-          "Huéspedes: "+guests,"Noches: "+n,"Estadía: "+money(stayAmount),
+          "Huéspedes: "+guests,"Noches: "+n,"Precio por noche: "+money(Number.isFinite(price)?price:null),"Estadía: "+money(stayAmount),
           "Productos y servicios:",
           ...(extras.length?extras.map(x=>"- "+x.name+": "+formatQuoteQty(x.quantity)+" "+x.unit+" — "+money(x.subtotal)):["Ninguno"]),
           "Total estimado: "+money(stayAmount===null?null:stayAmount+extraTotal),
@@ -3311,7 +3311,10 @@ function filter() {
           const response=await fetch(SUPABASE_URL+"/rest/v1/rpc/booking_public_request_v2",{method:"POST",headers:{...SUPABASE_HEADERS,"Content-Type":"application/json"},body:JSON.stringify({p_product:p.analyticsId,p_start:draft.start,p_end:draft.end,p_guests:draft.guests,p_customer_name:name,p_customer_whatsapp:phone,p_idempotency_key:bookingPendingKey,p_extras:extras}),signal:AbortSignal.timeout(15000)});
           if(!response.ok)throw new Error((await response.json().catch(()=>({}))).message||"No se pudo registrar");
           const id=await response.json(),code=String(id).slice(0,8);
-          status.textContent="Solicitud #"+code+" registrada y pendiente de confirmación. Ahora puedes enviar el resumen por WhatsApp al alojamiento.";
+          const totalSavedPreview=Number(draft.nights)*(Number(p.precioRebajado??p.precio)||0)+extras.reduce((sum,x)=>{const item=products.find(y=>String(y.analyticsId||y.id)===String(x.product_id));return sum+(Number(item?.precioRebajado??item?.precio)||0)*x.quantity;},0);
+          $("bookingReceipt").classList.remove("hidden");
+          $("bookingReceipt").innerHTML="<strong>Solicitud #"+esc(code)+"</strong><p>Estado: pendiente de confirmación</p><p>Total estimado: "+formatCLP(totalSavedPreview)+"</p>";
+          status.textContent="Solicitud registrada. Comparte el resumen por WhatsApp para contactar al alojamiento.";
           button.textContent="Solicitud registrada";
           button.setAttribute("aria-disabled","true");
           bookingRequestRegisteredFingerprint=fingerprint;
@@ -3321,7 +3324,7 @@ function filter() {
           share.classList.remove("hidden");
           share.textContent=link?"Enviar solicitud por WhatsApp":"WhatsApp del alojamiento no configurado";
           share.disabled=!link;
-          share.onclick=()=>{if(link){const opened=window.open(link,"_blank","noopener");status.textContent="Se abrió WhatsApp con el mensaje preparado. Comprueba y pulsa Enviar allí; el sistema no puede confirmar que se haya enviado.";}}; 
+          share.onclick=()=>{if(link){window.open(link,"_blank","noopener");$("bookingShareNotice").textContent="Se abrió WhatsApp con el mensaje preparado. Pulsa Enviar allí; abrirlo no significa que se haya enviado.";}}; 
         }catch(e){status.textContent="No se pudo completar la solicitud: "+(e.message||"Error de conexión")+". Puedes reintentar.";button.removeAttribute("aria-disabled");button.disabled=false;}finally{bookingRequestSubmitting=false;}
       }
       $("quickSearch").addEventListener("input", event => {
@@ -3894,7 +3897,8 @@ botonArriba.addEventListener('click', () => {
         quote[id] = Math.min(9999, Math.round(((Number(quote[id]) || 0) + step) * 100) / 100);
         saveQuote();
         if(config.catalogType==='lodging'){
-          showRequestFeedback(product.nombre);
+          const unitPrice=Number(product.precioRebajado??product.precio)||0;
+          showRequestFeedback(product.nombre+' · '+formatQuoteQty(step)+(product.unidad&&product.unidad!=='unidad'?' '+product.unidad:'')+' · '+formatCLP(step*unitPrice));
         }else openQuote();
       }
       function showRequestFeedback(name){
@@ -3994,7 +3998,7 @@ botonArriba.addEventListener('click', () => {
           $('quoteSummary').classList.toggle('hidden',!hasStay&&!lines.length);
           $('quoteSummary').innerHTML=(hasStay||lines.length)?'<div class="stay-summary-top"><span>Resumen de solicitud</span><strong>'+formatCLP(stayTotal+extraSum)+'</strong></div><p class="muted">'+(hasStay?'1 estadía':'Sin estadía')+' · '+lines.length+' productos o servicios</p><p class="quote-notice">Total estimado, sujeto a confirmación.</p>':'';
           if(hasStay){$('quoteSummary').insertAdjacentHTML('beforeend','<div class="quote-line-controls stay-actions"><button type="button" data-stay-edit>Editar estadía</button><button type="button" class="remove" data-stay-remove>Quitar estadía</button></div>');}
-          if(!hasStay){$('bookingShareFromQuote').classList.add('hidden');$('quoteSend').removeAttribute('aria-disabled');$('quoteSend').disabled=false;}
+          if(!hasStay){$('bookingShareFromQuote').classList.add('hidden');$('bookingReceipt').classList.add('hidden');$('bookingShareNotice').textContent='';$('quoteSend').removeAttribute('aria-disabled');$('quoteSend').disabled=false;}
           $('quoteSend').textContent=hasStay?'Registrar solicitud pendiente':(lines.length?'Consultar productos por WhatsApp':'Elegir una estadía');
           $('quoteSend').removeAttribute("href");
           const browse=$('requestContinueShopping'),actions=$('quoteSend').closest('.quote-actions');
@@ -4027,9 +4031,9 @@ botonArriba.addEventListener('click', () => {
             }).join('\n\n') +
             '\n\n' + messageSummary.join('\n') +
             '\n\n¿Me confirman disponibilidad y precio final?';
-          $('quoteSend').href = 'https://wa.me/' + String(config.whatsapp || '').replace(/\D/g,'') + '?text=' + encodeURIComponent(msg);
+          $('quoteSend').dataset.whatsappHref = 'https://wa.me/' + String(config.whatsapp || '').replace(/\D/g,'') + '?text=' + encodeURIComponent(msg);
         } else {
-          $('quoteSend').removeAttribute('href');
+          delete $('quoteSend').dataset.whatsappHref;
         }
       }
       // El catálogo no confirma envíos: solamente registra la solicitud antes de abrir WhatsApp.
