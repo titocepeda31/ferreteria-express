@@ -3547,7 +3547,17 @@ function filter() {
           const card=findCard(p),note=card?.querySelector(".upcoming-availability");if(!note)return;
           const free=days.filter(day=>state.get(day)===true);
           if(activeLodgingSearch)return;
-          if(!free.length){card.remove();if(!featured.querySelector(".card"))featured.innerHTML='<div class="empty">No hay cabañas con noches libres confirmadas en los próximos 16 días. Puedes buscar otras fechas o ver todas nuestras cabañas.</div>';return;}
+          if(!free.length){
+            const unknown=days.some(day=>state.get(day)===null||!state.has(day));
+            if(unknown){
+              note.textContent="No pudimos comprobar todas las fechas. Consulta otras fechas o reintenta.";
+              const action=card.querySelector(".card-actions");if(action)action.classList.remove("hidden");
+              return;
+            }
+            card.remove();
+            if(!featured.querySelector(".card"))featured.innerHTML='<div class="empty">No hay cabañas con noches libres confirmadas en los próximos 16 días. Puedes buscar otras fechas o ver todas nuestras cabañas.</div>';
+            return;
+          }
           // Keep cabins with earlier confirmed availability first.
           card.dataset.nextFree=free[0];
           [...featured.querySelectorAll(".card")].sort((a,b)=>(a.dataset.nextFree||"9999").localeCompare(b.dataset.nextFree||"9999")).forEach(el=>featured.appendChild(el));
