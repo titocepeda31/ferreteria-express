@@ -3313,8 +3313,19 @@ function filter() {
         }
         const select=$("bookingGuests"),max=Math.max(1,Math.min(30,Number(p?.capacidadMax)||30)),previous=Number(select.value)||1;
         if(select.options.length!==max){select.innerHTML=Array.from({length:max},(_,i)=>"<option value=\""+(i+1)+"\">"+(i+1)+(i===0?" persona":" personas")+"</option>").join("");select.value=String(Math.min(previous,max));}
+        // Si la búsqueda supera la capacidad, no reducir huéspedes silenciosamente ni dejar el selector vacío.
+        const requested=Number(activeLodgingSearch?.guests);
+        const mismatch=Number.isInteger(requested)&&requested>max&&Number(select.value)!==requested&&activeLodgingSearch&&String(p?.id)===String(quickBookingProduct||p?.id);
+        if(mismatch && !select.dataset.capacityAcknowledged){
+          const opt=document.createElement('option');
+          opt.value=String(requested);opt.textContent=requested+' personas · supera capacidad';opt.disabled=true;
+          select.appendChild(opt);select.value=String(requested);
+        }
+        if(Number(select.value)>max){
+          $('bookingEstimate').innerHTML='<div role="alert" style="color:#a13e33;font-weight:600">Esta cabaña admite hasta '+max+' personas; tu búsqueda es para '+requested+'. Ajusta los huéspedes o elige otra cabaña.</div>';
+        }
         select.parentElement.firstChild.textContent="Personas (máx. "+max+") ";
-        $("bookingStatus").textContent="";
+        $("bookingStatus").textContent=Number(select.value)>max?'La cantidad de huéspedes supera la capacidad de esta cabaña.':'';
         $("bookingWhatsApp").classList.add("hidden");
 
         verifiedBookingKey="";
@@ -3339,7 +3350,7 @@ function filter() {
         const preferred=homeBookingPrefill&&homeBookingPrefill.productId===String(p.id)?homeBookingPrefill:activeLodgingSearch;
         if(preferred&&preferred.start>=localToday()){const distance=Math.floor((Date.parse(preferred.start+"T12:00:00")-Date.parse(localToday()+"T12:00:00"))/86400000);calendarOffset=Math.max(0,Math.floor(distance/28));}
         $("bookingArrival").value=preferred?.start||"";$("bookingDeparture").value=preferred?.end||"";
-        if(preferred){$("bookingGuests").value=String(preferred.guests);homeBookingPrefill=null;}
+        if(preferred){$("bookingGuests").dataset.capacityAcknowledged='';$("bookingGuests").value=String(preferred.guests);homeBookingPrefill=null;}
         $("bookingDeparture").min=$("bookingArrival").value?plusDays($("bookingArrival").value,1):localToday();
         updateBookingEstimate();
         $("availabilitySelectionHint").textContent=preferred?"Fechas precargadas desde la búsqueda. Revisa los días y confirma disponibilidad.":"Toca un día disponible para elegir tu llegada.";
@@ -4133,7 +4144,8 @@ botonArriba.addEventListener('click', () => {
 
 
       // Cotización local: no requiere campos de unidades ni cambios en Google Sheets.
-      const QUOTE_KEY = 'titolabs_cotizacion_v1';
+      // Almacenamiento aislado por tienda. No importar el carrito global anterior: podría pertenecer a otra tienda.
+      const QUOTE_KEY = 'titolabs_cotizacion_v2_' + encodeURIComponent(new URLSearchParams(location.search).get('catalogo') || 'default');
       let quote = {};
       const STAY_KEY = "titolabs_estadia_v1_"+(new URLSearchParams(location.search).get("catalogo")||"default");
       let stayDraft = null;
