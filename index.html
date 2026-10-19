@@ -3351,7 +3351,7 @@ function filter() {
         updateBookingEstimate();
         calendarOffset=0;calendarArrivalPending=false;
         const preferred=homeBookingPrefill&&homeBookingPrefill.productId===String(p.id)?homeBookingPrefill:activeLodgingSearch;
-        if(preferred&&preferred.start>=localToday()){const distance=Math.floor((Date.parse(preferred.start+"T12:00:00")-Date.parse(localToday()+"T12:00:00"))/86400000);calendarOffset=Math.max(0,Math.floor(distance/28));}
+        if(preferred&&preferred.start>=localToday())calendarOffset=calendarMonthOffset(preferred.start)||0;
         $("bookingArrival").value=preferred?.start||"";$("bookingDeparture").value=preferred?.end||"";
         if(preferred){$("bookingGuests").dataset.capacityAcknowledged='';$("bookingGuests").value=String(preferred.guests);homeBookingPrefill=null;}
         $("bookingDeparture").min=$("bookingArrival").value?plusDays($("bookingArrival").value,1):localToday();
@@ -3391,7 +3391,10 @@ function filter() {
           $("availabilitySelectionHint").textContent="Salida ajustada automáticamente al "+new Date(end.value+"T12:00:00").toLocaleDateString("es-CL",{day:"numeric",month:"long"})+"; puedes cambiarla.";
         }
         if(end.value&&end.value<today){end.value="";}
-        verifiedBookingKey="";$("bookingCheck").textContent="Consultar disponibilidad";$("bookingStatus").textContent="";$("bookingWhatsApp").classList.add("hidden");updateBookingEstimate();markCalendarSelection();
+        verifiedBookingKey="";$("bookingCheck").textContent="Consultar disponibilidad";$("bookingStatus").textContent="";$("bookingWhatsApp").classList.add("hidden");updateBookingEstimate();
+        if(id==="bookingArrival"&&start.value)focusCalendarOnDate(start.value);
+        else if(id==="bookingDeparture"&&end.value)focusCalendarOnDate(end.value);
+        else markCalendarSelection();
       }));
       async function bookingRpc(name,p,start,end){
         const response=await fetch(SUPABASE_URL+"/rest/v1/rpc/"+name,{method:"POST",headers:{...SUPABASE_HEADERS,"Content-Type":"application/json"},body:JSON.stringify({p_product:p.analyticsId,p_start:start,p_end:end}),signal:AbortSignal.timeout(15000)});
@@ -3443,6 +3446,14 @@ function filter() {
       function plusDays(iso,n){const d=new Date(iso+"T12:00:00");d.setDate(d.getDate()+n);return dayISO(d);}
       function localToday(){return dayISO(new Date());}
       let calendarOffset=0,calendarVersion=0,calendarArrivalPending=false;
+      function calendarMonthOffset(iso){
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(iso||''))return null;
+        const today=new Date(localToday()+'T12:00:00'),target=new Date(iso+'T12:00:00');
+        if(Number.isNaN(target.getTime()))return null;
+        return Math.max(0,(target.getFullYear()-today.getFullYear())*12+target.getMonth()-today.getMonth());
+      }
+      function focusCalendarOnDate(iso){const month=calendarMonthOffset(iso);if(month!==null){calendarOffset=month;renderAvailabilityCalendar();}}
+
       async function dayAvailability(p,day){
         const key=String(p.analyticsId)+"|"+day;
         if(availabilityCache.has(key))return availabilityCache.get(key);
@@ -3473,10 +3484,13 @@ function filter() {
         $("bookingDeparture").min=$("bookingArrival").value?plusDays($("bookingArrival").value,1):localToday();
         if(config.catalogType!=="lodging"||!p?.analyticsId){root.classList.add("hidden");return;}
         root.classList.remove("hidden");
-        const version=++calendarVersion,first=plusDays(localToday(),calendarOffset*28);
-        const days=Array.from({length:28},(_,i)=>plusDays(first,i));
+        const version=++calendarVersion,today=new Date(localToday()+"T12:00:00");
+        const firstDate=new Date(today.getFullYear(),today.getMonth()+calendarOffset,1,12);
+        const first=dayISO(firstDate);
+        const count=new Date(firstDate.getFullYear(),firstDate.getMonth()+1,0).getDate();
+        const days=Array.from({length:count},(_,i)=>plusDays(first,i));
         $("availabilityPrev").disabled=calendarOffset===0;
-        $("availabilityPeriod").textContent=new Date(first+"T12:00:00").toLocaleDateString("es-CL",{day:"numeric",month:"long",year:"numeric"})+" — "+new Date(days[27]+"T12:00:00").toLocaleDateString("es-CL",{day:"numeric",month:"long"});
+        $("availabilityPeriod").textContent=new Date(first+"T12:00:00").toLocaleDateString("es-CL",{month:"long",year:"numeric"});
         const grid=$("availabilityDays");
         grid.innerHTML=days.map(day=>'<button type="button" data-day="'+day+'" class="availability-day" disabled><strong>'+Number(day.slice(8))+'</strong><small>'+new Date(day+"T12:00:00").toLocaleDateString("es-CL",{weekday:"short"})+'</small></button>').join("");
         limitedAvailability(p,days,(day,available)=>{
@@ -3492,7 +3506,7 @@ function filter() {
         });
       }
       $("availabilityPrev").onclick=()=>{calendarOffset=Math.max(0,calendarOffset-1);renderAvailabilityCalendar();};
-      $("availabilityNext").onclick=()=>{calendarOffset=Math.min(12,calendarOffset+1);renderAvailabilityCalendar();};
+      $("availabilityNext").onclick=()=>{calendarOffset=Math.min(24,calendarOffset+1);renderAvailabilityCalendar();};
       $("availabilityDays").addEventListener("click",e=>{
         const btn=e.target.closest("[data-day]");if(!btn||btn.disabled)return;
         const day=btn.dataset.day,hint=$("availabilitySelectionHint");
