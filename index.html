@@ -3370,6 +3370,15 @@ function filter() {
       const BOOKING_CONTACT_REQUIRED=true;
       let bookingPendingKey=null,bookingPendingFingerprint="";
       let bookingRequestSubmitting=false,bookingRequestRegisteredFingerprint="";
+      function invalidateBookingReceipt(){
+        if(!bookingRequestRegisteredFingerprint)return;
+        bookingRequestRegisteredFingerprint="";
+        $("bookingReceipt").classList.add("hidden");
+        $("bookingShareNotice").textContent="";
+        $("bookingShareFromQuote").classList.add("hidden");
+        $("quoteSend").disabled=false;
+        $("quoteSend").removeAttribute("aria-disabled");
+      }
       $("bookingCheck").addEventListener("click",async()=>{
         const p=bookingSelection(),start=$("bookingArrival").value,end=$("bookingDeparture").value;
         const guests=Number($("bookingGuests").value),status=$("bookingStatus"),btn=$("bookingCheck");
@@ -3924,9 +3933,10 @@ botonArriba.addEventListener('click', () => {
       const STAY_KEY = "titolabs_estadia_v1_"+(new URLSearchParams(location.search).get("catalogo")||"default");
       let stayDraft = null;
       try { stayDraft = JSON.parse(localStorage.getItem(STAY_KEY)||"null"); } catch(e) {}
-      function saveStayDraft(draft){stayDraft=draft;try{if(draft)localStorage.setItem(STAY_KEY,JSON.stringify(draft));else localStorage.removeItem(STAY_KEY);}catch(e){}renderQuote();}
+      function saveStayDraft(draft){if(JSON.stringify(stayDraft)!==JSON.stringify(draft))invalidateBookingReceipt();stayDraft=draft;try{if(draft)localStorage.setItem(STAY_KEY,JSON.stringify(draft));else localStorage.removeItem(STAY_KEY);}catch(e){}renderQuote();}
       try { quote = JSON.parse(localStorage.getItem(QUOTE_KEY) || '{}') || {}; } catch(e) { quote = {}; }
       function saveQuote() {
+        if(config.catalogType==="lodging")invalidateBookingReceipt();
         try { localStorage.setItem(QUOTE_KEY, JSON.stringify(quote)); } catch(e) {}
         renderQuote();
       }
@@ -4194,7 +4204,7 @@ botonArriba.addEventListener('click', () => {
           if (!saved?.request_number) throw new Error('La solicitud no devolvió una referencia válida');
           const phone = String(config.whatsapp || '').replace(/\D/g, '');
           if (!phone) throw new Error('La tienda no tiene WhatsApp configurado');
-          const original = new URL(button.href || 'https://wa.me/' + phone);
+          const original = new URL(button.dataset.whatsappHref || 'https://wa.me/' + phone);
           const detail = original.searchParams.get('text') || 'Hola, quisiera solicitar una cotización.';
           const message = 'Solicitud #' + saved.request_number + '\n\n' + detail;
           const url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message);
