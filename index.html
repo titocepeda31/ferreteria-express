@@ -1995,6 +1995,11 @@ body.request-open #quoteItems:empty{display:none!important}
 .lodging-home-search button{width:100%;min-height:48px}
 #homeSearchStatus{margin:10px 0 0}
 @media(max-width:600px){.lodging-home-fields{grid-template-columns:1fr 1fr}.lodging-home-fields label:first-child{grid-column:1/-1}}
+
+.upcoming-availability{display:flex;flex-direction:column;gap:6px;padding:11px 12px;margin:12px 0;background:#f1f8f3;border:1px solid #c8dfcf;border-radius:12px;font-size:13px;color:#25583b}
+.upcoming-availability strong{font-size:14px}.upcoming-availability span{color:#4e6657}
+.upcoming-availability .gap-highlight{background:#fff2d9;color:#815610;border-radius:7px;padding:6px 8px;font-weight:650}
+.upcoming-availability .availability-action{align-self:flex-start;padding:6px 0;background:none;border:0;color:#155b3a;text-decoration:underline;font:inherit;font-weight:700;cursor:pointer}
 </style>
     <link rel="stylesheet" href="catalog-ux.css?v=artwork-1">
 
@@ -2925,7 +2930,7 @@ function esDestacado(p) {
 }
 
 function renderDestacados() {
-  const seleccion = products.filter(p=>p.catalogSection!=="adicional"&&esDestacado(p)).slice(0, 12);
+  const seleccion = products.filter(p=>p.catalogSection!=="adicional"&&(config.catalogType==="lodging"||esDestacado(p))).slice(0, 12);
   $('featured').innerHTML = seleccion.length
     ? seleccion.map(tarjetaProducto).join('')
     : '<div class="empty">Todavía no hay productos destacados. Comprueba que la columna Principal llegue desde Drive con valor 1.</div>';
@@ -2933,7 +2938,7 @@ function renderDestacados() {
   const primary=products.filter(p=>p.catalogSection!=="adicional");
   // No redundant 'view all' CTA when every primary item is already on the home page.
   const allShown=primary.length>0&&primary.length<=12&&primary.every(p=>seleccion.some(x=>String(x.id)===String(p.id)));
-  if(config.catalogType==='lodging')showOneNightGaps();
+  if(config.catalogType==='lodging')showUpcomingCabinAvailability();
   const footer=document.querySelector('#inicio-destacados .featured-footer');
   if(footer)footer.classList.toggle('hidden',allShown);
 }
@@ -3455,27 +3460,51 @@ function filter() {
         markCalendarSelection();
       });
       let homeAvailabilityVersion=0;
-      async function showOneNightGaps(){
+      async function showUpcomingCabinAvailability(){
         if(config.catalogType!=="lodging")return;
         const version=++homeAvailabilityVersion;
         const cabins=products.filter(p=>p.catalogSection!=="adicional"&&p.unidad==="noche"&&p.analyticsId).slice(0,6);
-        const days=Array.from({length:23},(_,i)=>plusDays(localToday(),i));
+        const days=Array.from({length:16},(_,i)=>plusDays(localToday(),i));
+        const featured=$("featured");
+        const findCard=p=>[...featured.querySelectorAll(".card")].find(card=>card.querySelector('[data-quick-book="'+p.id+'"]'));
         for(const p of cabins){
+          const card=findCard(p);if(!card)continue;
+          const content=card.querySelector(".card-content");if(!content)continue;
+          const note=document.createElement("div");note.className="upcoming-availability";note.setAttribute("role","status");
+          note.textContent="Consultando próximas fechas…";
+          content.insertBefore(note,content.querySelector(".card-actions"));
+        }
+        // Limit requests and work only on the home screen; no full-month scan.
+        await Promise.all(cabins.map(async p=>{
           const state=new Map();
           await limitedAvailability(p,days,(day,result)=>state.set(day,result));
           if(version!==homeAvailabilityVersion)return;
+          const card=findCard(p),note=card?.querySelector(".upcoming-availability");if(!note)return;
+          const free=days.filter(day=>state.get(day)===true);
+          const dateLabel=day=>new Date(day+"T12:00:00").toLocaleDateString("es-CL",{day:"numeric",month:"short"});
           const gaps=days.slice(1,-1).filter((day,i)=>state.get(day)===true&&state.get(days[i])===false&&state.get(days[i+2])===false);
-          const card=[...$("featured").querySelectorAll(".card")].find(el=>el.querySelector('[data-quick-book="'+p.id+'"]'));
-          if(!card)continue;
-          card.querySelector(".one-night-gap")?.remove();
-          if(gaps.length){
-            const day=gaps[0],date=new Date(day+"T12:00:00").toLocaleDateString("es-CL",{day:"numeric",month:"short"});
-            const badge=document.createElement("div");badge.className="one-night-gap";
-            badge.textContent="1 noche libre: "+date;
-            badge.title="Noche aislada entre reservas o bloqueos; sujeta a nueva comprobación.";
-            card.querySelector(".card-content").appendChild(badge);
+          note.replaceChildren();
+          const heading=document.createElement("strong");
+          heading.textContent=free.length?"Próxima noche libre: "+dateLabel(free[0]):"Sin fechas libres confirmadas en los próximos 16 días";
+          note.appendChild(heading);
+          if(free.length){
+            const line=document.createElement("span");
+            line.textContent="Fechas próximas: "+free.slice(0,3).map(dateLabel).join(" · ");
+            note.appendChild(line);
           }
-        }
+          if(gaps.length){
+            const gap=document.createElement("span");gap.className="gap-highlight";
+            gap.textContent="Oportunidad de 1 noche: "+dateLabel(gaps[0]);
+            note.appendChild(gap);
+          }
+          const action=document.createElement("button");action.type="button";action.className="availability-action";
+          action.textContent="Ver calendario y reservar";
+          action.addEventListener("click",()=>{
+            if(free.length)homeBookingPrefill={productId:String(p.id),start:free[0],end:plusDays(free[0],1),guests:Math.min(2,Number(p.capacidadMax)||2)};
+            openQuickBooking(p.id);
+          });
+          note.appendChild(action);
+        }));
       }
       // Contact fields can become configurable after updating the server contract.
       const BOOKING_CONTACT_REQUIRED=true;
