@@ -2016,26 +2016,30 @@ body.request-open #quoteItems:empty{display:none!important}
       .store-loader-mark{width:100px;height:100px;display:grid;place-items:center;background:#f5f8f6;border:1px solid #e1e9e4;border-radius:24px;box-shadow:0 12px 32px rgba(23,48,36,.07)}
       .store-loader-mark svg{width:74px;height:74px}
       .store-loader-highlight{animation:store-line 1.6s ease-in-out infinite}
-      .store-visitor{transform-box:view-box;transform-origin:0 0}
-      .store-visitor-in{animation:store-person-in 5.6s linear infinite}
-      .store-visitor-out{animation:store-person-out 5.6s linear infinite}
+      .store-visitor{transform-box:view-box;transform-origin:0 0;opacity:0}
+      .store-visitor-in{animation:store-person-in 6.4s ease-in-out infinite}
+      .store-visitor-out{animation:store-person-out 6.4s ease-in-out infinite}
+      .visitor-arm,.visitor-leg{transform-box:fill-box;transform-origin:50% 0%;animation:visitor-walk .52s ease-in-out infinite alternate}
+      .visitor-arm-right,.visitor-leg-left{animation-direction:alternate-reverse}
+      @keyframes visitor-walk{from{transform:rotate(-17deg)}to{transform:rotate(17deg)}}
       @keyframes store-person-in{
-        0%,3%{transform:translate(8px,47px);opacity:0}
+        0%,4%{transform:translate(9px,44px) scale(1);opacity:0}
         8%{opacity:1}
-        34%{transform:translate(31px,47px);opacity:1}
-        41%,100%{transform:translate(37px,47px);opacity:0}
+        30%{transform:translate(31px,44px) scale(.88);opacity:1}
+        38%{transform:translate(37px,44px) scale(.68);opacity:0}
+        39%,100%{transform:translate(37px,44px) scale(.68);opacity:0}
       }
       @keyframes store-person-out{
-        0%,45%{transform:translate(37px,47px);opacity:0}
-        52%{transform:translate(40px,47px);opacity:1}
-        79%{transform:translate(69px,47px);opacity:1}
-        87%,100%{transform:translate(75px,47px);opacity:0}
+        0%,48%{transform:translate(37px,44px) scale(.68);opacity:0}
+        54%{transform:translate(42px,44px) scale(.8);opacity:1}
+        78%{transform:translate(68px,44px) scale(1);opacity:1}
+        86%,100%{transform:translate(75px,44px) scale(1);opacity:0}
       }
-            .store-loader-progress{width:96px;height:3px;background:#e0e8e2;border-radius:9px;overflow:hidden}
+      .store-loader-progress{width:96px;height:3px;background:#e0e8e2;border-radius:9px;overflow:hidden}
       .store-loader-progress span{display:block;width:38%;height:100%;background:#3b9773;border-radius:9px;animation:store-progress 1.35s ease-in-out infinite}
       @keyframes store-progress{0%{transform:translateX(-105%)}100%{transform:translateX(275%)}}
       @keyframes store-line{0%,100%{opacity:.3}50%{opacity:1}}
-      @media(prefers-reduced-motion:reduce){.store-loader-highlight,.store-loader-progress span,.store-visitor{animation:none}.store-visitor{opacity:0}.store-loader-progress span{width:100%}}
+      @media(prefers-reduced-motion:reduce){.store-loader-highlight,.store-loader-progress span,.store-visitor,.visitor-arm,.visitor-leg{animation:none}.store-visitor{opacity:0}.store-loader-progress span{width:100%}}
       #catalogRetry:focus-visible { outline:3px solid var(--ink); outline-offset:3px; }
   
 /* Búsqueda visible antes de los productos destacados, especialmente en móvil */
@@ -2053,8 +2057,21 @@ body.request-open #quoteItems:empty{display:none!important}
   <body aria-busy="true">
     <div id="catalogLoading"><div class="store-loader" aria-hidden="true"><div class="store-loader-mark"><svg viewBox="0 0 80 80" width="80" height="80" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 32L22 17H58L64 32" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 32H64V39C64 43.5 60.5 47 56 47C51.5 47 48 43.5 48 39C48 43.5 44.5 47 40 47C35.5 47 32 43.5 32 39C32 43.5 28.5 47 24 47C19.5 47 16 43.5 16 39V32Z" stroke="currentColor" stroke-width="3.5" stroke-linejoin="round"/><path d="M21 47V64H59V47M31 64V51H44V64M50 53H55" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path class="store-loader-highlight" d="M16 32H64" stroke="#3B9773" stroke-width="3.5" stroke-linecap="round"/>
 <g class="store-door"><path d="M31 64V51H44V64" stroke="#3B9773" stroke-width="3" stroke-linecap="round"/><path d="M33 53L42 53" stroke="#3B9773" stroke-width="2" opacity=".45"/></g>
-<g class="store-visitor store-visitor-in" stroke="#286A51" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="0" cy="0" r="3.2" fill="#D6EDE1"/><path d="M0 4V13M0 7L-4 10M0 7L4 10M0 13L-4 19M0 13L4 19"/></g>
-<g class="store-visitor store-visitor-out" stroke="#286A51" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="0" cy="0" r="3.2" fill="#D6EDE1"/><path d="M0 4V13M0 7L-4 10M0 7L4 10M0 13L-4 19M0 13L4 19"/></g></svg></div><div class="store-loader-progress"><span></span></div></div><p id="catalogLoadMessage" role="status" aria-live="polite">Preparando tu tienda…</p><button id="catalogRetry" hidden type="button">Reintentar</button><noscript>Activa JavaScript para ver el catálogo.</noscript></div>
+<g class="store-visitor store-visitor-in" fill="#286A51">
+  <circle cx="0" cy="-1" r="3.1"/>
+  <path d="M-3.7 4Q0 2.4 3.7 4L4.4 12Q0 14 -4.4 12Z"/>
+  <path class="visitor-arm visitor-arm-left" d="M-3.6 5Q-6.4 9 -5.1 12.2" stroke="#286A51" stroke-width="2.7" stroke-linecap="round" fill="none"/>
+  <path class="visitor-arm visitor-arm-right" d="M3.6 5Q6.4 9 5.1 12.2" stroke="#286A51" stroke-width="2.7" stroke-linecap="round" fill="none"/>
+  <path class="visitor-leg visitor-leg-left" d="M-2.2 12L-3.2 19.5" stroke="#286A51" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <path class="visitor-leg visitor-leg-right" d="M2.2 12L3.2 19.5" stroke="#286A51" stroke-width="3" stroke-linecap="round" fill="none"/>
+</g><g class="store-visitor store-visitor-out" fill="#286A51">
+  <circle cx="0" cy="-1" r="3.1"/>
+  <path d="M-3.7 4Q0 2.4 3.7 4L4.4 12Q0 14 -4.4 12Z"/>
+  <path class="visitor-arm visitor-arm-left" d="M-3.6 5Q-6.4 9 -5.1 12.2" stroke="#286A51" stroke-width="2.7" stroke-linecap="round" fill="none"/>
+  <path class="visitor-arm visitor-arm-right" d="M3.6 5Q6.4 9 5.1 12.2" stroke="#286A51" stroke-width="2.7" stroke-linecap="round" fill="none"/>
+  <path class="visitor-leg visitor-leg-left" d="M-2.2 12L-3.2 19.5" stroke="#286A51" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <path class="visitor-leg visitor-leg-right" d="M2.2 12L3.2 19.5" stroke="#286A51" stroke-width="3" stroke-linecap="round" fill="none"/>
+</g></svg></div><div class="store-loader-progress"><span></span></div></div><p id="catalogLoadMessage" role="status" aria-live="polite">Preparando tu tienda…</p><button id="catalogRetry" hidden type="button">Reintentar</button><noscript>Activa JavaScript para ver el catálogo.</noscript></div>
 
 
 
