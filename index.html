@@ -3379,6 +3379,7 @@ function filter() {
       $("bookingQuoteWA").addEventListener("click",()=>{const p=bookingSelection();if(!p||!validBookingGuests(p)||bookingNights()<1)return;window.open(bookingShareLink(bookingShareText(p,$("bookingArrival").value,$("bookingDeparture").value,null)),"_blank","noopener");});
       $("bookingWhatsApp").addEventListener("click",async()=>{const msg=$("bookingWhatsApp").dataset.message;if(!msg)return;const url=bookingShareLink(msg);if(url){window.open(url,"_blank","noopener");return;}try{await navigator.clipboard.writeText(msg);$("bookingStatus").textContent="Solicitud copiada. El negocio no tiene WhatsApp configurado; no se ha enviado ningún mensaje.";}catch(e){$("bookingStatus").textContent="Solicitud registrada, pero no hay WhatsApp configurado. Conserva el código de solicitud.";}});
       ["bookingArrival","bookingDeparture","bookingGuests"].forEach(id=>$(id).addEventListener("change",()=>{
+        if(id==="bookingGuests")$("bookingGuests").dataset.capacityAcknowledged="yes";
         const start=$("bookingArrival"),end=$("bookingDeparture"),today=localToday();
         start.min=today;end.min=start.value&&start.value>=today?plusDays(start.value,1):today;
         if(start.value&&start.value<today){start.value="";end.value="";$("availabilitySelectionHint").textContent="No se pueden seleccionar fechas anteriores a hoy.";}
