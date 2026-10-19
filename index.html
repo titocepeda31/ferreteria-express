@@ -3183,7 +3183,7 @@ function filter() {
           $('detailWA').classList.toggle('hidden',bookable);
           $('detailAdd').hidden=bookable;
           $('detailWA').hidden=bookable;
-          if(bookable&&!quickBookingProduct){const today=new Date();const localDate=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);$('bookingArrival').min=localDate;$('bookingDeparture').min=localDate;$('bookingArrival').value=localDate;const tomorrow=new Date(localDate+'T12:00:00');tomorrow.setDate(tomorrow.getDate()+2);$('bookingDeparture').value=tomorrow.toISOString().slice(0,10);$('bookingStatus').textContent='';updateBookingEstimate();}
+          if(bookable&&!quickBookingProduct){const search=activeLodgingSearch;const today=localToday();$('bookingArrival').min=today;$('bookingDeparture').min=search?.start?plusDays(search.start,1):today;$('bookingArrival').value=search?.start||'';$('bookingDeparture').value=search?.end||'';if(search)$('bookingGuests').value=String(search.guests);$('bookingStatus').textContent=search?'Fechas recuperadas de tu búsqueda. Confirma disponibilidad antes de agregar la estadía.':'';updateBookingEstimate();}
           $('detailPhoto').innerHTML = img(p);
           const photos=[p.imagen,...(p.galleryUrls||[])].filter(x=>/^https?:\/\//i.test(x));
           $('detailGallery').innerHTML=photos.length>1?photos.map((url,i)=>'<button type="button" data-gallery-index="'+i+'" aria-label="Ver foto '+(i+1)+'"><img src="'+esc(url)+'" alt="Foto '+(i+1)+' de '+esc(p.nombre)+'" loading="lazy"></button>').join(''):'';
@@ -3301,7 +3301,8 @@ function filter() {
         $("bookingDeparture").value=end.toISOString().slice(0,10);
         updateBookingEstimate();
         calendarOffset=0;calendarArrivalPending=false;
-        const preferred=homeBookingPrefill&&homeBookingPrefill.productId===String(p.id)?homeBookingPrefill:null;
+        const preferred=homeBookingPrefill&&homeBookingPrefill.productId===String(p.id)?homeBookingPrefill:activeLodgingSearch;
+        if(preferred&&preferred.start>=localToday()){const distance=Math.floor((Date.parse(preferred.start+"T12:00:00")-Date.parse(localToday()+"T12:00:00"))/86400000);calendarOffset=Math.max(0,Math.floor(distance/28));}
         $("bookingArrival").value=preferred?.start||"";$("bookingDeparture").value=preferred?.end||"";
         if(preferred){$("bookingGuests").value=String(preferred.guests);homeBookingPrefill=null;}
         $("bookingDeparture").min=$("bookingArrival").value?plusDays($("bookingArrival").value,1):localToday();
@@ -3349,7 +3350,9 @@ function filter() {
       }
 
       const availabilityCache=new Map(),availabilityPending=new Map();
-      let homeBookingPrefill=null,homeSearchVersion=0;
+      let homeBookingPrefill=null,homeSearchVersion=0,activeLodgingSearch=null;
+      function lodgingSearchLabel(search){return new Date(search.start+"T12:00:00").toLocaleDateString("es-CL",{day:"numeric",month:"long"})+" al "+new Date(search.end+"T12:00:00").toLocaleDateString("es-CL",{day:"numeric",month:"long"})+" · "+search.nights+" "+(search.nights===1?"noche":"noches")+" · "+search.guests+" "+(search.guests===1?"persona":"personas");}
+      function setLodgingSearchHeading(search){$("destacados-titulo").textContent=search?"Cabañas disponibles para tu viaje":"Disponibles próximamente";document.querySelector("#inicio-destacados .featured-heading p").textContent=search?lodgingSearchLabel(search):"Cabañas con noches libres confirmadas en los próximos 16 días. Consulta el calendario para otras fechas.";}
       // Initialize the native date field only after the date helpers are defined.
       $("homeArrival").min=localToday();
       $("homeArrival").addEventListener("change",()=>{
@@ -3368,11 +3371,13 @@ function filter() {
           const results=await Promise.all(cabins.map(async p=>({p,available:await bookingRpc("booking_public_availability",p,start,end).catch(()=>null)})));
           if(version!==homeSearchVersion)return;
           const available=results.filter(x=>x.available===true);
-          status.textContent=available.length?available.length+" "+(available.length===1?"cabaña disponible":"cabañas disponibles")+" para "+nights+" "+(nights===1?"noche":"noches")+". Selecciona una.":"No hay disponibilidad confirmada para esas fechas. Prueba otra llegada o menos noches.";
+          status.textContent=available.length?available.length+" "+(available.length===1?"cabaña disponible":"cabañas disponibles")+" para tu viaje del "+new Date(start+"T12:00:00").toLocaleDateString("es-CL",{day:"numeric",month:"long"})+" al "+new Date(end+"T12:00:00").toLocaleDateString("es-CL",{day:"numeric",month:"long"})+". Selecciona una.":"No hay disponibilidad confirmada para esas fechas. Prueba otra llegada o menos noches.";
+          activeLodgingSearch={start,end,nights,guests};
+          setLodgingSearchHeading(activeLodgingSearch);
           const featured=$("featured");
           homeAvailabilityVersion++;
           featured.innerHTML=available.length?available.map(x=>tarjetaProducto(x.p)).join(""):'<div class="empty">No hay cabañas disponibles para esas fechas.</div>';
-          featured.querySelectorAll("[data-quick-book]").forEach(button=>button.addEventListener("click",()=>{homeBookingPrefill={productId:button.dataset.quickBook,start,end,guests};openQuickBooking(button.dataset.quickBook);}));
+          // The delegated booking click handler reads activeLodgingSearch for every card.
           $("inicio-destacados").scrollIntoView({behavior:"smooth",block:"start"});
         }catch(error){status.textContent="No fue posible consultar disponibilidad. Intenta nuevamente.";}
         finally{btn.disabled=false;}
@@ -3484,6 +3489,7 @@ function filter() {
           if(version!==homeAvailabilityVersion)return;
           const card=findCard(p),note=card?.querySelector(".upcoming-availability");if(!note)return;
           const free=days.filter(day=>state.get(day)===true);
+          if(activeLodgingSearch)return;
           if(!free.length){card.remove();if(!featured.querySelector(".card"))featured.innerHTML='<div class="empty">No hay cabañas con noches libres confirmadas en los próximos 16 días. Puedes buscar otras fechas o ver todas nuestras cabañas.</div>';return;}
           // Keep cabins with earlier confirmed availability first.
           card.dataset.nextFree=free[0];
@@ -3507,7 +3513,7 @@ function filter() {
           const action=document.createElement("button");action.type="button";action.className="availability-action";
           action.textContent="Consultar estadía";
           action.addEventListener("click",()=>{
-            if(free.length)homeBookingPrefill={productId:String(p.id),start:free[0],end:plusDays(free[0],1),guests:Math.min(2,Number(p.capacidadMax)||2)};
+            if(free.length&&!activeLodgingSearch)homeBookingPrefill={productId:String(p.id),start:free[0],end:plusDays(free[0],1),guests:Math.min(2,Number(p.capacidadMax)||2)};
             openQuickBooking(p.id);
           });
           note.appendChild(action);
