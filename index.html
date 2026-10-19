@@ -2007,6 +2007,13 @@ body.request-open #quoteItems:empty{display:none!important}
       #catalogLoading[hidden] { display:none; }
       #catalogLoading p { margin:0; }
       #catalogRetry { min-height:44px; padding:10px 20px; border:1px solid var(--border); border-radius:12px; background:var(--primary); color:var(--primary-contrast); font:inherit; cursor:pointer; }
+      .store-loader{width:96px;height:96px;margin:auto;animation:store-bob 1.7s ease-in-out infinite}
+      .store-awning{transform-origin:48px 40px;animation:store-awning 1.7s ease-in-out infinite}
+      .store-spark{animation:store-spark 1.7s ease-in-out infinite}
+      @keyframes store-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+      @keyframes store-awning{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.88)}}
+      @keyframes store-spark{0%,100%{opacity:.25}50%{opacity:1}}
+      @media(prefers-reduced-motion:reduce){.store-loader,.store-awning,.store-spark{animation:none}}
       #catalogRetry:focus-visible { outline:3px solid var(--ink); outline-offset:3px; }
   
 /* Búsqueda visible antes de los productos destacados, especialmente en móvil */
@@ -2022,7 +2029,7 @@ body.request-open #quoteItems:empty{display:none!important}
 
 
   <body aria-busy="true">
-    <div id="catalogLoading"><p id="catalogLoadMessage" role="status" aria-live="polite">Cargando catálogo…</p><button id="catalogRetry" hidden type="button">Reintentar</button><noscript>Activa JavaScript para ver el catálogo.</noscript></div>
+    <div id="catalogLoading"><div class="store-loader" aria-hidden="true"><svg viewBox="0 0 96 96" width="96" height="96"><rect x="17" y="43" width="62" height="43" rx="5" fill="#e9f4ee" stroke="#216448" stroke-width="4"/><path d="M12 38L23 18H73L84 38Z" fill="#d9eee2" stroke="#216448" stroke-width="4"/><path class="store-awning" d="M12 38H84V47Q75 56 66 47Q57 56 48 47Q39 56 30 47Q21 56 12 47Z" fill="#4d9e73" stroke="#216448" stroke-width="3"/><rect x="29" y="59" width="16" height="27" rx="2" fill="#fff" stroke="#216448" stroke-width="3"/><rect x="53" y="59" width="15" height="14" rx="2" fill="#fff" stroke="#216448" stroke-width="3"/><circle class="store-spark" cx="81" cy="14" r="5" fill="#e9b44c"/></svg></div><p id="catalogLoadMessage" role="status" aria-live="polite">Preparando tu tienda…</p><button id="catalogRetry" hidden type="button">Reintentar</button><noscript>Activa JavaScript para ver el catálogo.</noscript></div>
 
 
 
@@ -3336,6 +3343,7 @@ function filter() {
 
       const availabilityCache=new Map(),availabilityPending=new Map();
       let homeBookingPrefill=null,homeSearchVersion=0;
+      // Initialize the native date field only after the date helpers are defined.
       $("homeArrival").min=localToday();
       $("homeArrival").addEventListener("change",()=>{
         const today=localToday();
@@ -3363,9 +3371,9 @@ function filter() {
         finally{btn.disabled=false;}
       });
 
-      const dayISO=date=>{const d=new Date(date);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");};
-      const plusDays=(iso,n)=>{const d=new Date(iso+"T12:00:00");d.setDate(d.getDate()+n);return dayISO(d);};
-      const localToday=()=>dayISO(new Date());
+      function dayISO(date){const d=new Date(date);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");}
+      function plusDays(iso,n){const d=new Date(iso+"T12:00:00");d.setDate(d.getDate()+n);return dayISO(d);}
+      function localToday(){return dayISO(new Date());}
       let calendarOffset=0,calendarVersion=0,calendarArrivalPending=false;
       async function dayAvailability(p,day){
         const key=String(p.analyticsId)+"|"+day;
@@ -4403,7 +4411,13 @@ botonArriba.addEventListener('click', () => {
         $('catalogRetry').hidden = false;
       }
       $('catalogRetry').addEventListener('click', () => location.reload());
-      init().then(catalogReady).catch(catalogFailed);
+      const catalogLoadTimeout=setTimeout(()=>{
+        if(document.documentElement.dataset.catalogState!=="ready"){
+          $("catalogLoadMessage").textContent="La tienda está tardando más de lo esperado. Puedes volver a intentar.";
+          $("catalogRetry").hidden=false;
+        }
+      },12000);
+      init().then(()=>{clearTimeout(catalogLoadTimeout);catalogReady();}).catch(error=>{clearTimeout(catalogLoadTimeout);console.error("Error al iniciar catálogo:",error);catalogFailed();});
 
 
 
