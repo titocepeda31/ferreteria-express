@@ -2813,7 +2813,7 @@ body.request-open #quoteItems:empty{display:none!important}
       function applyCatalogLanguage() {
         const presets = {
           retail: ['¿Qué producto necesitas?', 'Buscar productos en el catálogo…', 'Productos destacados', 'Descubre algunos de nuestros productos.'],
-          lodging: ['¿Qué cabaña buscas?', 'Buscar cabañas por nombre o capacidad…', 'Cabañas destacadas', 'Explora nuestras opciones para tu próxima estadía.'],
+          lodging: ['¿Qué cabaña buscas?', 'Buscar cabañas por nombre o capacidad…', 'Disponibles próximamente', 'Cabañas con noches libres confirmadas en los próximos 16 días. Consulta el calendario para otras fechas.'],
           food: ['¿Qué alimento buscas?', 'Buscar frutas, verduras y alimentos…', 'Productos destacados', 'Descubre nuestra selección de alimentos.'],
           services: ['¿Qué servicio necesitas?', 'Buscar servicios disponibles…', 'Servicios destacados', 'Conoce los servicios que ofrecemos.'],
           other: ['¿Qué estás buscando?', 'Buscar en el catálogo…', 'Destacados', 'Explora lo que tenemos para ofrecerte.']
@@ -2942,7 +2942,7 @@ function renderDestacados() {
   const allShown=primary.length>0&&primary.length<=12&&primary.every(p=>seleccion.some(x=>String(x.id)===String(p.id)));
   if(config.catalogType==='lodging')showUpcomingCabinAvailability();
   const footer=document.querySelector('#inicio-destacados .featured-footer');
-  if(footer)footer.classList.toggle('hidden',allShown);
+  if(footer)footer.classList.toggle('hidden',config.catalogType==='lodging'?false:allShown);
 }
 
 let secondaryCategory = "";
@@ -3475,6 +3475,7 @@ function filter() {
           const note=document.createElement("div");note.className="upcoming-availability";note.setAttribute("role","status");
           note.textContent="Consultando próximas fechas…";
           content.insertBefore(note,content.querySelector(".card-actions"));
+          const action=card.querySelector(".card-actions");if(action)action.classList.add("hidden");
         }
         // Limit requests and work only on the home screen; no full-month scan.
         await Promise.all(cabins.map(async p=>{
@@ -3483,11 +3484,15 @@ function filter() {
           if(version!==homeAvailabilityVersion)return;
           const card=findCard(p),note=card?.querySelector(".upcoming-availability");if(!note)return;
           const free=days.filter(day=>state.get(day)===true);
+          if(!free.length){card.remove();if(!featured.querySelector(".card"))featured.innerHTML='<div class="empty">No hay cabañas con noches libres confirmadas en los próximos 16 días. Puedes buscar otras fechas o ver todas nuestras cabañas.</div>';return;}
+          // Keep cabins with earlier confirmed availability first.
+          card.dataset.nextFree=free[0];
+          [...featured.querySelectorAll(".card")].sort((a,b)=>(a.dataset.nextFree||"9999").localeCompare(b.dataset.nextFree||"9999")).forEach(el=>featured.appendChild(el));
           const dateLabel=day=>new Date(day+"T12:00:00").toLocaleDateString("es-CL",{day:"numeric",month:"short"});
           const gaps=days.slice(1,-1).filter((day,i)=>state.get(day)===true&&state.get(days[i])===false&&state.get(days[i+2])===false);
           note.replaceChildren();
           const heading=document.createElement("strong");
-          heading.textContent=free.length?"Próxima noche libre: "+dateLabel(free[0]):"Sin fechas libres confirmadas en los próximos 16 días";
+          heading.textContent="Próxima noche libre: "+dateLabel(free[0]);
           note.appendChild(heading);
           if(free.length){
             const line=document.createElement("span");
@@ -3500,12 +3505,13 @@ function filter() {
             note.appendChild(gap);
           }
           const action=document.createElement("button");action.type="button";action.className="availability-action";
-          action.textContent="Ver calendario y reservar";
+          action.textContent="Consultar estadía";
           action.addEventListener("click",()=>{
             if(free.length)homeBookingPrefill={productId:String(p.id),start:free[0],end:plusDays(free[0],1),guests:Math.min(2,Number(p.capacidadMax)||2)};
             openQuickBooking(p.id);
           });
           note.appendChild(action);
+          card.querySelector(".card-actions")?.remove();
         }));
       }
       // Contact fields can become configurable after updating the server contract.
