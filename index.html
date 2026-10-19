@@ -2012,13 +2012,15 @@ body.request-open #quoteItems:empty{display:none!important}
       #catalogLoading[hidden] { display:none; }
       #catalogLoading p { margin:0; }
       #catalogRetry { min-height:44px; padding:10px 20px; border:1px solid var(--border); border-radius:12px; background:var(--primary); color:var(--primary-contrast); font:inherit; cursor:pointer; }
-      .store-loader{width:96px;height:96px;margin:auto;animation:store-bob 1.7s ease-in-out infinite}
-      .store-awning{transform-origin:48px 40px;animation:store-awning 1.7s ease-in-out infinite}
-      .store-spark{animation:store-spark 1.7s ease-in-out infinite}
-      @keyframes store-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
-      @keyframes store-awning{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.88)}}
-      @keyframes store-spark{0%,100%{opacity:.25}50%{opacity:1}}
-      @media(prefers-reduced-motion:reduce){.store-loader,.store-awning,.store-spark{animation:none}}
+      .store-loader{width:112px;margin:0 auto 4px;display:grid;justify-items:center;gap:15px;color:#253b35}
+      .store-loader-mark{width:100px;height:100px;display:grid;place-items:center;background:#f5f8f6;border:1px solid #e1e9e4;border-radius:24px;box-shadow:0 12px 32px rgba(23,48,36,.07)}
+      .store-loader-mark svg{width:74px;height:74px}
+      .store-loader-highlight{animation:store-line 1.6s ease-in-out infinite}
+      .store-loader-progress{width:96px;height:3px;background:#e0e8e2;border-radius:9px;overflow:hidden}
+      .store-loader-progress span{display:block;width:38%;height:100%;background:#3b9773;border-radius:9px;animation:store-progress 1.35s ease-in-out infinite}
+      @keyframes store-progress{0%{transform:translateX(-105%)}100%{transform:translateX(275%)}}
+      @keyframes store-line{0%,100%{opacity:.3}50%{opacity:1}}
+      @media(prefers-reduced-motion:reduce){.store-loader-highlight,.store-loader-progress span{animation:none}.store-loader-progress span{width:100%}}
       #catalogRetry:focus-visible { outline:3px solid var(--ink); outline-offset:3px; }
   
 /* Búsqueda visible antes de los productos destacados, especialmente en móvil */
@@ -2034,7 +2036,7 @@ body.request-open #quoteItems:empty{display:none!important}
 
 
   <body aria-busy="true">
-    <div id="catalogLoading"><div class="store-loader" aria-hidden="true"><svg viewBox="0 0 96 96" width="96" height="96"><rect x="17" y="43" width="62" height="43" rx="5" fill="#e9f4ee" stroke="#216448" stroke-width="4"/><path d="M12 38L23 18H73L84 38Z" fill="#d9eee2" stroke="#216448" stroke-width="4"/><path class="store-awning" d="M12 38H84V47Q75 56 66 47Q57 56 48 47Q39 56 30 47Q21 56 12 47Z" fill="#4d9e73" stroke="#216448" stroke-width="3"/><rect x="29" y="59" width="16" height="27" rx="2" fill="#fff" stroke="#216448" stroke-width="3"/><rect x="53" y="59" width="15" height="14" rx="2" fill="#fff" stroke="#216448" stroke-width="3"/><circle class="store-spark" cx="81" cy="14" r="5" fill="#e9b44c"/></svg></div><p id="catalogLoadMessage" role="status" aria-live="polite">Preparando tu tienda…</p><button id="catalogRetry" hidden type="button">Reintentar</button><noscript>Activa JavaScript para ver el catálogo.</noscript></div>
+    <div id="catalogLoading"><div class="store-loader" aria-hidden="true"><div class="store-loader-mark"><svg viewBox="0 0 80 80" width="80" height="80" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 32L22 17H58L64 32" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 32H64V39C64 43.5 60.5 47 56 47C51.5 47 48 43.5 48 39C48 43.5 44.5 47 40 47C35.5 47 32 43.5 32 39C32 43.5 28.5 47 24 47C19.5 47 16 43.5 16 39V32Z" stroke="currentColor" stroke-width="3.5" stroke-linejoin="round"/><path d="M21 47V64H59V47M31 64V51H44V64M50 53H55" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path class="store-loader-highlight" d="M16 32H64" stroke="#3B9773" stroke-width="3.5" stroke-linecap="round"/></svg></div><div class="store-loader-progress"><span></span></div></div><p id="catalogLoadMessage" role="status" aria-live="polite">Preparando tu tienda…</p><button id="catalogRetry" hidden type="button">Reintentar</button><noscript>Activa JavaScript para ver el catálogo.</noscript></div>
 
 
 
