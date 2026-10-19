@@ -3731,7 +3731,7 @@ function filter() {
           finally{bookingRequestSubmitting=false;button.disabled=false;button.removeAttribute("aria-disabled");}
           return;
         }
-        if(bookingRequestRegisteredFingerprint===fingerprint){status.textContent="Esta solicitud ya fue registrada. Usa el botón de WhatsApp para compartirla.";return;}
+        if(bookingRequestRegisteredFingerprint===fingerprint){status.textContent="Esta solicitud ya fue registrada. Si el comprobante no aparece, vuelve a abrir Mi solicitud para recuperarlo.";return;}
         if(bookingPendingFingerprint!==fingerprint){
           bookingPendingFingerprint=fingerprint;
           bookingPendingKey=savedBookingRetry?.fingerprint===fingerprint&&savedBookingRetry.key?savedBookingRetry.key:crypto.randomUUID();
@@ -4432,7 +4432,11 @@ botonArriba.addEventListener('click', () => {
           if(hasStay){$('quoteSummary').insertAdjacentHTML('beforeend','<div class="quote-line-controls stay-actions"><button type="button" data-stay-edit>Editar estadía</button><button type="button" class="remove" data-stay-remove>Quitar estadía</button></div>');}
           if(!hasStay){$('bookingShareFromQuote').classList.add('hidden');$('bookingReceipt').classList.add('hidden');$('bookingShareNotice').textContent='';$('quoteSend').removeAttribute('aria-disabled');$('quoteSend').disabled=false;}
           $('quoteSend').textContent=bookingRequestRegisteredFingerprint?(savedBookingRetry?.status==='registered'?'Recuperar comprobante':'Solicitud registrada'):hasStay?'Registrar solicitud pendiente':(lines.length?'Consultar productos por WhatsApp':'Elegir una estadía');
-          if(hasStay&&savedBookingRetry?.status==='registered'){$('quoteSend').disabled=false;$('quoteSend').removeAttribute('aria-disabled');}
+          if(hasStay&&savedBookingRetry?.status==='registered'){
+            const receiptPending=$('bookingReceipt').classList.contains('hidden')||$('bookingReceipt').textContent.includes('Comprobante pendiente de consulta');
+            $('quoteSend').disabled=!bookingRequestSubmitting&&!receiptPending;
+            if(receiptPending&&!bookingRequestSubmitting)$('quoteSend').removeAttribute('aria-disabled');
+          }
           $('quoteSend').removeAttribute("href");
           const browse=$('requestContinueShopping'),actions=$('quoteSend').closest('.quote-actions');
           if(browse)browse.classList.toggle("hidden",!!bookingRequestRegisteredFingerprint);
