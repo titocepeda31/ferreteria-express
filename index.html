@@ -3290,6 +3290,8 @@ function filter() {
         const preferred=homeBookingPrefill&&homeBookingPrefill.productId===String(p.id)?homeBookingPrefill:null;
         $("bookingArrival").value=preferred?.start||"";$("bookingDeparture").value=preferred?.end||"";
         if(preferred){$("bookingGuests").value=String(preferred.guests);homeBookingPrefill=null;}
+        $("bookingDeparture").min=$("bookingArrival").value?plusDays($("bookingArrival").value,1):localToday();
+        updateBookingEstimate();
         $("availabilitySelectionHint").textContent=preferred?"Fechas precargadas desde la búsqueda. Revisa los días y confirma disponibilidad.":"Toca un día disponible para elegir tu llegada.";
         $("availabilitySelectionHint").classList.remove("is-error");
         renderAvailabilityCalendar();
@@ -3334,7 +3336,7 @@ function filter() {
 
       const availabilityCache=new Map(),availabilityPending=new Map();
       let homeBookingPrefill=null,homeSearchVersion=0;
-      $("homeArrival").min=new Date().toLocaleDateString("en-CA");
+      $("homeArrival").min=localToday();
       $("homeArrival").addEventListener("change",()=>{
         const today=localToday();
         $("homeArrival").min=today;
@@ -3353,10 +3355,12 @@ function filter() {
           const available=results.filter(x=>x.available===true);
           status.textContent=available.length?available.length+" "+(available.length===1?"cabaña disponible":"cabañas disponibles")+" para "+nights+" "+(nights===1?"noche":"noches")+". Selecciona una.":"No hay disponibilidad confirmada para esas fechas. Prueba otra llegada o menos noches.";
           const featured=$("featured");
+          homeAvailabilityVersion++;
           featured.innerHTML=available.length?available.map(x=>tarjetaProducto(x.p)).join(""):'<div class="empty">No hay cabañas disponibles para esas fechas.</div>';
           featured.querySelectorAll("[data-quick-book]").forEach(button=>button.addEventListener("click",()=>{homeBookingPrefill={productId:button.dataset.quickBook,start,end,guests};openQuickBooking(button.dataset.quickBook);}));
           $("inicio-destacados").scrollIntoView({behavior:"smooth",block:"start"});
-        }finally{btn.disabled=false;}
+        }catch(error){status.textContent="No fue posible consultar disponibilidad. Intenta nuevamente.";}
+        finally{btn.disabled=false;}
       });
 
       const dayISO=date=>{const d=new Date(date);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");};
@@ -3389,6 +3393,8 @@ function filter() {
       }
       function renderAvailabilityCalendar(){
         const p=bookingSelection(),root=$("bookingAvailabilityCalendar");
+        $("bookingArrival").min=localToday();
+        $("bookingDeparture").min=$("bookingArrival").value?plusDays($("bookingArrival").value,1):localToday();
         if(config.catalogType!=="lodging"||!p?.analyticsId){root.classList.add("hidden");return;}
         root.classList.remove("hidden");
         const version=++calendarVersion,first=plusDays(localToday(),calendarOffset*28);
