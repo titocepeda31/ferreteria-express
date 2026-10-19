@@ -1974,6 +1974,11 @@ body.request-open #quoteItems:empty{display:none!important}
 .one-night-gap{margin-top:10px;padding:9px 11px;border-radius:9px;background:#fff2d9;color:#77510d;font-weight:700;font-size:13px}
 #bookingReceipt{padding:13px 15px;margin:12px 0;border:1px solid #b8d9c4;border-radius:12px;background:#eaf7ee}
 #bookingReceipt p{margin:4px 0}
+
+.availability-day.selected-start,.availability-day.selected-end{background:#195e48!important;color:#fff!important;border:3px solid #093e2e!important;box-shadow:0 0 0 2px #f3b94f;opacity:1}
+.availability-day.selected-range{background:#b6e6d1!important;color:#164b38!important;border:2px solid #499b78}
+.availability-day.selected-conflict{background:#a71f29!important;color:#fff!important;border:3px solid #6c0d15!important;opacity:1}
+#bookingStatus.booking-error{background:#fff0f0;border:2px solid #ba3030;border-radius:12px;padding:12px 14px;color:#8b1717;font-weight:700}
 </style>
     <link rel="stylesheet" href="catalog-ux.css?v=artwork-1">
 
@@ -3284,7 +3289,7 @@ function filter() {
       document.addEventListener("click",e=>{const b=e.target.closest("[data-quick-book]");if(b)openQuickBooking(b.dataset.quickBook);});
       $("bookingQuoteWA").addEventListener("click",()=>{const p=bookingSelection();if(!p||!validBookingGuests(p)||bookingNights()<1)return;window.open(bookingShareLink(bookingShareText(p,$("bookingArrival").value,$("bookingDeparture").value,null)),"_blank","noopener");});
       $("bookingWhatsApp").addEventListener("click",async()=>{const msg=$("bookingWhatsApp").dataset.message;if(!msg)return;const url=bookingShareLink(msg);if(url){window.open(url,"_blank","noopener");return;}try{await navigator.clipboard.writeText(msg);$("bookingStatus").textContent="Solicitud copiada. El negocio no tiene WhatsApp configurado; no se ha enviado ningún mensaje.";}catch(e){$("bookingStatus").textContent="Solicitud registrada, pero no hay WhatsApp configurado. Conserva el código de solicitud.";}});
-      ["bookingArrival","bookingDeparture","bookingGuests"].forEach(id=>$(id).addEventListener("change",()=>{verifiedBookingKey="";$("bookingCheck").textContent="Agregar estadía a Mi solicitud";$("bookingStatus").textContent="";$("bookingWhatsApp").classList.add("hidden");updateBookingEstimate();}));
+      ["bookingArrival","bookingDeparture","bookingGuests"].forEach(id=>$(id).addEventListener("change",()=>{verifiedBookingKey="";$("bookingCheck").textContent="Agregar estadía a Mi solicitud";$("bookingStatus").textContent="";$("bookingWhatsApp").classList.add("hidden");updateBookingEstimate();markCalendarSelection();}));
       async function bookingRpc(name,p,start,end){
         const response=await fetch(SUPABASE_URL+"/rest/v1/rpc/"+name,{method:"POST",headers:{...SUPABASE_HEADERS,"Content-Type":"application/json"},body:JSON.stringify({p_product:p.analyticsId,p_start:start,p_end:end}),signal:AbortSignal.timeout(15000)});
         if(!response.ok)throw new Error((await response.json().catch(()=>({}))).message||"No se pudo consultar disponibilidad");
@@ -3309,6 +3314,17 @@ function filter() {
           while(cursor<days.length){const day=days[cursor++];onResult(day,await dayAvailability(p,day));}
         }));
       }
+      function markCalendarSelection(){
+        const start=$("bookingArrival").value,end=$("bookingDeparture").value;
+        $("availabilityDays").querySelectorAll("[data-day]").forEach(btn=>{
+          const day=btn.dataset.day;
+          btn.classList.toggle("selected-start",day===start);
+          btn.classList.toggle("selected-end",day===end);
+          btn.classList.toggle("selected-range",day>start&&day<end);
+          btn.classList.toggle("selected-conflict",day>=start&&day<end&&btn.classList.contains("occupied"));
+          btn.setAttribute("aria-pressed",String(day===start||day===end));
+        });
+      }
       function renderAvailabilityCalendar(){
         const p=bookingSelection(),root=$("bookingAvailabilityCalendar");
         if(config.catalogType!=="lodging"||!p?.analyticsId){root.classList.add("hidden");return;}
@@ -3327,6 +3343,7 @@ function filter() {
           btn.classList.toggle("occupied",available===false);
           btn.title=available===true?"Disponible":available===false?"Ocupado o bloqueado":"Sin comprobar";
           btn.setAttribute("aria-label",day+": "+btn.title);
+          markCalendarSelection();
         });
       }
       $("availabilityPrev").onclick=()=>{calendarOffset=Math.max(0,calendarOffset-1);renderAvailabilityCalendar();};
@@ -3342,6 +3359,7 @@ function filter() {
           $("bookingStatus").textContent="Fechas seleccionadas. Comprueba la estadía completa.";
         }
         updateBookingEstimate();
+        markCalendarSelection();
       });
       let homeAvailabilityVersion=0;
       async function showOneNightGaps(){
@@ -3378,19 +3396,32 @@ function filter() {
         $("bookingShareFromQuote").classList.add("hidden");
         $("quoteSend").disabled=false;
         $("quoteSend").removeAttribute("aria-disabled");
+        $("requestContinueShopping").classList.remove("hidden");
       }
       $("bookingCheck").addEventListener("click",async()=>{
         const p=bookingSelection(),start=$("bookingArrival").value,end=$("bookingDeparture").value;
         const guests=Number($("bookingGuests").value),status=$("bookingStatus"),btn=$("bookingCheck");
         const now=new Date(),today=new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,10);
         if(!p?.analyticsId||!validBookingGuests(p)||!start||start<today||bookingNights()<1||bookingNights()>30){status.textContent="Revisa fechas y huéspedes (máximo 30 noches).";return;}
-        btn.disabled=true;status.textContent="Comprobando disponibilidad…";
+        btn.disabled=true;status.classList.remove("booking-error");status.textContent="Comprobando disponibilidad…";
         try{
           const available=await bookingRpc("booking_public_availability",p,start,end);
-          if(!available){status.textContent="Las fechas seleccionadas se cruzan con una reserva o bloqueo existente. Prueba otra fecha de llegada o salida.";return;}
+          if(!available){
+            status.textContent="La estadía se cruza con una noche ocupada o bloqueada. Las noches en conflicto están destacadas en el calendario.";
+            status.classList.add("booking-error");
+            const nights=Array.from({length:Math.min(30,bookingNights())},(_,i)=>plusDays(start,i));
+            await limitedAvailability(p,nights,()=>{});
+            $("availabilityDays").querySelectorAll("[data-day]").forEach(btn=>{
+              const day=btn.dataset.day,key=String(p.analyticsId)+"|"+day;
+              if(day>=start&&day<end&&availabilityCache.get(key)===false){btn.classList.add("occupied");btn.classList.remove("available");btn.disabled=true;}
+            });
+            markCalendarSelection();
+            status.scrollIntoView({block:"nearest",behavior:"smooth"});
+            return;
+          }
           if(start!==$("bookingArrival").value||end!==$("bookingDeparture").value||guests!==Number($("bookingGuests").value)||String(p.id)!==String(bookingSelection()?.id))return;
           saveStayDraft({productId:p.id,start,end,guests,nights:bookingNights()});
-          status.textContent="";
+          status.textContent="";status.classList.remove("booking-error");
           closeQuickBooking();
           openQuote();
         }catch(e){status.textContent="No se pudo consultar disponibilidad: "+(e.message||"Error de conexión");}
@@ -3422,6 +3453,7 @@ function filter() {
           bookingRequestRegisteredFingerprint=fingerprint;
           const message=bookingShareText(p,draft.start,draft.end,code,{...draft},extras.map(x=>({...x})),{name,phone});
           const link=bookingShareLink(message);
+          $("requestContinueShopping").classList.add("hidden");
           const share=$("bookingShareFromQuote");
           share.classList.remove("hidden");
           share.textContent=link?"Enviar solicitud por WhatsApp":"WhatsApp del alojamiento no configurado";
@@ -4102,9 +4134,10 @@ botonArriba.addEventListener('click', () => {
           $('quoteSummary').innerHTML=(hasStay||lines.length)?'<div class="stay-summary-top"><span>Resumen de solicitud</span><strong>'+formatCLP(stayTotal+extraSum)+'</strong></div><p class="muted">'+(hasStay?'1 estadía':'Sin estadía')+' · '+lines.length+' productos o servicios</p><p class="quote-notice">Total estimado, sujeto a confirmación.</p>':'';
           if(hasStay){$('quoteSummary').insertAdjacentHTML('beforeend','<div class="quote-line-controls stay-actions"><button type="button" data-stay-edit>Editar estadía</button><button type="button" class="remove" data-stay-remove>Quitar estadía</button></div>');}
           if(!hasStay){$('bookingShareFromQuote').classList.add('hidden');$('bookingReceipt').classList.add('hidden');$('bookingShareNotice').textContent='';$('quoteSend').removeAttribute('aria-disabled');$('quoteSend').disabled=false;}
-          $('quoteSend').textContent=hasStay?'Registrar solicitud pendiente':(lines.length?'Consultar productos por WhatsApp':'Elegir una estadía');
+          $('quoteSend').textContent=bookingRequestRegisteredFingerprint?'Solicitud registrada':hasStay?'Registrar solicitud pendiente':(lines.length?'Consultar productos por WhatsApp':'Elegir una estadía');
           $('quoteSend').removeAttribute("href");
           const browse=$('requestContinueShopping'),actions=$('quoteSend').closest('.quote-actions');
+          if(browse)browse.classList.toggle("hidden",!!bookingRequestRegisteredFingerprint);
           if(actions&&browse.previousElementSibling!==actions)actions.insertAdjacentElement('afterend',browse);
           $('quoteClear').textContent='Vaciar mi solicitud';
           $('bookingCustomerName').required=true;$('bookingCustomerPhone').required=true;
