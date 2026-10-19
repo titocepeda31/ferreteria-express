@@ -3638,6 +3638,48 @@ function filter() {
         }catch(e){status.textContent="No se pudo consultar disponibilidad: "+(e.message||"Error de conexión");}
         finally{btn.disabled=false;}
       });
+      async function fetchPersistedBookingReceipt(id,key){
+        const response=await fetch(SUPABASE_URL+"/rest/v1/rpc/booking_public_receipt",{
+          method:"POST",headers:{...SUPABASE_HEADERS,"Content-Type":"application/json"},
+          body:JSON.stringify({p_request:id,p_idempotency_key:key}),signal:AbortSignal.timeout(15000)
+        });
+        if(!response.ok)throw new Error("No se pudo consultar el comprobante guardado");
+        const receipt=await response.json();
+        if(!receipt||String(receipt.id)!==String(id))throw new Error("No se encontró el comprobante autorizado");
+        return receipt;
+      }
+      function persistedBookingText(receipt,contact){
+        const date=s=>{const a=String(s||"").split("-");return a.length===3?a[2]+"/"+a[1]+"/"+a[0]:s;};
+        const nights=Math.round((Date.parse(receipt.end_date+"T12:00:00")-Date.parse(receipt.start_date+"T12:00:00"))/86400000);
+        const lines=["Solicitud de estadía #"+String(receipt.id).slice(0,8),
+          "Estado: "+({pendiente:"Pendiente de confirmación",confirmada:"Confirmada",rechazada:"Rechazada"}[receipt.status]||receipt.status),
+          "Alojamiento: "+(receipt.product_name||"Alojamiento"),
+          "Llegada: "+date(receipt.start_date),"Salida: "+date(receipt.end_date),
+          "Huéspedes: "+receipt.guests,"Noches: "+nights,
+          "Precio por noche registrado: "+(receipt.nightly_price==null?"Sin tarifa registrada":formatCLP(Number(receipt.nightly_price))),
+          "Adicionales:"];
+        const extras=Array.isArray(receipt.extras)?receipt.extras:[];
+        lines.push(...(extras.length?extras.map(x=>"- "+String(x.name||"Adicional")+": "+formatQuoteQty(Number(x.quantity))+" "+String(x.unit||"unidad")+" × "+formatCLP(Number(x.unit_price))):["Ninguno"]));
+        lines.push("Total estimado registrado: "+(receipt.estimated_total==null?"Sin importe registrado":formatCLP(Number(receipt.estimated_total))));
+        if(contact){lines.push("Contacto: "+contact.name,"WhatsApp de contacto: "+contact.phone);}
+        lines.push("Este comprobante no acredita un pago.");
+        return lines.join("\\n");
+      }
+      function showPersistedBookingReceipt(receipt,contact){
+        const text=persistedBookingText(receipt,contact);
+        const code=String(receipt.id).slice(0,8);
+        $("bookingReceipt").classList.remove("hidden");
+        $("bookingReceipt").innerHTML="<strong>Comprobante registrado #"+esc(code)+"</strong><p>"+esc(text).replace(/\\n/g,"<br>")+"</p>";
+        $("quoteHelp").textContent="Solicitud registrada. Los importes se consultaron desde Supabase.";
+        $("quoteSend").disabled=true;
+        $("quoteSend").textContent="Solicitud registrada";
+        $("requestContinueShopping").classList.add("hidden");
+        const share=$("bookingShareFromQuote"),link=bookingShareLink(text);
+        share.classList.remove("hidden");
+        share.textContent=link?"Preparar WhatsApp con comprobante":"WhatsApp del alojamiento no configurado";
+        share.disabled=!link;
+        share.onclick=()=>{if(link){window.open(link,"_blank","noopener");$("bookingShareNotice").textContent="Se abrió WhatsApp con el mensaje preparado. Pulsa Enviar allí; no se envió automáticamente.";}}; 
+      }
       async function submitStayRequest(){
         const status=$("quoteHelp"),button=$("quoteSend"),draft=stayDraft;
         const p=draft&&products.find(x=>String(x.id)===String(draft.productId));
@@ -3648,7 +3690,11 @@ function filter() {
         const extras=Object.entries(quote).map(([id,qty])=>{const item=products.find(x=>String(x.id)===id);return item?.catalogSection==="adicional"?{product_id:item.analyticsId||item.id,quantity:Number(qty)}:null;}).filter(Boolean);
         const fingerprint=requestRetryFingerprint(draft,name,phone,extras);
         if(savedBookingRetry?.fingerprint===fingerprint&&savedBookingRetry?.status==="registered"){
-          status.textContent="Esta solicitud ya fue registrada con código #"+savedBookingRetry.code+". No vuelvas a registrarla; comparte el comprobante guardado.";
+          status.textContent="La solicitud ya está registrada. Recuperando comprobante…";
+          try{
+            const receipt=await fetchPersistedBookingReceipt(savedBookingRetry.id,savedBookingRetry.key);
+            showPersistedBookingReceipt(receipt,{name,phone});
+          }catch(e){status.textContent="La solicitud ya existe, pero no se pudo recuperar el comprobante. Reintenta con conexión; no se creará otra solicitud.";}
           return;
         }
         if(bookingRequestRegisteredFingerprint===fingerprint){status.textContent="Esta solicitud ya fue registrada. Usa el botón de WhatsApp para compartirla.";return;}
@@ -3663,23 +3709,18 @@ function filter() {
           const response=await fetch(SUPABASE_URL+"/rest/v1/rpc/booking_public_request_v2",{method:"POST",headers:{...SUPABASE_HEADERS,"Content-Type":"application/json"},body:JSON.stringify({p_product:p.analyticsId,p_start:draft.start,p_end:draft.end,p_guests:draft.guests,p_customer_name:name,p_customer_whatsapp:phone,p_idempotency_key:bookingPendingKey,p_extras:extras}),signal:AbortSignal.timeout(15000)});
           if(!response.ok)throw new Error((await response.json().catch(()=>({}))).message||"No se pudo registrar");
           const id=await response.json(),code=String(id).slice(0,8);
-          // La RPC actual devuelve un identificador, no un desglose persistido de precios.
-          // Nunca presentar un cálculo local como si fuese el importe confirmado por el servidor.
           persistBookingRetry({fingerprint,key:bookingPendingKey,status:"registered",code,id:String(id)});
-          $("bookingReceipt").classList.remove("hidden");
-          $("bookingReceipt").innerHTML="<strong>Solicitud #"+esc(code)+"</strong><p>Estado: pendiente de confirmación</p><p>Importe definitivo: por confirmar con el alojamiento.</p><p>Los precios vistos antes del registro eran estimaciones del catálogo.</p>";
-          status.textContent="Solicitud registrada. Comparte el resumen por WhatsApp para contactar al alojamiento.";
-          button.textContent="Solicitud registrada";
-          button.setAttribute("aria-disabled","true");
           bookingRequestRegisteredFingerprint=fingerprint;
-          const message=bookingShareText(p,draft.start,draft.end,code,{...draft},extras.map(x=>({...x})),{name,phone}).replace(/Total estimado: [^\n]*/, "Importe definitivo: por confirmar con el alojamiento");
-          const link=bookingShareLink(message);
-          $("requestContinueShopping").classList.add("hidden");
-          const share=$("bookingShareFromQuote");
-          share.classList.remove("hidden");
-          share.textContent=link?"Enviar solicitud por WhatsApp":"WhatsApp del alojamiento no configurado";
-          share.disabled=!link;
-          share.onclick=()=>{if(link){window.open(link,"_blank","noopener");$("bookingShareNotice").textContent="Se abrió WhatsApp con el mensaje preparado. Pulsa Enviar allí; abrirlo no significa que se haya enviado.";}}; 
+          try{
+            const receipt=await fetchPersistedBookingReceipt(id,bookingPendingKey);
+            showPersistedBookingReceipt(receipt,{name,phone});
+          }catch(e){
+            $("bookingReceipt").classList.remove("hidden");
+            $("bookingReceipt").innerHTML="<strong>Solicitud #"+esc(code)+" registrada</strong><p>Comprobante pendiente de consulta. No se mostrará un total calculado localmente.</p>";
+            status.textContent="Solicitud registrada, pero falló la consulta del comprobante. Puedes volver a abrir Mi solicitud y recuperar el comprobante sin registrar otra.";
+            button.textContent="Solicitud registrada";
+            $("requestContinueShopping").classList.add("hidden");
+          }
         }catch(e){status.textContent="No se pudo confirmar el resultado: "+(e.message||"Error de conexión")+". Si reintentas, se reutilizará el mismo identificador para evitar duplicaciones, siempre que el servidor respete la clave de idempotencia.";button.removeAttribute("aria-disabled");button.disabled=false;}finally{bookingRequestSubmitting=false;}
       }
       $("quickSearch").addEventListener("input", event => {
