@@ -3,12 +3,12 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
 const html=fs.readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');
-const gate=html.slice(html.indexOf('      function catalogReady()'),html.indexOf('init().then(catalogReady).catch(catalogFailed);')+'init().then(catalogReady).catch(catalogFailed);'.length);
+const gate=html.slice(html.indexOf('      function catalogReady()'),html.indexOf('\n\n\n    </script>',html.indexOf('      function catalogReady()')));
 function boot(){
  const nodes={catalogLoading:{hidden:false},catalogLoadMessage:{textContent:'Cargando catálogo…'},catalogRetry:{hidden:true,addEventListener(type,fn){this.retry=fn;}}};
  let resolve,reject,clearance=0,reloads=0;const pending=new Promise((a,b)=>{resolve=a;reject=b;});
  const document={documentElement:{dataset:{catalogState:'loading'}},body:{setAttribute(k,v){this[k]=v;}},title:'Cargando catálogo…'};
- vm.runInNewContext(gate,{document,$:id=>nodes[id],init:()=>pending,syncCatalogClearance:()=>clearance++,location:{reload(){reloads++;}}});
+ vm.runInNewContext(gate,{document,$:id=>nodes[id],init:()=>pending,syncCatalogClearance:()=>clearance++,setTimeout:()=>1,clearTimeout:()=>{},console:{error(){}},location:{reload(){reloads++;}}});
  return {nodes,document,resolve,reject,get clearance(){return clearance;},get reloads(){return reloads;}};
 }
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
@@ -34,3 +34,4 @@ test('unavailable requested shops do not fall back to another store',async()=>{
 test('public inline scripts parse after bootstrap changes',()=>{
  for(const [,code]of html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g))if(code.trim())new vm.Script(code);
 });
+
