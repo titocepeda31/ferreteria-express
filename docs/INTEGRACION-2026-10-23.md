@@ -36,4 +36,11 @@ La recuperación de comprobantes usa sessionStorage y cubre la misma pestaña; n
 
 No se incorpora el antiguo calendario que inserta/elimina reservas directamente. Se conserva la interfaz revisada que confirma mediante RPC y presenta ocupación de solo lectura. Tampoco se incorpora el interruptor antiguo de rotación en el mismo día: el contrato actual ocupa noches con salida exclusiva y no implementa esa política alternativa.
 
-Pendiente de completar con enlaces de PR y verificación de despliegue al publicar.
+## Publicación verificada
+
+- Administrador integrado mediante [PR #26](https://github.com/titocepeda31/catalogo-admin/pull/26), commit de fusión `df57f3b4683a1f493e273abe0fce03c1cc8b483d`.
+- Catálogo integrado mediante [PR #12](https://github.com/titocepeda31/ferreteria-express/pull/12), commit de fusión `0c57c70da2d17c20883e6609c1432f37133f57fe`.
+- Despliegue de producción del administrador `dpl_H7nsZXLBKk1yqbzE5yZZFR2QywCJ`: READY. Alias de producción: https://catalogo-admin-seven.vercel.app/.
+- GitHub Pages del catálogo: workflow `40038399629` completado con éxito.
+- Navegador real de escritorio: catálogo demo cargado y buscador visible dentro de catálogo completo; administrador publicado en /prueba-reservas muestra navegación, calendario mensual y los doce meses del resumen anual. El administrador se revisó con datos ficticios; no acredita una sesión autenticada de propietario.
+- No se escribieron reservas ni se enviaron mensajes durante la comprobación de publicación.
