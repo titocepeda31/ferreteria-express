@@ -12,15 +12,15 @@ function fixture() {
     return {contains:x=>set.has(x), add:x=>set.add(x), remove:x=>set.delete(x),
       toggle:(x, enabled)=>enabled ? set.add(x) : set.delete(x)};
   }
-  for (const id of ['quotePanel','quoteClose','quoteFab','quoteCount','quoteItems','quoteSummary','quoteSend','quoteClear','page']) {
+  for (const id of ['quotePanel','quoteClose','quoteFab','quoteCount','quoteItems','quoteSummary','quoteSend','quoteClear','quoteHelp','quoteTitle','bookingReceipt','bookingShareNotice','bookingShareFromQuote','requestContinueShopping','quoteContactSlot','bookingContact','page']) {
     nodes[id] = {id, tagName:'DIV', inert:false, isConnected:true, classList:classes(id === 'quotePanel' ? ['hidden'] : []),
-      focus(){document.activeElement=this;}, removeAttribute(key){delete this[key];}};
+      focus(){document.activeElement=this;}, dataset:{},style:{},addEventListener(){},setAttribute(key,value){this[key]=value;},removeAttribute(key){delete this[key];}};
   }
   document.body.children = [nodes.page,nodes.quoteFab,nodes.quotePanel];
   nodes.page.inert = true; // Previously inert content must stay inert after closing.
   nodes.quoteFab.focus();
   const saved = new Map();
-  const context = vm.createContext({document, localStorage:{getItem:k=>saved.get(k),setItem:(k,v)=>saved.set(k,v)},
+  const context = vm.createContext({document,window:{scrollY:0,scrollTo(){}}, URLSearchParams,URL,location:{search:''},sessionStorage:{getItem:()=>null},crypto:require('node:crypto').webcrypto,stayDraft:null,requestAnimationFrame:fn=>fn(), localStorage:{getItem:k=>saved.get(k),setItem:(k,v)=>saved.set(k,v)},
     $:id=>nodes[id], esc:s=>String(s), config:{whatsapp:'+56 9 1234 5678'},
     products:[{id:'timber',nombre:'Pino dimensionado 1 × 10, 3.20 mts'}, {id:'bulk',nombre:'Material',unidad:'kg'}]});
   const start = html.indexOf("      const QUOTE_KEY =");
@@ -36,7 +36,7 @@ test('Adding products preserves integer/decimal steps, count and quotation Whats
   assert.equal(f.run("quote.timber"),2);
   assert.equal(f.run("quote.bulk"),0.5);
   assert.equal(f.nodes.quoteCount.textContent,'2,5');
-  const url=new URL(f.nodes.quoteSend.href);
+  const url=new URL(f.nodes.quoteSend.dataset.whatsappHref);
   assert.equal(url.pathname,'/56912345678');
   assert.match(url.searchParams.get('text'),/Pino dimensionado 1 × 10, 3.20 mts\n2 · Precio por confirmar/);
   assert.match(url.searchParams.get('text'),/0,5 kg · Precio por confirmar/);
@@ -93,7 +93,7 @@ function setQuote(f, products, quote) {
   f.context.products = products;
   f.context.selection = quote;
   f.run('quote = selection; renderQuote()');
-  return new URL(f.nodes.quoteSend.href).searchParams.get('text');
+  return new URL(f.nodes.quoteSend.dataset.whatsappHref).searchParams.get('text');
 }
 
 test('Known prices, sale prices and totals are identical on screen and WhatsApp',()=>{
@@ -150,14 +150,14 @@ test('Quantity changes, removal and empty state recalculate without a stale send
   const f=fixture();
   setQuote(f,[{id:'a',nombre:'Material',precio:3500},{id:'b',nombre:'Pendiente'}],{a:1,b:1});
   f.run('quote.a=3; saveQuote()');
-  assert.match(decodeURIComponent(f.nodes.quoteSend.href),/Subtotal conocido: \$10\.500/);
+  assert.match(decodeURIComponent(f.nodes.quoteSend.dataset.whatsappHref),/Subtotal conocido: \$10\.500/);
   f.run('delete quote.b; saveQuote()');
   assert.match(f.nodes.quoteSummary.innerHTML,/Total referencial/);
   assert.match(f.nodes.quoteSummary.innerHTML,/\$10\.500/);
   f.run('quote={}; saveQuote()');
   assert.equal(f.nodes.quoteSummary.innerHTML,'');
   assert.equal(f.nodes.quoteSummary.classList.contains('hidden'),true);
-  assert.equal(f.nodes.quoteSend.href,undefined);
+  assert.equal(f.nodes.quoteSend.dataset.whatsappHref,undefined);
 });
 
 test('Decimal quantities use published whole CLP and sum displayed line subtotals',()=>{
@@ -178,3 +178,4 @@ test('From prices remain indicative and sale fallback matches the catalog',()=>{
   assert.ok(message.endsWith('¿Me confirman disponibilidad y precio final?'));
   assert.match(f.nodes.quoteSummary.innerHTML,/<dt>Subtotal<\/dt><dd>Desde \$7\.000<\/dd>/);
 });
+
