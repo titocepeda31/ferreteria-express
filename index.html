@@ -1929,6 +1929,9 @@ footer { margin-top: 24px; }
       .brand-sector { display:block; margin-top:3px; color:#64736a; font-size:11px; font-weight:500; letter-spacing:.01em; }
       .brand-monogram { display:grid; place-items:center; flex:none; width:44px; height:44px; border-radius:12px; background:var(--primary); color:var(--primary-contrast,#fff); font-size:17px; font-weight:750; letter-spacing:-.04em; }
       @media (max-width:490px) { .brand-monogram { width:38px; height:38px; border-radius:10px; font-size:15px; } .brand-name { max-width:43vw; font-size:14px; } .brand-sector { font-size:10px; } }
+      /* Misma forma del monograma en el administrador y el catálogo público. */
+      #brand .brand-monogram { border-radius:12px !important; aspect-ratio:1; overflow:hidden; }
+      @media (max-width:490px) { #brand .brand-monogram { border-radius:10px !important; } }
       .brand-logo { display:block; width:auto; max-width:190px; max-height:48px; object-fit:contain; }
       @media (max-width:490px) {
         .brand-logo { max-width:150px; max-height:40px; }
