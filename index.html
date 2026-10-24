@@ -4521,18 +4521,18 @@ botonArriba.addEventListener('click', () => {
             const pendingUnits = economy.lines.filter(line => line.unitPrice === null).reduce((sum, line) => sum + line.qty, 0);
             messageSummary.push('Sin precio publicado: ' + economy.pending + (economy.pending === 1 ? ' producto' : ' productos') + ' (' + formatQuoteQty(pendingUnits) + (pendingUnits === 1 ? ' unidad solicitada)' : ' unidades solicitadas)'));
           }
-          const msg = 'Hola, quisiera solicitar una cotización.\\n\\n' +
-            'Productos solicitados:\\n\\n' +
+          const msg = 'Hola, quisiera solicitar una cotización.\n\n' +
+            'Productos solicitados:\n\n' +
             economy.lines.map(({p,qty,unitPrice,unitText,subtotalText},index) => {
               const quantity = formatQuoteQty(qty) + (p.unidad && p.unidad !== 'unidad' ? ' ' + p.unidad : (qty === 1 ? ' unidad' : ' unidades'));
-              return (index + 1) + '. ' + p.nombre + '\\n' +
-                'Cantidad: ' + quantity + '\\n' +
+              return (index + 1) + '. ' + p.nombre + '\n' +
+                'Cantidad: ' + quantity + '\n' +
                 (unitPrice === null
                   ? 'Precio: por confirmar'
-                  : 'Precio unitario: ' + unitText + '\\nSubtotal: ' + subtotalText);
-            }).join('\\n\\n') +
-            (messageSummary.length ? '\\n\\nResumen:\\n' + messageSummary.join('\\n') : '') +
-            '\\n\\n¿Me pueden confirmar los precios pendientes, la disponibilidad y el total final?';
+                  : 'Precio unitario: ' + unitText + '\nSubtotal: ' + subtotalText);
+            }).join('\n\n') +
+            (messageSummary.length ? '\n\nResumen:\n' + messageSummary.join('\n') : '') +
+            '\n\n¿Me pueden confirmar los precios pendientes, la disponibilidad y el total final?';
           $('quoteSend').dataset.whatsappHref = 'https://wa.me/' + String(config.whatsapp || '').replace(/\D/g,'') + '?text=' + encodeURIComponent(msg);
         } else {
           delete $('quoteSend').dataset.whatsappHref;
