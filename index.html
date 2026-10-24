@@ -281,6 +281,19 @@
       .quick-booking-sheet{background:#fff;border-radius:20px;padding:20px;width:100%;max-width:520px;max-height:90dvh;overflow:auto;position:relative;}
       .quick-booking-close{position:absolute;right:16px;top:16px;background:white;border:1px solid #ddd;border-radius:50%;width:40px;height:40px;font-size:20px;cursor:pointer;}
       .quick-booking-sheet h2{padding-right:45px;}
+
+/* Galería móvil: imagen completa, controles táctiles y ampliación */
+#detailPhoto{aspect-ratio:auto;min-height:240px;max-height:75dvh;display:flex;align-items:center;justify-content:center;background:var(--primary-soft);cursor:zoom-in;}
+#detailPhoto img{width:100%;height:auto;max-height:75dvh;object-fit:contain;display:block;}
+.detail-gallery button[aria-current="true"]{border-color:var(--primary);}
+.detail-photo-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;}
+.detail-photo-controls button{border:1px solid var(--border);background:#fff;color:var(--ink);border-radius:10px;padding:9px 13px;cursor:pointer;}
+.detail-photo-controls button:disabled{opacity:.35;cursor:default;}
+.photo-lightbox{position:fixed;inset:0;z-index:12000;background:rgba(0,0,0,.94);display:flex;align-items:center;justify-content:center;padding:60px 12px;}
+.photo-lightbox[hidden]{display:none;}
+.photo-lightbox img{max-width:100%;max-height:100%;object-fit:contain;touch-action:pinch-zoom;}
+.photo-lightbox button{position:absolute;top:18px;right:18px;border:0;border-radius:50%;background:#fff;color:#111;width:44px;height:44px;font-size:26px;cursor:pointer;}
+@media(max-width:700px){#detailPhoto{min-height:0;max-height:none;}#detailPhoto img{max-height:72dvh;}}
       .detail-gallery{display:flex;gap:8px;overflow-x:auto;margin-top:10px;}
       .detail-gallery button{padding:0;border:2px solid transparent;border-radius:9px;overflow:hidden;background:none;flex:0 0 82px;cursor:pointer;}
       .detail-gallery button img{width:82px;height:70px;object-fit:cover;display:block;}
@@ -3230,10 +3243,26 @@ function filter() {
           $('detailAdd').hidden=bookable;
           $('detailWA').hidden=bookable;
           if(bookable&&!quickBookingProduct){const search=activeLodgingSearch;const today=localToday();$('bookingArrival').min=today;$('bookingDeparture').min=search?.start?plusDays(search.start,1):today;$('bookingArrival').value=search?.start||'';$('bookingDeparture').value=search?.end||'';if(search)$('bookingGuests').value=String(search.guests);$('bookingStatus').textContent=search?'Fechas recuperadas de tu búsqueda. Confirma disponibilidad antes de agregar la estadía.':'';updateBookingEstimate();}
-          $('detailPhoto').innerHTML = img(p);
           const photos=[p.imagen,...(p.galleryUrls||[])].filter(x=>/^https?:\/\//i.test(x));
+          let activePhoto=0;
+          const renderPhoto=()=>{
+            $('detailPhoto').innerHTML=photos.length?'<img src="'+esc(photos[activePhoto])+'" alt="'+esc(p.nombre)+' · foto '+(activePhoto+1)+'" loading="eager">':img(p);
+            $('detailGallery').querySelectorAll('[data-gallery-index]').forEach((button,i)=>button.setAttribute('aria-current',String(i===activePhoto)));
+            const controls=document.getElementById('detailPhotoControls');
+            if(controls){controls.querySelector('[data-prev]').disabled=activePhoto===0;controls.querySelector('[data-next]').disabled=activePhoto===photos.length-1;controls.querySelector('[data-count]').textContent=(activePhoto+1)+' / '+photos.length;}
+          };
           $('detailGallery').innerHTML=photos.length>1?photos.map((url,i)=>'<button type="button" data-gallery-index="'+i+'" aria-label="Ver foto '+(i+1)+'"><img src="'+esc(url)+'" alt="Foto '+(i+1)+' de '+esc(p.nombre)+'" loading="lazy"></button>').join(''):'';
-          $('detailGallery').onclick=e=>{const button=e.target.closest('[data-gallery-index]');if(!button)return;const url=photos[Number(button.dataset.galleryIndex)];if(url)$('detailPhoto').innerHTML='<img src="'+esc(url)+'" alt="'+esc(p.nombre)+'">';};
+          document.getElementById('detailPhotoControls')?.remove();
+          if(photos.length>1){$('detailGallery').insertAdjacentHTML('beforebegin','<div id="detailPhotoControls" class="detail-photo-controls"><button type="button" data-prev aria-label="Foto anterior">←</button><span data-count aria-live="polite"></span><button type="button" data-next aria-label="Foto siguiente">→</button></div>');}
+          const selectPhoto=index=>{activePhoto=Math.max(0,Math.min(photos.length-1,index));renderPhoto();};
+          $('detailGallery').onclick=e=>{const button=e.target.closest('[data-gallery-index]');if(button)selectPhoto(Number(button.dataset.galleryIndex));};
+          const controls=document.getElementById('detailPhotoControls');
+          if(controls)controls.onclick=e=>{if(e.target.closest('[data-prev]'))selectPhoto(activePhoto-1);if(e.target.closest('[data-next]'))selectPhoto(activePhoto+1);};
+          let startX=null;
+          $('detailPhoto').ontouchstart=e=>{startX=e.touches.length===1?e.touches[0].clientX:null;};
+          $('detailPhoto').ontouchend=e=>{if(startX===null||!e.changedTouches.length)return;const dx=e.changedTouches[0].clientX-startX;startX=null;if(Math.abs(dx)>45&&photos.length>1){selectPhoto(activePhoto+(dx<0?1:-1));$('detailPhoto').dataset.swiped='1';}};
+          $('detailPhoto').onclick=()=>{if($('detailPhoto').dataset.swiped==='1'){$('detailPhoto').dataset.swiped='';return;}if(!photos.length)return;const overlay=document.createElement('div');overlay.className='photo-lightbox';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-label','Fotografía ampliada');overlay.innerHTML='<button type="button" aria-label="Cerrar fotografía">×</button><img src="'+esc(photos[activePhoto])+'" alt="'+esc(p.nombre)+'">';document.body.appendChild(overlay);const close=()=>{overlay.remove();document.removeEventListener('keydown',escapeClose);};const escapeClose=e=>{if(e.key==='Escape')close();};overlay.onclick=e=>{if(e.target===overlay||e.target.closest('button'))close();};document.addEventListener('keydown',escapeClose);overlay.querySelector('button').focus();};
+          renderPhoto();
           $('detailCategory').textContent = (p.categorias || []).join(' · ');
           $('detailName').textContent = p.nombre;
           $('detailPrice').innerHTML =
