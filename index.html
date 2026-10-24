@@ -1924,6 +1924,11 @@ footer { margin-top: 24px; }
 #detailPrice { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 #detailPrice .detail-sale-badge, #detailPrice .price-original { margin-right: 0; }
       .brand.has-logo { display:inline-flex; align-items:center; gap:8px; }
+      .brand-identity { display:flex; flex-direction:column; min-width:0; line-height:1.2; }
+      .brand-name { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:min(48vw,340px); font-weight:750; letter-spacing:-.025em; }
+      .brand-sector { display:block; margin-top:3px; color:#64736a; font-size:11px; font-weight:500; letter-spacing:.01em; }
+      .brand-monogram { display:grid; place-items:center; flex:none; width:44px; height:44px; border-radius:12px; background:var(--primary); color:var(--primary-contrast,#fff); font-size:17px; font-weight:750; letter-spacing:-.04em; }
+      @media (max-width:490px) { .brand-monogram { width:38px; height:38px; border-radius:10px; font-size:15px; } .brand-name { max-width:43vw; font-size:14px; } .brand-sector { font-size:10px; } }
       .brand-logo { display:block; width:auto; max-width:190px; max-height:48px; object-fit:contain; }
       @media (max-width:490px) {
         .brand-logo { max-width:150px; max-height:40px; }
@@ -2753,11 +2758,12 @@ body.request-open #quoteItems:empty{display:none!important}
       }
       function renderStoreIntro() {
         const name = config.nombre || "Ferretería Demo";
-        const logo = String(config.logo_url || config.logo || "").trim();
-        const initials = name.trim().split(/\s+/).slice(0, 2).map(word => Array.from(word)[0]).join('').toUpperCase();
-        $('brand').innerHTML = (/^https?:\/\//i.test(logo)
-          ? '<img class="brand-logo" src="' + esc(logo) + '" alt="">'
-          : '<span class="brand-monogram" aria-hidden="true">' + esc(initials) + '</span>') + '<span class="brand-name">' + esc(name) + '</span>';
+        const initials = name.trim().split(/\s+/).filter(Boolean).slice(0, 2).map(word => Array.from(word)[0]).join('').toLocaleUpperCase('es-CL') || 'T';
+        const rubros = {retail:'Tienda y productos',lodging:'Alojamiento',food:'Alimentos y bebidas',services:'Servicios',other:'Catálogo comercial'};
+        const rubro = rubros[config.catalogType] || rubros.other;
+        // La identidad estándar no depende de archivos subidos como logo.
+        $('brand').innerHTML = '<span class="brand-monogram" aria-hidden="true">' + esc(initials) + '</span>' +
+          '<span class="brand-identity"><span class="brand-name">' + esc(name) + '</span><small class="brand-sector">' + esc(rubro) + '</small></span>';
         $('brand').classList.add('has-logo');
         $('topwa').innerHTML = '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11a9 9 0 0 1-9 9H3l2-4a9 9 0 1 1 16-5Z"/><path d="M8 7c0 4 2 6 6 7l2-2-3-2-1 1-2-2 1-1-2-2Z"/></svg><span>Contactar <span aria-hidden="true">↗</span></span>';
         const hasContact = !!String(config.whatsapp || '').replace(/\D/g, '');
