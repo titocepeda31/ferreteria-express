@@ -2473,7 +2473,14 @@ body.request-open #quoteItems:empty{display:none!important}
       let remoteAnalyticsReady = false;
       const SUPABASE_URL = "https://wndwnjzmnrrclczpxbea.supabase.co";
       const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_6W5lUpsW4g5WUesWI8u-wg_9adY5G-6";
-      const CATALOG_SLUG = new URLSearchParams(location.search).get("catalogo") || "ferreteria-demo";
+      // Compatibilidad: los enlaces antiguos ?catalogo= siguen siendo válidos.
+      // En Rapitienda, cada tienda se identifica por el primer segmento de /nombre-tienda/.
+      // No interpretar /ferreteria-express/ de GitHub Pages como una tienda.
+      const CATALOG_QUERY_SLUG = new URLSearchParams(location.search).get("catalogo");
+      const CATALOG_PATH_SLUG = location.hostname.endsWith(".github.io") ? "" :
+        decodeURIComponent(location.pathname.split("/").filter(Boolean)[0] || "");
+      const CATALOG_SLUG = CATALOG_QUERY_SLUG || CATALOG_PATH_SLUG || "ferreteria-demo";
+      const HAS_CATALOG_SELECTOR = Boolean(CATALOG_QUERY_SLUG || CATALOG_PATH_SLUG);
       const SUPABASE_HEADERS = {
         apikey: SUPABASE_PUBLISHABLE_KEY,
         Authorization: "Bearer " + SUPABASE_PUBLISHABLE_KEY,
@@ -3661,7 +3668,7 @@ function filter() {
       const BOOKING_CONTACT_REQUIRED=true;
       let bookingPendingKey=null,bookingPendingFingerprint="";
       // Guardar la misma clave entre recargas: un timeout no implica que el servidor no haya registrado.
-      const BOOKING_RETRY_KEY="titolabs_booking_retry_v1_"+encodeURIComponent(new URLSearchParams(location.search).get("catalogo")||"default");
+      const BOOKING_RETRY_KEY="titolabs_booking_retry_v1_"+encodeURIComponent(CATALOG_SLUG || "default");
       let savedBookingRetry=null;
       try{savedBookingRetry=JSON.parse(sessionStorage.getItem(BOOKING_RETRY_KEY)||"null");}catch(e){}
       function persistBookingRetry(entry){savedBookingRetry=entry;try{if(entry)sessionStorage.setItem(BOOKING_RETRY_KEY,JSON.stringify(entry));else sessionStorage.removeItem(BOOKING_RETRY_KEY);}catch(e){}}
@@ -3860,11 +3867,11 @@ function filter() {
         try {
           remoteLoaded = await loadRemoteCatalog();
         } catch (error) {
-          if (new URLSearchParams(location.search).has("catalogo")) throw error;
+          if (HAS_CATALOG_SELECTOR) throw error;
           console.warn("No se pudo cargar el catálogo desde Supabase; se usará la copia estática.", error);
         }
 
-        if (!remoteLoaded && new URLSearchParams(location.search).has("catalogo")) throw new Error("Catálogo no disponible");
+        if (!remoteLoaded && HAS_CATALOG_SELECTOR) throw new Error("Catálogo no disponible");
 
         if (new URLSearchParams(location.search).get("preview") === "1") {
 
@@ -4310,9 +4317,9 @@ botonArriba.addEventListener('click', () => {
 
       // Cotización local: no requiere campos de unidades ni cambios en Google Sheets.
       // Almacenamiento aislado por tienda. No importar el carrito global anterior: podría pertenecer a otra tienda.
-      const QUOTE_KEY = 'titolabs_cotizacion_v2_' + encodeURIComponent(new URLSearchParams(location.search).get('catalogo') || 'default');
+      const QUOTE_KEY = 'titolabs_cotizacion_v2_' + encodeURIComponent(CATALOG_SLUG || 'default');
       let quote = {};
-      const STAY_KEY = "titolabs_estadia_v1_"+(new URLSearchParams(location.search).get("catalogo")||"default");
+      const STAY_KEY = "titolabs_estadia_v1_"+(CATALOG_SLUG || "default");
       let stayDraft = null;
       try { stayDraft = JSON.parse(localStorage.getItem(STAY_KEY)||"null"); } catch(e) {}
       function saveStayDraft(draft){if(JSON.stringify(stayDraft)!==JSON.stringify(draft))invalidateBookingReceipt();stayDraft=draft;try{if(draft)localStorage.setItem(STAY_KEY,JSON.stringify(draft));else localStorage.removeItem(STAY_KEY);}catch(e){}renderQuote();}
