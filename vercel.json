@@ -1,0 +1,13 @@
+{
+  "cleanUrls": false,
+  "rewrites": [
+    {
+      "source": "/:tienda",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/:tienda/",
+      "destination": "/index.html"
+    }
+  ]
+}
