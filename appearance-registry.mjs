@@ -6,6 +6,7 @@ export const PALETTES = [
   {id:'burgundy',name:'Burdeo',primary:'#8b3a62'},
   {id:'graphite',name:'Gris grafito',primary:'#4b5563'},
   {id:'rose',name:'Rosa delicado',primary:'#ad3862',soft:'#f5dce6',background:'#fff9fc',ink:'#30252b',border:'#e9d5df'},
+  {id:'rose-lavender',name:'Rosa Lavanda',primary:'#8456A6',soft:'#F6E9F5',background:'#FFFAFD',ink:'#653D85',border:'#E8D6EC'},
   {id:'purple',name:'Morado creativo',primary:'#71427f',soft:'#ede0f1',background:'#fcf8fe',ink:'#302735',border:'#e3d5e8'},
   {id:'elegant',name:'Oscuro elegante',primary:'#29262e',soft:'#e5dce9',background:'#faf7fb',ink:'#29262e',border:'#ddd3e2'}
 ];
