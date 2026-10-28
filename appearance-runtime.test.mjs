@@ -50,3 +50,15 @@ test('Only the registered illustration enables full-color artwork; switching awa
   applyStoreAppearance({...value,heroAsset:{...value.heroAsset,name:'https://outside.test/art.webp'}},null,{businessId});
   assert.equal(f.classes['has-illustration'],false);assert.equal(f.tokens['--hero-art'],'none');
 });
+
+test('Rosa Lavanda conserva un tema independiente y no cambia paletas anteriores',()=>{
+ const f=fixture(),id='11111111-1111-4111-8111-111111111111';
+ applyStoreAppearance({version:1,paletteId:'rose-lavender',decorations:{hero:'soft-waves',prefooter:null,footer:'soft-waves'}},'#8456A6',{businessId:id});
+ assert.equal(f.tokens['--primary'],'#8456A6');
+ assert.equal(f.tokens['--primary-soft'],'#F6E9F5');
+ assert.equal(f.tokens['--background'],'#FFFAFD');
+ assert.equal(f.tokens['--ink'],'#653D85');
+ assert.equal(document.documentElement.dataset.decorationhero,'soft-waves');
+ applyStoreAppearance({version:1,paletteId:'rose',decorations:{hero:'none'}},'#ad3862',{businessId:id});
+ assert.equal(f.tokens['--primary'],'#ad3862');
+});
