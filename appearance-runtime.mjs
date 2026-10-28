@@ -1,4 +1,4 @@
-import {normalizeAppearance,paletteTokens,vectorUrl,HERO_PATTERN_FILES,HERO_ILLUSTRATIONS} from './appearance-registry.mjs?v=artwork-1';
+import {normalizeAppearance,paletteTokens,vectorUrl,HERO_PATTERN_FILES,HERO_ILLUSTRATIONS} from './appearance-registry.mjs?v=rosa-lavanda-1';
 
 export function applyStoreAppearance(input,color,{businessId='',assetOrigin='',preview=false}={}){
   const appearance=normalizeAppearance(input,{businessId,allowPending:preview});
