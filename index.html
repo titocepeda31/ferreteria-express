@@ -4254,7 +4254,7 @@ function filter() {
 
         renderStoreIntro();
         try {
-          const appearanceRuntime = await import("./appearance-runtime.mjs?v=artwork-1");
+          const appearanceRuntime = await import("./appearance-runtime.mjs?v=rosa-lavanda-1");
           appearanceRuntime.applyStoreAppearance(config.appearance, config.color, {businessId:config.id,assetOrigin:SUPABASE_URL});
           appearanceRuntime.connectAppearancePreview(config, SUPABASE_URL);
         } catch (error) { console.warn("No se pudo aplicar la apariencia; se conserva el tema actual.", error); }
