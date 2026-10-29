@@ -12,6 +12,8 @@ function fixture(){
 }
 test('Preview requires an allowed origin and an embedded frame',()=>{
   fixture();assert.equal(previewOrigin(),'https://catalogo-admin-seven.vercel.app');
+  location.search='?appearancePreview=1&previewOrigin=https%3A%2F%2Fadmin.rapitienda.cl';assert.equal(previewOrigin(),'https://admin.rapitienda.cl');
+  location.search='?appearancePreview=1&previewOrigin=https%3A%2F%2Fadmin.rapitienda.cl.evil.test';assert.equal(previewOrigin(),null);
   location.search='?appearancePreview=1&previewOrigin=https://attacker.test';assert.equal(previewOrigin(),null);
   location.search='?appearancePreview=1&previewOrigin=https://catalogo-admin-seven.vercel.app.evil.test';assert.equal(previewOrigin(),null);
   location.search='?appearancePreview=1&previewOrigin=https://catalogo-admin-seven.vercel.app';window.parent=window;assert.equal(previewOrigin(),null);

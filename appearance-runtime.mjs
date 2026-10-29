@@ -26,7 +26,7 @@ export function previewOrigin(){
   if(query.get('appearancePreview')!=='1'||window.parent===window||!raw)return null;
   try{
     const u=new URL(raw);
-    const known=['catalogo-admin-seven.vercel.app','catalogo-admin-titocepeda31s-projects.vercel.app','catalogo-admin-git-main-titocepeda31s-projects.vercel.app'];
+    const known=['admin.rapitienda.cl','catalogo-admin-seven.vercel.app','catalogo-admin-titocepeda31s-projects.vercel.app','catalogo-admin-git-main-titocepeda31s-projects.vercel.app'];
     if(u.origin!==raw)return null;
     if(u.protocol==='https:'&&(known.includes(u.hostname)||/^catalogo-admin-[a-z0-9-]+-titocepeda31s-projects\.vercel\.app$/.test(u.hostname)))return raw;
     if(u.protocol==='http:'&&u.hostname==='localhost'&&u.port==='5173')return raw;
