@@ -1,0 +1,21 @@
+name: QA paletas del catálogo público
+on:
+  push:
+    branches:
+      - feature/paleta-rosa-lavanda
+  pull_request:
+    paths:
+      - appearance-registry.mjs
+      - appearance-runtime.mjs
+      - appearance-runtime.test.mjs
+jobs:
+  appearance:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test appearance-runtime.test.mjs
